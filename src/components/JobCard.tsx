@@ -4,12 +4,14 @@ import { countdown, windowText } from '../lib/format'
 import { JOB_TYPES, type Job } from '../lib/types'
 
 // The driver-portal style card: dark header with time and amount, then the job facts
-export default function JobCard({ job, amount, amountLabel, badge, footer }: {
+export default function JobCard({ job, amount, amountLabel, badge, footer, action }: {
   job: Job
   amount?: string
   amountLabel?: string
   badge?: ReactNode
   footer?: ReactNode
+  // Replaces the Open job link, e.g. a Claim button on Find Job
+  action?: ReactNode
 }) {
   return (
     <article className="job-card">
@@ -42,7 +44,7 @@ export default function JobCard({ job, amount, amountLabel, badge, footer }: {
           <div className="notes"><span>Access</span>{job.access_notes}</div>
         )}
         {footer}
-        <Link to={`/jobs/${job.id}`} className="primary block">Open job ›</Link>
+        {action ?? <Link to={`/jobs/${job.id}`} className="primary block">Open job ›</Link>}
       </div>
     </article>
   )

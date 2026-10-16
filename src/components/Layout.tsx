@@ -23,6 +23,7 @@ export default function Layout({ title, back, children }: { title?: string; back
       </header>
       <main className="content">{children}</main>
       <nav className="tabbar">
+        {account?.role === 'crew' && <NavLink to="/find">Find Job</NavLink>}
         <NavLink to="/" end>{account?.role === 'admin' ? 'Jobs' : 'My Jobs'}</NavLink>
         {account?.role === 'admin' && <NavLink to="/people">People</NavLink>}
         <NavLink to="/profile">Profile</NavLink>

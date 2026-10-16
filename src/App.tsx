@@ -8,6 +8,7 @@ import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
+import FindJob from './pages/crew/FindJob'
 import Profile from './pages/Profile'
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MyJobs />} />
       <Route path="/jobs/:id" element={<CrewJob />} />
+      <Route path="/find" element={<FindJob />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

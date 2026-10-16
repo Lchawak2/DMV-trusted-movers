@@ -30,6 +30,8 @@ export interface Job {
   crew_size: number | null
   status: JobStatus
   is_open: boolean
+  open_pay: number | null
+  open_pay_type: 'flat' | 'hourly'
 }
 
 export interface Assignment {
