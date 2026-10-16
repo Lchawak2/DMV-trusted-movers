@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
+import JobDayChecklist from '../jobday/JobDayChecklist'
+import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, fromLocalInput, money, toLocalInput, windowText } from '../../lib/format'
 import {
@@ -19,6 +21,7 @@ export default function AdminJobDetail() {
   const [crew, setCrew] = useState<CrewRow[]>([])
   const [rental, setRental] = useState<TruckRental | null>(null)
   const [costs, setCosts] = useState<JobCost[]>([])
+  const day = useJobDay(id)
 
   const load = useCallback(async () => {
     const [j, a, r, c] = await Promise.all([
@@ -80,6 +83,7 @@ export default function AdminJobDetail() {
       </section>
 
       <CrewSection job={job} crew={crew} onChange={load} />
+      <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
       <RentalSection jobId={id} rental={rental} onChange={load} />
       <CostsSection jobId={id} costs={costs} onChange={load} />
 
