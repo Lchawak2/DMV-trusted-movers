@@ -78,6 +78,8 @@ export const JOB_TYPES: Record<string, string> = {
   labor_only: 'Labor only',
   packing: 'Packing',
   junk_haul: 'Junk haul',
+  small_move: 'Single items or small move',
+  other: 'Other',
 }
 
 export const TRUCK_SIZES = ['Cargo van', '12 ft', '16 ft', '22 ft', '26 ft']
