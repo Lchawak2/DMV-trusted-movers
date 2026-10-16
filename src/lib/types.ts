@@ -74,13 +74,14 @@ export interface TimeEntry {
 
 export const JOB_TYPES: Record<string, string> = {
   full_move: 'Full move',
+  office_move: 'Office relocation',
   labor_only: 'Labor only',
   packing: 'Packing',
   junk_haul: 'Junk haul',
 }
 
 export const TRUCK_SIZES = ['Cargo van', '12 ft', '16 ft', '22 ft', '26 ft']
-export const HOME_SIZES = ['Studio', '1 bedroom', '2 bedrooms', '3 bedrooms', '4+ bedrooms', 'Office', 'Few items']
+export const HOME_SIZES = ['Studio', '1 bedroom', '2 bedrooms', '3 bedrooms', '4+ bedrooms', 'Small office (1 to 10 people)', 'Medium office (11 to 30 people)', 'Large office (30+ people)', 'Few items']
 
 export type PhotoKind = 'before' | 'after' | 'damage' | 'other'
 export type ExtraKind = 'item' | 'time' | 'supplies'
