@@ -74,10 +74,44 @@ export interface TimeEntry {
 
 export const JOB_TYPES: Record<string, string> = {
   full_move: 'Full move',
+  office_move: 'Office relocation',
   labor_only: 'Labor only',
   packing: 'Packing',
   junk_haul: 'Junk haul',
+  small_move: 'Single items or small move',
+  other: 'Other',
 }
 
 export const TRUCK_SIZES = ['Cargo van', '12 ft', '16 ft', '22 ft', '26 ft']
-export const HOME_SIZES = ['Studio', '1 bedroom', '2 bedrooms', '3 bedrooms', '4+ bedrooms', 'Office', 'Few items']
+export const HOME_SIZES = ['Studio', '1 bedroom', '2 bedrooms', '3 bedrooms', '4+ bedrooms', 'Small office (1 to 10 people)', 'Medium office (11 to 30 people)', 'Large office (30+ people)', 'Few items']
+
+export type PhotoKind = 'before' | 'after' | 'damage' | 'other'
+export type ExtraKind = 'item' | 'time' | 'supplies'
+
+export interface JobPhoto {
+  id: string
+  job_id: string
+  uploaded_by: string | null
+  kind: PhotoKind
+  storage_path: string
+  note: string | null
+  created_at: string
+}
+
+export interface JobExtra {
+  id: string
+  job_id: string
+  kind: ExtraKind
+  title: string
+  note: string | null
+  created_at: string
+}
+
+export interface JobSignoff {
+  job_id: string
+  signer_name: string
+  signature: string
+  signed_at: string
+}
+
+export const EXTRA_KINDS: Record<ExtraKind, string> = { item: 'Item', time: 'Time', supplies: 'Supplies' }

@@ -4,6 +4,8 @@ import Layout from '../../components/Layout'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
+import JobDayChecklist from '../jobday/JobDayChecklist'
+import { useJobDay } from '../jobday/useJobDay'
 import { JOB_TYPES, type Assignment, type Job, type TimeEntry, type TruckRental } from '../../lib/types'
 
 export default function CrewJob() {
@@ -14,6 +16,7 @@ export default function CrewJob() {
   const [rental, setRental] = useState<TruckRental | null>(null)
   const [entry, setEntry] = useState<TimeEntry | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const day = useJobDay(id)
 
   const load = useCallback(async () => {
     if (!account) return
@@ -57,6 +60,9 @@ export default function CrewJob() {
   }
 
   const onClock = entry && !entry.clock_out
+  const isLead = assignment.role === 'lead' && assignment.status === 'accepted'
+  // The lead clocks out only after the customer has signed
+  const mustSign = isLead && !day.signoff
   const mapsLink = (address: string) => `https://maps.google.com/?q=${encodeURIComponent(address)}`
 
   return (
@@ -113,7 +119,8 @@ export default function CrewJob() {
               ) : onClock ? (
                 <>
                   <p className="muted">On the clock since {dateTime(entry!.clock_in)}</p>
-                  <button className="primary" onClick={clockOut}>Clock out</button>
+                  {mustSign && <p className="muted small">Clock out unlocks once the customer has signed.</p>}
+                  <button className="primary" onClick={clockOut} disabled={mustSign}>Clock out</button>
                 </>
               ) : (
                 <button className="primary" onClick={clockIn}>Clock in</button>
@@ -123,6 +130,7 @@ export default function CrewJob() {
           {error && <p className="warn">{error}</p>}
         </div>
       </section>
+      {isLead && <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />}
     </Layout>
   )
 }

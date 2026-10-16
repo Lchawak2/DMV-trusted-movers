@@ -136,3 +136,33 @@ input.pay { width: 84px; padding: 6px 8px; }
 .login { max-width: 400px; margin: 0 auto; padding: 48px 16px; }
 .login h1 { color: var(--navy); }
 .login-links { display: flex; justify-content: space-between; flex-wrap: wrap; margin-top: 8px; }
+
+/* Job day */
+.segmented.wide { margin-bottom: 8px; }
+.segmented.wide button { flex: 1; min-height: 44px; }
+.steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.steps a {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 44px;
+  border: 1px solid var(--line); border-radius: 12px; text-decoration: none;
+}
+.step-detail { display: block; }
+.step-dot {
+  width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; background: var(--line);
+}
+.step-dot.done { background: var(--green); color: var(--navy); }
+.photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 16px; }
+.photo { position: relative; aspect-ratio: 1; }
+.photo img, .damage img, .photo-missing { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; background: #c9ced8; }
+.photo-remove {
+  position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; border: 0;
+  background: rgba(15, 27, 45, 0.75); color: #fff; font-size: 18px; line-height: 1;
+}
+.photo-add {
+  aspect-ratio: 1; border: 2px dashed var(--gold); border-radius: 10px; background: #fff; color: var(--gold-dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+}
+.damage { display: flex; gap: 12px; align-items: flex-start; }
+.damage > a, .damage > .photo-missing { width: 88px; height: 88px; flex: none; }
+.sign-pad { width: 100%; height: 160px; background: #fff; border: 2px solid var(--gold); border-radius: 10px; touch-action: none; display: block; }
+.signature { width: 100%; max-height: 160px; object-fit: contain; border: 1px solid var(--line); border-radius: 10px; }
