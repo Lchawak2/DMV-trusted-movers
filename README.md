@@ -8,8 +8,8 @@ Built with React, Vite and Supabase.
 
 | Who | Screens |
 | --- | --- |
-| Admin | Job list (upcoming and past), create and edit jobs, crew offers and pay, truck rental details, job costs, totals, People (approve sign-ups, can-lead, truck sizes, switch off) |
-| Crew | My Jobs list in the driver-portal style, job screen with accept or decline, truck pickup details for the lead, clock in and out |
+| Admin | Job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, People (approve sign-ups, can-lead, truck sizes, switch off) |
+| Crew | Find Job board to claim open spots on posted jobs, My Jobs list in the driver-portal style, job screen with accept or decline, truck pickup details for the lead, clock in and out |
 | Everyone | Sign in, sign up, password reset, profile with language |
 
 ## How access works
@@ -17,7 +17,8 @@ Built with React, Vite and Supabase.
 The rules live in the database (`supabase/migrations`), not just in the screens:
 
 - Crew can read only their own assignments and the jobs they're on. They can't read quotes, payments, job costs or customer requests.
-- Crew can't change their own pay or role. Accepting or declining goes through `respond_to_assignment`.
+- Crew can't change their own pay or role. Accepting or declining goes through `respond_to_assignment`, and claiming a posted job goes through `claim_open_job`, which adds them as a helper at the posted pay.
+- Every offer is checked by the database: only movers marked "can lead" can be a lead, a job has one lead, and nobody can be booked on two jobs that overlap. A mover with upcoming jobs can't be switched off.
 - Only the accepted lead on a job can read its truck rental.
 - New sign-ups start as `client` and see a waiting screen until the admin adds them to the crew.
 

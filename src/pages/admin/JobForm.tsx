@@ -17,6 +17,8 @@ const empty = {
   truck_size: '',
   crew_size: '2',
   is_open: false,
+  open_pay: '',
+  open_pay_type: 'flat',
 }
 
 type Form = typeof empty
@@ -45,6 +47,8 @@ export default function JobForm() {
         truck_size: job.truck_size ?? '',
         crew_size: job.crew_size?.toString() ?? '',
         is_open: job.is_open,
+        open_pay: job.open_pay?.toString() ?? '',
+        open_pay_type: job.open_pay_type,
       })
     })
   }, [id])
@@ -55,6 +59,9 @@ export default function JobForm() {
     e.preventDefault()
     if (form.window_start && form.window_end && form.window_end <= form.window_start) {
       return setError('The arrival window must end after it starts.')
+    }
+    if (form.is_open && !form.open_pay) {
+      return setError('Set the pay crew members get when they claim this job.')
     }
     setBusy(true)
     const row = {
@@ -70,6 +77,8 @@ export default function JobForm() {
       truck_size: form.truck_size || null,
       crew_size: form.crew_size ? Number(form.crew_size) : null,
       is_open: form.is_open,
+      open_pay: form.open_pay ? Number(form.open_pay) : null,
+      open_pay_type: form.open_pay_type,
     }
     const result = id
       ? await supabase.from('jobs').update(row).eq('id', id).select('id').single()
@@ -122,8 +131,23 @@ export default function JobForm() {
         </div>
         <label className="check">
           <input type="checkbox" checked={form.is_open} onChange={(e) => setForm({ ...form, is_open: e.target.checked })} />
-          Post this job so crew members can see it before they're assigned
+          Post this job to Find Job so crew members can claim a spot
         </label>
+        {form.is_open && (
+          <div className="row">
+            <label>Pay per helper<input type="number" min={0} step={1} value={form.open_pay} onChange={set('open_pay')} placeholder="$" /></label>
+            <label>
+              Paid
+              <select value={form.open_pay_type} onChange={set('open_pay_type')}>
+                <option value="flat">Flat for the job</option>
+                <option value="hourly">Per hour</option>
+              </select>
+            </label>
+          </div>
+        )}
+        {form.is_open && (
+          <p className="muted small">Crew who claim a spot join as helpers at this pay. You still pick the lead yourself. The job comes off the board once every spot is filled.</p>
+        )}
         {error && <p className="warn">{error}</p>}
         <button className="primary" disabled={busy}>{id ? 'Save changes' : 'Create job'}</button>
       </form>
