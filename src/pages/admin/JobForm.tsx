@@ -89,7 +89,7 @@ export default function JobForm() {
   }
 
   return (
-    <Layout back={id ? `/jobs/${id}` : '/'} title={id ? 'Edit job' : 'New job'}>
+    <Layout back={id ? `/jobs/${id}` : '/jobs'} title={id ? 'Edit job' : 'New job'}>
       <form className="card form" onSubmit={submit}>
         <label>Date<input type="date" value={form.job_date} onChange={set('job_date')} required /></label>
         <div className="row">

@@ -3,6 +3,7 @@ import { useAuth } from './lib/auth'
 import Login from './pages/Login'
 import Pending from './pages/Pending'
 import AdminJobs from './pages/admin/Jobs'
+import Dashboard from './pages/admin/Dashboard'
 import JobForm from './pages/admin/JobForm'
 import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
@@ -27,7 +28,8 @@ export default function App() {
   if (account.role === 'admin') {
     return (
       <Routes>
-        <Route path="/" element={<AdminJobs />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/jobs" element={<AdminJobs />} />
         <Route path="/jobs/new" element={<JobForm />} />
         <Route path="/jobs/:id" element={<AdminJobDetail />} />
         <Route path="/jobs/:id/edit" element={<JobForm />} />

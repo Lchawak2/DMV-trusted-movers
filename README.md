@@ -8,7 +8,7 @@ Built with React, Vite and Supabase.
 
 | Who | Screens |
 | --- | --- |
-| Admin | Job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off) |
+| Admin | Dashboard (needs-you list, today, next 7 days readiness, this week's money, crew pay owed), job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off) |
 | Crew | Find Job board to claim open spots on posted jobs, My Jobs list in the driver-portal style, job screen with accept or decline, truck pickup details for the lead, clock in and out, and job-day tools for the lead: before and damage photos, extras, customer signature (clock out waits for the signature) |
 | Everyone | Sign in, sign up, password reset, profile with language |
 
@@ -20,6 +20,7 @@ The rules live in the database (`supabase/migrations`), not just in the screens:
 - Crew can't change their own pay or role. Accepting or declining goes through `respond_to_assignment`, and claiming a posted job goes through `claim_open_job`, which adds them as a helper at the posted pay.
 - Every offer is checked by the database: only movers marked "can lead" can be a lead, a job has one lead, and nobody can be booked on two jobs that overlap. A mover with upcoming jobs can't be switched off.
 - Only the accepted lead on a job can read its truck rental.
+- The customer price and amount paid for each job live in `job_prices`, which only admins can read, because crew can read the jobs table.
 - Job-day tools belong to the accepted lead and admins. Anyone on the job can view its photos (private `job-photos` bucket, files under `<job id>/`); only the lead adds them. Extras lock once the customer signs, and extra prices sit in an admin-only table.
 - New sign-ups start as `client` and see a waiting screen until the admin adds them to the crew.
 

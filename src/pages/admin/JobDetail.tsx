@@ -4,6 +4,7 @@ import Layout from '../../components/Layout'
 import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
+import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, toLocalInput, windowText } from '../../lib/format'
 import {
   JOB_TYPES, TRUCK_SIZES,
@@ -38,7 +39,7 @@ export default function AdminJobDetail() {
 
   useEffect(() => { load() }, [load])
 
-  if (!job) return <Layout back="/"><p className="muted center">Loading…</p></Layout>
+  if (!job) return <Layout back="/jobs"><p className="muted center">Loading…</p></Layout>
 
   async function setStatus(status: JobStatus) {
     await supabase.from('jobs').update({ status }).eq('id', id)
@@ -48,14 +49,14 @@ export default function AdminJobDetail() {
   async function remove() {
     if (!confirm('Delete this job and everything attached to it?')) return
     await supabase.from('jobs').delete().eq('id', id)
-    navigate('/', { replace: true })
+    navigate('/jobs', { replace: true })
   }
 
-  const totalPay = crew.filter((a) => a.status !== 'declined' && a.status !== 'removed').reduce((s, a) => s + Number(a.crew_pay), 0)
+  const totalPay = crew.reduce((s, a) => s + assignmentPay(a, job, a.time_entries), 0)
   const totalCosts = costs.reduce((s, c) => s + Number(c.amount), 0)
 
   return (
-    <Layout back="/" title="Job">
+    <Layout back="/jobs" title="Job">
       <section className="card">
         <div className="card-head">
           <div>
@@ -87,10 +88,7 @@ export default function AdminJobDetail() {
       <RentalSection jobId={id} rental={rental} onChange={load} />
       <CostsSection jobId={id} costs={costs} onChange={load} />
 
-      <section className="card">
-        <h3>Totals (only you see this)</h3>
-        <p>Crew pay {money(totalPay)} · Other costs {money(totalCosts)} · <strong>{money(totalPay + totalCosts)}</strong></p>
-      </section>
+      <MoneySection jobId={id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
 
       <button className="danger" onClick={remove}>Delete job</button>
     </Layout>
@@ -345,6 +343,44 @@ function CostsSection({ jobId, costs, onChange }: { jobId: string; costs: JobCos
         <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
         <button className="secondary">Add cost</button>
       </form>
+    </section>
+  )
+}
+
+function MoneySection({ jobId, extrasTotal, crewPay, costs }: { jobId: string; extrasTotal: number; crewPay: number; costs: number }) {
+  const [row, setRow] = useState<{ price: number; paid: number } | null>(null)
+
+  const load = useCallback(async () => {
+    const { data } = await supabase.from('job_prices').select('price, paid').eq('job_id', jobId).maybeSingle()
+    setRow(data ? { price: Number(data.price), paid: Number(data.paid) } : { price: 0, paid: 0 })
+  }, [jobId])
+
+  useEffect(() => { load() }, [load])
+
+  async function save(key: 'price' | 'paid', value: string) {
+    if (!row || Number(value || 0) === row[key]) return
+    await supabase.from('job_prices').upsert({ job_id: jobId, ...row, [key]: Number(value || 0), updated_at: new Date().toISOString() })
+    load()
+  }
+
+  if (!row) return null
+  const charged = row.price + extrasTotal
+  const kept = charged - crewPay - costs
+
+  return (
+    <section className="card">
+      <h3>Money (only you see this)</h3>
+      <div className="row">
+        <label>Customer price $<input type="number" min={0} step={0.01} defaultValue={row.price || ''} onBlur={(e) => save('price', e.target.value)} /></label>
+        <label>Paid so far $<input type="number" min={0} step={0.01} defaultValue={row.paid || ''} onBlur={(e) => save('paid', e.target.value)} /></label>
+      </div>
+      <ul className="list">
+        <li><span>Price{extrasTotal ? ` + extras ${money(extrasTotal)}` : ''}</span><strong>{money(charged)}</strong></li>
+        <li><span>Crew pay</span><span>−{money(crewPay)}</span></li>
+        <li><span>Truck and other costs</span><span>−{money(costs)}</span></li>
+        <li><span>Kept</span><strong className={kept < 0 ? 'warn' : ''}>{money(kept)}</strong></li>
+        <li><span>Balance due from customer</span><strong>{money(Math.max(charged - row.paid, 0))}</strong></li>
+      </ul>
     </section>
   )
 }
