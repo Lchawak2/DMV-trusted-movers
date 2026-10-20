@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Pending from './pages/Pending'
 import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
+import Money from './pages/admin/Money'
 import JobForm from './pages/admin/JobForm'
 import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/jobs/:id/photos" element={<Photos />} />
         <Route path="/jobs/:id/extras" element={<Extras />} />
         <Route path="/jobs/:id/sign" element={<Sign />} />
+        <Route path="/money" element={<Money />} />
         <Route path="/people" element={<People />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
