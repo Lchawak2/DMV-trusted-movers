@@ -8,9 +8,9 @@ Built with React, Vite and Supabase.
 
 | Who | Screens |
 | --- | --- |
-| Admin | Dashboard (needs-you list with actions, this week's bookings by day, today, link to Money), Money (this week or month: customers owe, crew pay, booked, kept, profit per job, pay per mover), job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off), quote requests (review, price, text or email the quote, book it into a job) |
+| Admin | Dashboard (needs-you list with actions, this week's bookings by day, today, link to Money), Money (this week or month: customers owe, crew pay, booked, kept, profit per job, pay per mover), job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off), quote requests (review, price, text or email the quote with its link, book it into a job) |
 | Crew | Find Job board to claim open spots on posted jobs, My Jobs list in the driver-portal style, job screen with accept or decline, truck pickup details for the lead, clock in and out, and job-day tools for the lead: before and damage photos, extras, customer signature (clock out waits for the signature) |
-| Customer | Booking form at `/book` with no login: move type, addresses with floor, elevator and parking, size, special items, photos, date (48 hours ahead at least), contact |
+| Customer | Booking form at `/book` with no login: move type, addresses with floor, elevator and parking, size, special items, photos, date (48 hours ahead at least), contact. Quote page at `/quote/<link>` to see the price and pay the deposit by card (Stripe Checkout); a paid deposit books the job |
 | Everyone | Sign in, sign up, password reset, profile with language |
 
 ## How access works
@@ -46,3 +46,9 @@ update public.accounts set role = 'admin' where email = 'you@example.com';
 ## Deploy
 
 Any static host works. On Vercel or Netlify, import this repo, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, use `npm run build` as the build command and `dist` as the output folder. Add a rewrite of all paths to `/index.html` so links like `/jobs/123` load. Then add the site's address under Supabase > Authentication > URL Configuration.
+
+## Card deposits
+
+The `deposit` Edge Function (in `supabase/functions/deposit`) opens a Stripe Checkout page for a quote's deposit and books the job once Stripe says it's paid. It's deployed with JWT checks off because guests have no login; it only acts on a valid quote link. It needs one secret, set in Supabase under Edge Functions › Secrets (never in the repo):
+
+- `STRIPE_SECRET_KEY`: the Stripe secret key (`sk_test_…` while testing, `sk_live_…` when you go live)

@@ -42,12 +42,3 @@ export function placeText(floor: number | null, elevator: boolean | null, parkin
   ].filter(Boolean)
   return parts.join(', ')
 }
-
-// Arrival windows from the booking form, as job times
-export function windowTimes(label: string | null): [string | null, string | null] {
-  if (!label) return [null, null]
-  if (label.startsWith('Morning')) return ['08:00', '10:00']
-  if (label.startsWith('Midday')) return ['11:00', '13:00']
-  if (label.startsWith('Afternoon')) return ['14:00', '16:00']
-  return [null, null]
-}

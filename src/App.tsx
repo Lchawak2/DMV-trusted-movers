@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import Login from './pages/Login'
 import Book from './pages/Book'
+import Quote from './pages/Quote'
 import Pending from './pages/Pending'
 import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
@@ -25,6 +26,8 @@ export default function App() {
 
   // Customers ask for a quote without signing in
   if (pathname === '/book') return <Book />
+  const quote = pathname.match(/^\/quote\/([0-9a-f-]{36})$/)
+  if (quote) return <Quote token={quote[1]} />
   if (loading) return <div className="center muted">Loading…</div>
   if (!session) return <Login />
   if (!account) return <div className="center muted">Setting up your account…</div>
