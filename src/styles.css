@@ -201,3 +201,13 @@ input.pay { width: 84px; padding: 6px 8px; }
 .money-bar-sub { display: block; font-size: 12.5px; color: #c9d1de; font-weight: 400; }
 .money-bar-go { color: var(--gold); }
 .total-row { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px; font-weight: 700; }
+
+/* Customer booking */
+.public { padding-bottom: 24px; }
+.topbar-link { color: #fff; font-size: 14px; }
+.chip.big { padding: 8px 12px; font-size: 14px; font-weight: 600; min-height: 40px; }
+.done-mark { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%; background: #e3f2e9; color: #1a6b3c; display: grid; place-items: center; font-size: 30px; font-weight: 700; }
+.center-text { text-align: center; }
+.flag { background: #fbeed6; color: #8a4f00; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; margin: 8px 0 0; }
+.quote-text { white-space: pre-wrap; font: inherit; font-size: 14px; background: #f4f5f7; border-radius: 8px; padding: 10px 12px; margin: 0; }
+.requests-link { margin: 0 0 12px; text-align: left; }

@@ -1,10 +1,13 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import Login from './pages/Login'
+import Book from './pages/Book'
 import Pending from './pages/Pending'
 import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
 import Money from './pages/admin/Money'
+import Requests from './pages/admin/Requests'
+import RequestDetail from './pages/admin/RequestDetail'
 import JobForm from './pages/admin/JobForm'
 import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
@@ -18,7 +21,10 @@ import Sign from './pages/jobday/Sign'
 
 export default function App() {
   const { session, account, loading } = useAuth()
+  const { pathname } = useLocation()
 
+  // Customers ask for a quote without signing in
+  if (pathname === '/book') return <Book />
   if (loading) return <div className="center muted">Loading…</div>
   if (!session) return <Login />
   if (!account) return <div className="center muted">Setting up your account…</div>
@@ -38,6 +44,8 @@ export default function App() {
         <Route path="/jobs/:id/extras" element={<Extras />} />
         <Route path="/jobs/:id/sign" element={<Sign />} />
         <Route path="/money" element={<Money />} />
+        <Route path="/requests" element={<Requests />} />
+        <Route path="/requests/:id" element={<RequestDetail />} />
         <Route path="/people" element={<People />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />

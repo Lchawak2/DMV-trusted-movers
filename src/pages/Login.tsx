@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -57,6 +58,7 @@ export default function Login() {
         </button>
         {mode === 'signin' && <button className="link" onClick={resetPassword}>Forgot password</button>}
       </div>
+      <Link to="/book" className="secondary block">Need a move? Get a quote</Link>
     </div>
   )
 }

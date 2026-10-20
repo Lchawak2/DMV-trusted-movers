@@ -11,6 +11,12 @@ type Row = { job: Job; crew: Assignment[] }
 export default function AdminJobs() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [showPast, setShowPast] = useState(false)
+  const [newRequests, setNewRequests] = useState(0)
+
+  useEffect(() => {
+    supabase.from('move_requests').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      .then(({ count }) => setNewRequests(count ?? 0))
+  }, [])
 
   useEffect(() => {
     const today = new Date().toLocaleDateString('en-CA')
@@ -30,6 +36,9 @@ export default function AdminJobs() {
         </div>
         <Link to="/jobs/new" className="primary">+ New job</Link>
       </div>
+      <Link to="/requests" className="secondary block requests-link">
+        Quote requests{newRequests ? ` · ${newRequests} new` : ''} ›
+      </Link>
       {rows === null ? (
         <p className="muted center">Loading…</p>
       ) : (

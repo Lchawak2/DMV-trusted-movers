@@ -8,8 +8,9 @@ Built with React, Vite and Supabase.
 
 | Who | Screens |
 | --- | --- |
-| Admin | Dashboard (needs-you list with actions, this week's bookings by day, today, link to Money), Money (this week or month: customers owe, crew pay, booked, kept, profit per job, pay per mover), job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off) |
+| Admin | Dashboard (needs-you list with actions, this week's bookings by day, today, link to Money), Money (this week or month: customers owe, crew pay, booked, kept, profit per job, pay per mover), job list (upcoming and past), create and edit jobs, post jobs to Find Job with helper pay, crew offers and pay, truck rental details, job costs, totals, job-day tools (photos, extras with prices, customer sign-off) for jobs you lead yourself, People (approve sign-ups, can-lead, truck sizes, switch off), quote requests (review, price, text or email the quote, book it into a job) |
 | Crew | Find Job board to claim open spots on posted jobs, My Jobs list in the driver-portal style, job screen with accept or decline, truck pickup details for the lead, clock in and out, and job-day tools for the lead: before and damage photos, extras, customer signature (clock out waits for the signature) |
+| Customer | Booking form at `/book` with no login: move type, addresses with floor, elevator and parking, size, special items, photos, date (48 hours ahead at least), contact |
 | Everyone | Sign in, sign up, password reset, profile with language |
 
 ## How access works
