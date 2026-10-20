@@ -28,12 +28,14 @@ export default function Layout({ title, back, children }: { title?: string; back
           <>
             <NavLink to="/" end>Dashboard</NavLink>
             <NavLink to="/jobs">Jobs</NavLink>
+            <NavLink to="/money">Money</NavLink>
           </>
         ) : (
           <NavLink to="/" end>My Jobs</NavLink>
         )}
         {account?.role === 'admin' && <NavLink to="/people">People</NavLink>}
-        <NavLink to="/profile">Profile</NavLink>
+        {/* Admin reaches Profile from the avatar, so the tab bar fits four tabs */}
+        {account?.role !== 'admin' && <NavLink to="/profile">Profile</NavLink>}
       </nav>
     </div>
   )
