@@ -17,11 +17,14 @@ export default function Dashboard() {
   const week = weekOf(today)
   const jobs = useJobs(addDays(today, -30), week.end > addDays(today, 7) ? week.end : addDays(today, 7))
   const [signups, setSignups] = useState(0)
+  const [requests, setRequests] = useState(0)
   const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     supabase.from('accounts').select('id', { count: 'exact', head: true }).eq('role', 'client')
       .then(({ count }) => setSignups(count ?? 0))
+    supabase.from('move_requests').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      .then(({ count }) => setRequests(count ?? 0))
   }, [])
 
   if (!jobs) return <Layout><p className="muted center">Loading…</p></Layout>
@@ -47,6 +50,7 @@ export default function Dashboard() {
       if (f.hasPrice && f.due > 0) todos.push({ level: 'warn', title: `Balance due ${money(f.due)}`, detail: name, to, action: 'Record pay' })
     }
   }
+  if (requests) todos.push({ level: 'warn', title: `${requests} new quote ${requests === 1 ? 'request' : 'requests'}`, detail: 'Customers waiting for a price', to: '/requests', action: 'Quote' })
   if (signups) todos.push({ level: 'info', title: `${signups} ${signups === 1 ? 'sign-up' : 'sign-ups'} waiting`, detail: 'Approve crew in People', to: '/people', action: 'Review' })
   const rank: Record<Level, number> = { crit: 0, warn: 1, info: 2 }
   todos.sort((a, b) => rank[a.level] - rank[b.level])

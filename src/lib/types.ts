@@ -115,3 +115,50 @@ export interface JobSignoff {
 }
 
 export const EXTRA_KINDS: Record<ExtraKind, string> = { item: 'Item', time: 'Time', supplies: 'Supplies' }
+
+export type RequestStatus = 'new' | 'waiting_on_client' | 'quoted' | 'accepted' | 'declined' | 'cancelled'
+
+export interface Customer {
+  id: string
+  full_name: string
+  phone: string | null
+  email: string | null
+}
+
+export interface MoveRequest {
+  id: string
+  customer_id: string
+  move_type: string
+  from_address: string
+  from_floor: number | null
+  from_elevator: boolean | null
+  from_parking: string | null
+  to_address: string | null
+  to_floor: number | null
+  to_elevator: boolean | null
+  to_parking: string | null
+  home_size: string | null
+  special_items: string[]
+  preferred_date: string
+  arrival_window: string | null
+  notes: string | null
+  status: RequestStatus
+  created_at: string
+}
+
+export interface Quote {
+  id: string
+  request_id: string
+  version: number
+  price: number
+  deposit: number
+  crew_size: number | null
+  truck_size: string | null
+  est_hours: number | null
+  arrival_window: string | null
+  note: string | null
+  status: 'draft' | 'sent' | 'accepted' | 'expired' | 'superseded'
+  sent_at: string | null
+  expires_at: string | null
+  token: string
+}
