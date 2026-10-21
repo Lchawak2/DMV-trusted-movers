@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, parseDay } from '../../lib/format'
 import { JOB_TYPES, TRUCK_SIZES, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
-import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, windowTimes, type RequestRow } from './requestData'
+import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
 
 const QUOTE_DAYS = 3
 
@@ -26,6 +26,14 @@ export default function RequestDetail() {
     setR(row)
     if (!row) return
     const q = latestQuote(row)
+    if (q?.status === 'sent') {
+      const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true }).eq('quote_id', q.id).eq('status', 'pending')
+      // A customer may pay and close the page before coming back; ask Stripe and book it if so
+      if (count) {
+        const { data: res } = await supabase.functions.invoke('deposit', { body: { action: 'confirm', token: q.token } })
+        if (res?.paid) return load()
+      }
+    }
     setForm({
       price: q?.price.toString() ?? '', deposit: q?.deposit.toString() ?? '',
       crew_size: q?.crew_size?.toString() ?? '2', truck_size: q?.truck_size ?? '', est_hours: q?.est_hours?.toString() ?? '',
@@ -77,30 +85,14 @@ export default function RequestDetail() {
     load()
   }
 
-  // Customer said yes: turn the request and quote into a job with its price
+  // Customer said yes: the database turns the request and quote into a job with its price
   async function book() {
     if (!q) return
     setBusy(true)
     setError(null)
-    const [start, end] = windowTimes(q.arrival_window)
-    const access = [
-      placeText(r!.from_floor, r!.from_elevator, r!.from_parking) && `From: ${placeText(r!.from_floor, r!.from_elevator, r!.from_parking)}`,
-      r!.to_address && placeText(r!.to_floor, r!.to_elevator, r!.to_parking) && `To: ${placeText(r!.to_floor, r!.to_elevator, r!.to_parking)}`,
-      r!.special_items.length && `Special items: ${r!.special_items.join(', ')}`,
-      r!.notes,
-      q.note && `Quote note: ${q.note}`,
-    ].filter(Boolean).join('\n')
-    const { data: job, error } = await supabase.from('jobs').insert({
-      request_id: id, quote_id: q.id, job_date: r!.preferred_date, window_start: start, window_end: end,
-      job_type: JOB_TYPES[r!.move_type] ? r!.move_type : 'other', home_size: r!.home_size,
-      from_address: r!.from_address, to_address: r!.to_address, access_notes: access || null,
-      est_hours: q.est_hours, truck_size: q.truck_size, crew_size: q.crew_size,
-    }).select('id').single()
+    const { data: job, error } = await supabase.rpc('book_quote', { p_quote: q.id, p_paid: depositPaid ? q.deposit : 0 })
     if (error || !job) { setBusy(false); return setError(error?.message ?? 'The job could not be created.') }
-    await supabase.from('job_prices').insert({ job_id: job.id, price: q.price, paid: depositPaid ? q.deposit : 0 })
-    await supabase.from('quotes').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', q.id)
-    await supabase.from('move_requests').update({ status: 'accepted' }).eq('id', id)
-    navigate(`/jobs/${job.id}`)
+    navigate(`/jobs/${job}`)
   }
 
   const first = c?.full_name.split(' ')[0] ?? ''
@@ -111,6 +103,7 @@ export default function RequestDetail() {
     [q.crew_size && `${q.crew_size} movers`, q.truck_size && `a ${q.truck_size} truck`, q.est_hours && `about ${q.est_hours} hours`].filter(Boolean).join(', '),
     q.note,
     q.deposit > 0 ? `A ${money(q.deposit)} deposit books your date. Free cancellation up to 72 hours before the move.` : null,
+    `See your quote${q.deposit > 0 ? ' and pay the deposit' : ''}: ${location.origin}/quote/${q.token}`,
     `This price is good until ${q.expires_at ? new Date(q.expires_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'further notice'}.`,
   ].filter(Boolean).join('\n')
   const askText = `Hi ${first}, thanks for your moving request for ${when}. Could you send a few photos of the rooms and any large items so we can price it?`
@@ -186,7 +179,7 @@ export default function RequestDetail() {
             {mail(quoteText) && <a href={mail(quoteText)!} className="secondary">Email it</a>}
           </div>
           {r.status === 'accepted' ? (
-            <p className="note">Booked {q.price ? `for ${money(q.price)}` : ''}. The job is on the Jobs tab.</p>
+            <p className="note">Booked for {money(q.price)}. The job is on the Jobs tab.</p>
           ) : (
             <>
               <h3>Customer said yes?</h3>

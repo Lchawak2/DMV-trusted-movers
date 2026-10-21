@@ -1,5 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES } from '../lib/types'
@@ -189,20 +189,5 @@ function PlaceCard({ title, place, onChange, required }: { title: string; place:
         </select>
       </label>
     </section>
-  )
-}
-
-function PublicPage({ sub, children }: { sub: string; children: ReactNode }) {
-  return (
-    <div className="app public">
-      <header className="topbar">
-        <div>
-          <div className="topbar-name">DMV Trusted Movers</div>
-          <div className="topbar-sub">{sub}</div>
-        </div>
-        <Link to="/" className="topbar-link">Sign in</Link>
-      </header>
-      <main className="content">{children}</main>
-    </div>
   )
 }

@@ -211,3 +211,6 @@ input.pay { width: 84px; padding: 6px 8px; }
 .flag { background: #fbeed6; color: #8a4f00; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; margin: 8px 0 0; }
 .quote-text { white-space: pre-wrap; font: inherit; font-size: 14px; background: #f4f5f7; border-radius: 8px; padding: 10px 12px; margin: 0; }
 .requests-link { margin: 0 0 12px; text-align: left; }
+.quote-price { text-align: center; padding: 8px 0 16px; }
+.quote-amount { font-size: 36px; font-weight: 700; }
+.steps-plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
