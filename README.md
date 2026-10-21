@@ -66,4 +66,4 @@ Who gets what:
 Secrets, set in Supabase under Edge Functions › Secrets (never in the repo):
 
 - `RESEND_API_KEY`: the Resend API key. Until it's set, nothing is sent.
-- `NOTIFY_FROM` (optional): a sender on a domain you've verified in Resend, like `DMV Trusted Movers <hello@yourdomain.com>`. Without it, emails come from Resend's test address, which only delivers to the email you signed up to Resend with, so customer and crew emails are skipped until it's set.
+- `NOTIFY_FROM` (optional): a sender on a domain you've verified in Resend, like `DMV Trusted Movers <hello@yourdomain.com>`. Without it, emails come from Resend's test address, which only delivers to the email you signed up to Resend with, so only the admin emails go out until it's set. Sign up to Resend with the same email your admin account uses.

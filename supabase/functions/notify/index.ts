@@ -6,9 +6,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 
 const LIVE_SITE = 'https://dmv-trusted-movers-8tyn.vercel.app'
 // Until a domain is verified in Resend, it only delivers to the Resend account's own email,
-// so customer emails wait for NOTIFY_FROM (an address on that verified domain).
+// so emails to anyone but the admins wait for NOTIFY_FROM (an address on that verified domain).
 const FROM = Deno.env.get('NOTIFY_FROM')
-const CAN_EMAIL_CUSTOMERS = !!FROM
+const CAN_EMAIL_OTHERS = !!FROM
 
 const TYPES: Record<string, string> = {
   full_move: 'Home move', office_move: 'Office move', small_move: 'Small move',
@@ -83,7 +83,7 @@ async function depositPaid(paymentId: string): Promise<Email[]> {
       `See the booking: ${LIVE_SITE}/requests/${q.request_id}`,
     ),
   }]
-  if (CAN_EMAIL_CUSTOMERS && c?.email) {
+  if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
       subject: `You're booked for ${day(r.preferred_date)}`,
@@ -116,7 +116,7 @@ async function moveReminder(jobId: string): Promise<Email[]> {
   const emails: Email[] = []
   const crew = ((j.assignments ?? []) as unknown as { status: string; accounts: { email: string | null } | null }[])
     .filter((a) => a.status === 'accepted' && a.accounts?.email).map((a) => a.accounts!.email!)
-  if (crew.length) {
+  if (CAN_EMAIL_OTHERS && crew.length) {
     emails.push({
       to: crew,
       subject: `Job tomorrow: ${slot(j.window_start, j.window_end)}`,
@@ -130,7 +130,7 @@ async function moveReminder(jobId: string): Promise<Email[]> {
     })
   }
   const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null } | null } | null)?.customers
-  if (CAN_EMAIL_CUSTOMERS && c?.email) {
+  if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
       subject: 'Your move is tomorrow',
