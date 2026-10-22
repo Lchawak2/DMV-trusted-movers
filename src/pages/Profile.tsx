@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import { t } from '../lib/lang'
+import { sendText } from '../lib/texting'
 
 export default function Profile() {
   const { account, refresh } = useAuth()
@@ -42,8 +43,67 @@ export default function Profile() {
         <button className="primary">{t('Save', 'Guardar')}</button>
         {saved && <p className="note">{t('Saved.', 'Guardado.')}</p>}
       </form>
+      {account?.role === 'admin' && <ReviewLink />}
+      {account?.role === 'admin' && <TestText phone={account.phone} />}
       <p className="muted">{t('Signed in as', 'Conectado como')} {account?.email} · {account?.role}</p>
       <button className="secondary" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
     </Layout>
+  )
+}
+
+// Checks the Twilio setup by texting the admin's own phone
+function TestText({ phone }: { phone: string | null }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  async function send() {
+    if (!phone) return
+    setState('busy'); setError(null)
+    const err = await sendText(phone, 'DMV Trusted Movers: this is a test text. Texting from the app works!')
+    if (err) { setError(err); setState('idle') } else setState('sent')
+  }
+
+  return (
+    <section className="card form">
+      <h3>Texting</h3>
+      <p className="muted small">Sends a test text from your Twilio number to your phone above, to check the setup.</p>
+      {error && <p className="warn">{error}</p>}
+      {state === 'sent' && <p className="note">Sent. It should arrive in a few seconds.</p>}
+      <button className="secondary" disabled={!phone || state === 'busy'} onClick={send}>
+        {!phone ? 'Add your phone above first' : state === 'busy' ? 'Sending…' : 'Send me a test text'}
+      </button>
+    </section>
+  )
+}
+
+// Where the Leave a Google review button sends customers
+function ReviewLink() {
+  const [url, setUrl] = useState('')
+  const [state, setState] = useState<'idle' | 'saved'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.from('settings').select('review_url').maybeSingle().then(({ data }) => setUrl(data?.review_url ?? ''))
+  }, [])
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    const value = url.trim()
+    if (value && !value.startsWith('https://')) return setError('The link should start with https://')
+    const { error } = await supabase.from('settings').update({ review_url: value || null, updated_at: new Date().toISOString() }).eq('id', true)
+    if (error) return setError(error.message)
+    setState('saved')
+  }
+
+  return (
+    <form className="card form" onSubmit={save}>
+      <h3>Google review link</h3>
+      <p className="muted small">After a move, customers rate it on their booking page and get a button to this link. In your Google Business Profile, tap "Ask for reviews" to copy it.</p>
+      <label>Link<input type="url" value={url} placeholder="https://g.page/r/..." onChange={(e) => { setUrl(e.target.value); setState('idle') }} /></label>
+      {error && <p className="warn">{error}</p>}
+      {state === 'saved' && <p className="note">Saved.</p>}
+      <button className="secondary">Save link</button>
+    </form>
   )
 }

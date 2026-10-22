@@ -1,4 +1,5 @@
-// Sends the emails waiting in the notifications outbox, through Resend.
+// Sends the emails waiting in the notifications outbox, through Resend, and texts through Twilio
+// once its three secrets are saved (booking confirmation and the day-before reminders).
 // The database wakes this function when it queues an email (and every 10 minutes as a safety net).
 // Deployed with verify_jwt off: calling it only sends what is already queued, so a caller can't
 // choose who gets emailed or what it says.
@@ -20,6 +21,20 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 })
 
 type Email = { to: string[]; subject: string; text: string }
+type Text = { sms: string[]; text: string }
+type Out = Email | Text
+
+const TWILIO = {
+  sid: Deno.env.get('TWILIO_ACCOUNT_SID'), token: Deno.env.get('TWILIO_AUTH_TOKEN'), from: Deno.env.get('TWILIO_FROM'),
+}
+const CAN_TEXT = !!(TWILIO.sid && TWILIO.token && TWILIO.from)
+// US numbers in any format to +1XXXXXXXXXX
+function e164(phone: string | null | undefined): string | null {
+  const d = (phone ?? '').replace(/\D/g, '')
+  if (d.length === 10) return `+1${d}`
+  if (d.length === 11 && d.startsWith('1')) return `+${d}`
+  return null
+}
 type Note = { id: string; kind: string; ref_id: string }
 
 const money = (n: number | string | null) => `$${Number(n ?? 0).toFixed(2)}`
@@ -63,18 +78,18 @@ async function newRequest(id: string): Promise<Email[]> {
   }]
 }
 
-async function depositPaid(paymentId: string): Promise<Email[]> {
+async function depositPaid(paymentId: string): Promise<Out[]> {
   const { data: p } = await db.from('payments')
-    .select('amount, quotes(id, token, price, request_id, move_requests(preferred_date, arrival_window, customers(full_name, email)))')
+    .select('amount, quotes(id, token, price, request_id, move_requests(preferred_date, arrival_window, customers(full_name, email, phone)))')
     .eq('id', paymentId).maybeSingle()
   const q = p?.quotes as unknown as {
     id: string; token: string; price: number; request_id: string
-    move_requests: { preferred_date: string; arrival_window: string | null; customers: { full_name: string; email: string | null } | null }
+    move_requests: { preferred_date: string; arrival_window: string | null; customers: { full_name: string; email: string | null; phone: string | null } | null }
   } | null
   if (!p || !q) return []
   const r = q.move_requests
   const c = r.customers
-  const emails: Email[] = [{
+  const emails: Out[] = [{
     to: await admins(),
     subject: `Deposit paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
     text: lines(
@@ -103,19 +118,37 @@ async function depositPaid(paymentId: string): Promise<Email[]> {
       ),
     })
   }
+  if (c?.phone) {
+    emails.push({
+      sms: [c.phone],
+      text: `DMV Trusted Movers: you're booked for ${day(r.preferred_date)}${r.arrival_window ? `, ${r.arrival_window.toLowerCase()}` : ''}. We got your ${money(p.amount)} deposit. Your booking: ${LIVE_SITE}/quote/${q.token}`,
+    })
+  }
   return emails
 }
 
-async function moveReminder(jobId: string): Promise<Email[]> {
+async function moveReminder(jobId: string): Promise<Out[]> {
   const { data: j } = await db.from('jobs')
-    .select('job_date, window_start, window_end, job_type, from_address, to_address, status, move_requests(customers(full_name, email)), assignments(status, accounts(email))')
+    .select('job_date, window_start, window_end, job_type, from_address, to_address, status, move_requests(customers(full_name, email, phone)), assignments(status, accounts(email, phone, language))')
     .eq('id', jobId).maybeSingle()
   // Skip a move that was cancelled or moved after the reminder was queued
   if (!j || j.status !== 'scheduled') return []
   const when = `${day(j.job_date)}, ${slot(j.window_start, j.window_end)}`
-  const emails: Email[] = []
-  const crew = ((j.assignments ?? []) as unknown as { status: string; accounts: { email: string | null } | null }[])
-    .filter((a) => a.status === 'accepted' && a.accounts?.email).map((a) => a.accounts!.email!)
+  const emails: Out[] = []
+  type Mover = { email: string | null; phone: string | null; language: string | null }
+  const accepted = ((j.assignments ?? []) as unknown as { status: string; accounts: Mover | null }[])
+    .filter((a) => a.status === 'accepted' && a.accounts).map((a) => a.accounts!)
+  const crew = accepted.filter((a) => a.email).map((a) => a.email!)
+  for (const lang of ['en', 'es']) {
+    const phones = accepted.filter((a) => a.phone && (a.language === 'es') === (lang === 'es')).map((a) => a.phone!)
+    if (!phones.length) continue
+    emails.push({
+      sms: phones,
+      text: lang === 'es'
+        ? `DMV Trusted Movers: tienes un trabajo mañana, ${slot(j.window_start, j.window_end)}. ${j.from_address}. Detalles: ${LIVE_SITE}/jobs/${jobId}`
+        : `DMV Trusted Movers: you're on a job tomorrow, ${slot(j.window_start, j.window_end)}. ${j.from_address}. Details: ${LIVE_SITE}/jobs/${jobId}`,
+    })
+  }
   if (CAN_EMAIL_OTHERS && crew.length) {
     emails.push({
       to: crew,
@@ -129,7 +162,13 @@ async function moveReminder(jobId: string): Promise<Email[]> {
       ),
     })
   }
-  const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null } | null } | null)?.customers
+  const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null; phone: string | null } | null } | null)?.customers
+  if (c?.phone) {
+    emails.push({
+      sms: [c.phone],
+      text: `DMV Trusted Movers: your crew arrives tomorrow, ${when}. Please book the elevator and save a parking spot for the truck if you can. Reply here if anything changed.`,
+    })
+  }
   if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
@@ -186,7 +225,8 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
         '',
         `We received your ${money(Number(p.amount) + Number(tip?.amount ?? 0))} card payment for your move on ${day(job.job_date)}.`,
         tip && `That includes a ${money(tip.amount)} tip for your crew. Thank you!`,
-        `Your booking: ${LIVE_SITE}/quote/${q.token}`,
+        '',
+        `How did we do? Rate your move: ${LIVE_SITE}/quote/${q.token}`,
         '',
         'Thank you for choosing DMV Trusted Movers.',
       ),
@@ -278,6 +318,25 @@ async function dateChange(jobId: string): Promise<Email[]> {
   }]
 }
 
+async function review(jobId: string): Promise<Out[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, job_reviews(rating, comment), move_requests(customers(full_name, phone))').eq('id', jobId).maybeSingle()
+  const rv = (Array.isArray(j?.job_reviews) ? j!.job_reviews[0] : j?.job_reviews) as { rating: number; comment: string | null } | undefined
+  if (!j || !rv) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string; phone: string | null } | null } | null)?.customers
+  return [{
+    to: await admins(),
+    subject: `${'★'.repeat(rv.rating)}${'☆'.repeat(5 - rv.rating)} from ${c?.full_name ?? 'a customer'}`,
+    text: lines(
+      `${c?.full_name ?? 'A customer'} rated their move on ${day(j.job_date)} ${rv.rating} out of 5.`,
+      rv.comment && `"${rv.comment}"`,
+      rv.rating < 4 && c?.phone && `Worth a call: ${c.phone}`,
+      '',
+      `See the job: ${LIVE_SITE}/jobs/${jobId}`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -287,9 +346,21 @@ async function send(key: string, e: Email) {
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`)
 }
 
-const builders: Record<string, (id: string) => Promise<Email[]>> = {
+// Texts are a bonus to the emails: a failed text is noted but doesn't resend the emails
+async function sendText(to: string, body: string) {
+  const number = e164(to)
+  if (!number) return
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO.sid}/Messages.json`, {
+    method: 'POST',
+    headers: { Authorization: 'Basic ' + btoa(`${TWILIO.sid}:${TWILIO.token}`), 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ To: number, From: e164(TWILIO.from) ?? TWILIO.from!, Body: body }),
+  })
+  if (!res.ok) throw new Error(`Twilio ${res.status}: ${(await res.text()).slice(0, 300)}`)
+}
+
+const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
-  balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange,
+  balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
 }
 
 Deno.serve(async () => {
@@ -301,9 +372,16 @@ Deno.serve(async () => {
   let sent = 0
   for (const n of (batch ?? []) as Note[]) {
     try {
-      const emails = (await builders[n.kind]?.(n.ref_id)) ?? []
-      for (const e of emails) if (e.to.length) await send(key, e)
-      await db.from('notifications').update({ sent_at: new Date().toISOString(), last_error: null }).eq('id', n.id)
+      const outs = (await builders[n.kind]?.(n.ref_id)) ?? []
+      for (const e of outs) if ('to' in e && e.to.length) await send(key, e)
+      let textError: string | null = null
+      for (const e of outs) {
+        if (!('sms' in e) || !CAN_TEXT) continue
+        for (const to of e.sms) {
+          try { await sendText(to, e.text) } catch (err) { textError = err instanceof Error ? err.message : String(err) }
+        }
+      }
+      await db.from('notifications').update({ sent_at: new Date().toISOString(), last_error: textError }).eq('id', n.id)
       sent++
     } catch (e) {
       // Release the claim so the next run retries it (up to 5 tries)

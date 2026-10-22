@@ -269,3 +269,9 @@ input.pay { width: 84px; padding: 6px 8px; }
 .outbox-bar { background: #fbeed6; color: #8a4f00; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .photo.waiting img { opacity: .6; }
 .photo-badge { position: absolute; left: 4px; bottom: 4px; right: 4px; background: rgba(15, 27, 45, .8); color: #fff; font-size: 11px; border-radius: 4px; padding: 2px 4px; text-align: center; }
+
+/* Ratings */
+.stars { color: var(--gold); font-size: 22px; letter-spacing: 2px; margin: 4px 0; }
+.star-pick { display: flex; gap: 6px; justify-content: center; }
+.star-pick button { background: none; border: 0; font-size: 36px; line-height: 1; color: #d5d9e0; padding: 4px; }
+.star-pick button.on { color: var(--gold); }
