@@ -26,6 +26,9 @@ type QuoteView = {
   job_status: string | null
   free_cancel_until: string | null
   started: boolean | null
+  total: number | null
+  balance_due: number | null
+  balance_payable: boolean | null
 }
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -62,6 +65,15 @@ export default function Quote({ token }: { token: string }) {
     const message = error ? await errorText(error) : data?.error
     if (message) { setBusy(false); return setError(message) }
     if (data?.paid) { setBusy(false); return load() }
+    location.href = data.url
+  }
+
+  async function payBalance() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.functions.invoke('deposit', { body: { action: 'balance', token } })
+    const message = error ? await errorText(error) : data?.error
+    if (message) { setBusy(false); return setError(message) }
     location.href = data.url
   }
 
@@ -141,6 +153,26 @@ export default function Quote({ token }: { token: string }) {
             <li>Your lead mover walks through with you, and you sign off at the end.</li>
             <li>Pay the balance when the move is done.</li>
           </ol>
+        </section>
+      )}
+
+      {booked && q.balance_payable && q.balance_due != null && (
+        <section className="card form">
+          {q.balance_due > 0 ? (
+            <>
+              <h3>Pay your balance</h3>
+              <ul className="list">
+                <li><span>Move total</span><span>{money(q.total)}</span></li>
+                <li><span>Already paid</span><span>{money(Number(q.total) - q.balance_due)}</span></li>
+                <li><strong>Left to pay</strong><strong>{money(q.balance_due)}</strong></li>
+              </ul>
+              {error && <p className="warn">{error}</p>}
+              <button className="primary" disabled={busy} onClick={payBalance}>{busy ? 'Opening payment…' : `Pay ${money(q.balance_due)}`}</button>
+              <p className="note">You'll pay securely with Stripe. The total includes anything added on the day, like extra items.</p>
+            </>
+          ) : (
+            <p className="center-text"><strong>Paid in full.</strong> Thank you for moving with us.</p>
+          )}
         </section>
       )}
 

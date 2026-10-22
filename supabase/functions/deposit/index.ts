@@ -2,6 +2,7 @@
 // POST { action: 'start', token } -> { url } to send the customer to Stripe's payment page
 // POST { action: 'confirm', token } -> { paid } after they come back; a paid deposit books the job
 // POST { action: 'cancel', token } -> { refunded } the customer cancels; 72+ hours ahead the deposit is refunded
+// POST { action: 'balance', token } -> { url } after the move, to pay what's left (price plus extras, minus paid)
 // POST { action: 'refund', job_id } -> { refunded } the admin (signed in) refunds a cancelled job's deposit
 // Deployed with verify_jwt off: guests have no login, so the function checks the quote token itself.
 // The quote token in the customer's link is the only key a guest has, so every lookup goes through it.
@@ -70,6 +71,28 @@ async function confirm(quoteId: string): Promise<boolean> {
   return true
 }
 
+// Settle balance payments: record the ones Stripe says are paid. With close_open set, also close any
+// checkout still open, so a customer who opens the payment page twice can't pay twice.
+async function confirmFinals(quoteId: string, closeOpen = false): Promise<boolean> {
+  const { data: payments } = await db.from('payments').select('id, provider_ref')
+    .eq('quote_id', quoteId).eq('kind', 'final').eq('status', 'pending').not('provider_ref', 'is', null)
+  let paid = false
+  for (const p of payments ?? []) {
+    const session = await stripe(`checkout/sessions/${p.provider_ref}`)
+    if (session.payment_status === 'paid') {
+      const { error } = await db.rpc('record_final_payment', { p_payment: p.id })
+      if (error) throw new Error(error.message)
+      paid = true
+    } else if (session.status === 'expired') {
+      await db.from('payments').update({ status: 'expired' }).eq('id', p.id)
+    } else if (closeOpen && session.status === 'open') {
+      await stripe(`checkout/sessions/${p.provider_ref}/expire`, {})
+      await db.from('payments').update({ status: 'expired' }).eq('id', p.id)
+    }
+  }
+  return paid
+}
+
 // Refund every card deposit on a quote. Stripe's idempotency key stops a retry from refunding twice.
 async function refundDeposits(quoteId: string): Promise<number> {
   const { data: payments } = await db.from('payments').select('id, amount, provider_ref')
@@ -117,7 +140,40 @@ Deno.serve(async (req) => {
     const quote = await quoteFor(token)
     if (!quote) return reply({ error: 'This quote link is not valid.' }, 404)
 
-    if (action === 'confirm') return reply({ paid: await confirm(quote.id) })
+    if (action === 'confirm') {
+      const paid = await confirm(quote.id)
+      return reply({ paid, balance_paid: await confirmFinals(quote.id) })
+    }
+
+    if (action === 'balance') {
+      await confirmFinals(quote.id, true)
+      const { data: bal, error } = await db.rpc('balance_for_token', { p_token: token })
+      if (error) throw new Error(error.message)
+      if (!bal) return reply({ error: 'This booking has no move to pay for yet.' }, 409)
+      if (bal.status === 'cancelled') return reply({ error: 'This move was cancelled.' }, 409)
+      if (!bal.payable) return reply({ error: 'You can pay the balance once your move is done.' }, 409)
+      const cents = Math.round(Number(bal.balance) * 100)
+      if (cents < 50) return reply({ error: 'Nothing is left to pay. Thank you!' }, 409)
+
+      const request = quote.move_requests as unknown as { preferred_date: string; customers: { email: string | null } | null }
+      const site = siteFor(req.headers.get('origin'))
+      const form: Record<string, string> = {
+        mode: 'payment',
+        'line_items[0][quantity]': '1',
+        'line_items[0][price_data][currency]': 'usd',
+        'line_items[0][price_data][unit_amount]': String(cents),
+        'line_items[0][price_data][product_data][name]': `Moving balance for ${request.preferred_date}`,
+        client_reference_id: quote.id,
+        'metadata[quote_id]': quote.id,
+        'metadata[kind]': 'final',
+        success_url: `${site}/quote/${token}?paid=1`,
+        cancel_url: `${site}/quote/${token}`,
+      }
+      if (request.customers?.email) form.customer_email = request.customers.email
+      const session = await stripe('checkout/sessions', form)
+      await db.from('payments').insert({ quote_id: quote.id, kind: 'final', amount: cents / 100, status: 'pending', provider_ref: session.id })
+      return reply({ url: session.url })
+    }
 
     if (action === 'cancel') {
       const { data, error } = await db.rpc('cancel_booking', { p_token: token })
