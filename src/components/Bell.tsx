@@ -13,7 +13,7 @@ function ago(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-// Admin alerts: new quote requests, paid deposits and tomorrow's moves, the same events the emails cover
+// Admin alerts: the same events the emails cover (requests, payments, cancellations, tomorrow's moves, crews not full)
 export default function Bell() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [open, setOpen] = useState(false)
