@@ -7,11 +7,15 @@ import { TRUCK_SIZES, type Account, type Role } from '../../lib/types'
 export default function People() {
   const { account: me } = useAuth()
   const [people, setPeople] = useState<Account[]>([])
+  const [customerIds, setCustomerIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(() => {
     supabase.from('accounts').select('*').order('role').order('full_name')
       .then(({ data }) => setPeople((data ?? []) as Account[]))
+    // Customers who saved their bookings into an account aren't crew sign-ups
+    supabase.from('customers').select('account_id').not('account_id', 'is', null)
+      .then(({ data }) => setCustomerIds(new Set((data ?? []).map((c) => c.account_id as string))))
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -32,7 +36,7 @@ export default function People() {
     load()
   }
 
-  const waiting = people.filter((p) => p.role === 'client' && p.active)
+  const waiting = people.filter((p) => p.role === 'client' && p.active && !customerIds.has(p.id))
   const crew = people.filter((p) => p.role === 'crew')
   const admins = people.filter((p) => p.role === 'admin')
 

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 
@@ -41,6 +42,15 @@ export default function Book() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState<{ photosFailed: boolean } | null>(null)
+  const { account } = useAuth()
+
+  // A signed-in customer booking again: fill in their details
+  useEffect(() => {
+    if (account?.role !== 'client') return
+    setName((v) => v || account.full_name || '')
+    setPhone((v) => v || account.phone || '')
+    setEmail((v) => v || account.email || '')
+  }, [account])
 
   const office = type === 'office_move'
   const sizes = HOME_SIZES.filter((s) => (office ? s.includes('office') : !s.includes('office')))

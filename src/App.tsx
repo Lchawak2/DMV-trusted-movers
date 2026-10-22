@@ -5,6 +5,8 @@ import Book from './pages/Book'
 import Quote from './pages/Quote'
 import Policies from './pages/Policies'
 import Pending from './pages/Pending'
+import CustomerAccount from './pages/CustomerAccount'
+import MyMoves from './pages/customer/MyMoves'
 import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
 import Money from './pages/admin/Money'
@@ -32,11 +34,12 @@ export default function App() {
   const quote = pathname.match(/^\/quote\/([0-9a-f-]{36})$/)
   if (quote) return <Quote token={quote[1]} />
   if (loading) return <div className="center muted">Loading…</div>
-  if (!session) return <Login />
+  if (!session) return pathname === '/account' ? <CustomerAccount /> : <Login />
   if (!account) return <div className="center muted">Setting up your account…</div>
 
-  // Inactive accounts and clients (no client screens yet) wait for the admin
-  if (!account.active || account.role === 'client') return <Pending />
+  if (!account.active) return <Pending />
+  // Customers see their moves; a sign-up with no moves is waiting to join the crew
+  if (account.role === 'client') return <MyMoves />
 
   if (account.role === 'admin') {
     return (
