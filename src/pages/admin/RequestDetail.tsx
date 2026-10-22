@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, parseDay, smsLink } from '../../lib/format'
 import { JOB_TYPES, TRUCK_SIZES, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
+import ProfitPreview from './ProfitPreview'
 import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
 
 const QUOTE_DAYS = 3
@@ -160,6 +161,8 @@ export default function RequestDetail() {
               </select>
             </label>
           </div>
+          <ProfitPreview price={Number(form.price || 0)} deposit={Number(form.deposit || 0)} movers={Number(form.crew_size || 0)}
+            hours={Number(form.est_hours || 0)} truck={form.truck_size} />
           <label>Note to customer<textarea rows={2} value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="What the price includes" /></label>
           <p className="note">The quote is good for {QUOTE_DAYS} days.</p>
           {error && <p className="warn">{error}</p>}
