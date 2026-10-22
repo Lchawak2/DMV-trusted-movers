@@ -230,6 +230,26 @@ async function openSpots(jobId: string): Promise<Email[]> {
   }]
 }
 
+async function dateChange(jobId: string): Promise<Email[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, change_date, change_note, change_status, move_requests(customers(full_name, phone))')
+    .eq('id', jobId).maybeSingle()
+  // Skip one already answered before the email went out
+  if (!j || j.change_status !== 'pending' || !j.change_date) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string; phone: string | null } | null } | null)?.customers
+  return [{
+    to: await admins(),
+    subject: `New date asked: ${c?.full_name ?? 'Customer'}, ${day(j.change_date)}`,
+    text: lines(
+      `${c?.full_name ?? 'A customer'} asked to change their move from ${day(j.job_date)} to ${day(j.change_date)}.`,
+      j.change_note && `Note: ${j.change_note}`,
+      c?.phone && `Phone: ${c.phone}`,
+      '',
+      `Approve or decline: ${LIVE_SITE}/jobs/${jobId}`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -241,7 +261,7 @@ async function send(key: string, e: Email) {
 
 const builders: Record<string, (id: string) => Promise<Email[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
-  balance_paid: balancePaid, open_spots: openSpots,
+  balance_paid: balancePaid, open_spots: openSpots, date_change: dateChange,
 }
 
 Deno.serve(async () => {

@@ -64,7 +64,7 @@ export default function Policies() {
           <li><strong>Less than 72 hours before your move:</strong> you can still cancel, but the deposit is kept.</li>
           <li><strong>If we have to cancel:</strong> you get your full deposit back.</li>
         </ul>
-        <p>To cancel, open your booking link and tap "Cancel my move". To change your date, reply to our text or email us and we'll move it if a crew is free.</p>
+        <p>To cancel, open your booking link and tap "Cancel my move". To change your date, tap "Change my date" and pick a new day. We'll confirm it if a crew is free.</p>
       </section>
 
       <section className="card policy" id="privacy">

@@ -36,6 +36,9 @@ export interface Job {
   quote_id: string | null
   cancelled_at: string | null
   cancelled_by: 'customer' | 'admin' | null
+  change_date: string | null
+  change_note: string | null
+  change_status: 'pending' | 'declined' | null
 }
 
 export interface Assignment {
