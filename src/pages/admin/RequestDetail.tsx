@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
-import { dateTime, dayHeading, money, parseDay } from '../../lib/format'
+import { dateTime, dayHeading, money, parseDay, smsLink } from '../../lib/format'
 import { JOB_TYPES, TRUCK_SIZES, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
 import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
@@ -107,7 +107,7 @@ export default function RequestDetail() {
     `This price is good until ${q.expires_at ? new Date(q.expires_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'further notice'}.`,
   ].filter(Boolean).join('\n')
   const askText = `Hi ${first}, thanks for your moving request for ${when}. Could you send a few photos of the rooms and any large items so we can price it?`
-  const sms = (body: string) => c?.phone ? `sms:${c.phone}?&body=${encodeURIComponent(body)}` : null
+  const sms = (body: string) => c?.phone ? smsLink(c.phone, body) : null
   const mail = (body: string) => c?.email ? `mailto:${c.email}?subject=${encodeURIComponent('Your moving quote')}&body=${encodeURIComponent(body)}` : null
 
   return (

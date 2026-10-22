@@ -5,7 +5,7 @@ import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
-import { dateTime, dayHeading, fromLocalInput, money, toLocalInput, windowText } from '../../lib/format'
+import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type TimeEntry, type TruckRental,
@@ -355,7 +355,7 @@ function RentalSection({ jobId, rental, onChange }: { jobId: string; rental: Tru
 // Booked-online jobs: the customer pays the balance by card from their booking link
 function PayLink({ quoteId, due }: { quoteId: string; due: number }) {
   const [info, setInfo] = useState<{ link: string; phone: string | null; name: string } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState('')
 
   useEffect(() => {
     supabase.from('quotes').select('token, move_requests(customers(full_name, phone))').eq('id', quoteId).maybeSingle()
@@ -368,11 +368,16 @@ function PayLink({ quoteId, due }: { quoteId: string; due: number }) {
 
   if (!info) return null
   const text = `Hi ${info.name}, thanks for moving with DMV Trusted Movers! Your balance is ${money(due)}. You can pay by card here: ${info.link}`
+  const copy = (what: string, value: string) => { navigator.clipboard?.writeText(value); setCopied(what) }
   return (
-    <div className="row">
-      {info.phone && <a className="primary small-btn" href={`sms:${info.phone}?&body=${encodeURIComponent(text)}`}>Text payment link</a>}
-      <button className="secondary small-btn" onClick={() => { navigator.clipboard?.writeText(info.link); setCopied(true) }}>{copied ? 'Copied' : 'Copy link'}</button>
-    </div>
+    <>
+      <div className="row">
+        {info.phone && <a className="primary small-btn" href={smsLink(info.phone, text)}>Text payment link</a>}
+        <button className="secondary small-btn" onClick={() => copy('message', text)}>{copied === 'message' ? 'Copied' : 'Copy message'}</button>
+        <button className="secondary small-btn" onClick={() => copy('link', info.link)}>{copied === 'link' ? 'Copied' : 'Copy link'}</button>
+      </div>
+      <p className="muted small">{info.phone ? 'Texting opens your phone\'s messages app. On a computer, copy the message and send it from your phone.' : 'No phone number on file. Copy the message and send it another way.'}</p>
+    </>
   )
 }
 
