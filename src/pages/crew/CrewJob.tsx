@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
 import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
-import { JOB_TYPES, type Assignment, type Job, type TimeEntry, type TruckRental } from '../../lib/types'
+import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type TimeEntry, type TruckRental } from '../../lib/types'
 
 export default function CrewJob() {
   const { id } = useParams() as { id: string }
@@ -77,6 +77,7 @@ export default function CrewJob() {
             <div className="job-amount">
               <div>{money(assignment.crew_pay)}</div>
               <div className="job-sub">{assignment.pay_type === 'hourly' ? 'Your pay per hour' : 'Your pay'}</div>
+              {assignment.paid_at && <div className="job-sub">Paid {money(assignment.paid_amount)} · {PAY_METHODS[assignment.paid_method!]}</div>}
             </div>
           </div>
         </div>

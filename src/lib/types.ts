@@ -13,6 +13,7 @@ export interface Account {
   truck_sizes: string[]
   can_lead: boolean
   active: boolean
+  zelle: string | null
 }
 
 export interface Job {
@@ -42,6 +43,14 @@ export interface Assignment {
   crew_pay: number
   pay_type: 'flat' | 'hourly'
   status: AssignmentStatus
+  paid_at: string | null
+  paid_amount: number | null
+  paid_method: PayMethod | null
+}
+
+export type PayMethod = 'cash' | 'zelle' | 'cash_app' | 'venmo' | 'check' | 'other'
+export const PAY_METHODS: Record<PayMethod, string> = {
+  cash: 'Cash', zelle: 'Zelle', cash_app: 'Cash App', venmo: 'Venmo', check: 'Check', other: 'Other',
 }
 
 export interface TruckRental {

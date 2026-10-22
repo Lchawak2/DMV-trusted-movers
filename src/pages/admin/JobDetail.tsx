@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, toLocalInput, windowText } from '../../lib/format'
 import {
-  JOB_TYPES, TRUCK_SIZES,
+  JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type TimeEntry, type TruckRental,
 } from '../../lib/types'
 
@@ -168,6 +168,7 @@ function CrewSection({ job, crew, onChange }: { job: Job; crew: CrewRow[]; onCha
               <div className="list-main">
                 <strong>{a.accounts.full_name ?? a.accounts.email}</strong>
                 <span className="muted"> · {a.role} · {a.status}</span>
+                {a.paid_at && <div className="small tone-good">Paid {money(a.paid_amount)} · {PAY_METHODS[a.paid_method!]}</div>}
                 {entry && (
                   <div className="muted small">
                     In {dateTime(entry.clock_in)}{entry.clock_out ? ` · Out ${dateTime(entry.clock_out)}` : ' · On the clock'}
