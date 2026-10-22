@@ -230,3 +230,7 @@ input.pay { width: 84px; padding: 6px 8px; }
 .bell-dot.deposit_paid { background: var(--green); }
 .bell-dot.move_reminder { background: var(--amber); }
 .bell-item.new { background: #fbf6ee; }
+
+/* Crew payouts */
+.payout-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.payout-row select { flex: 1; min-width: 0; }

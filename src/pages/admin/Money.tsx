@@ -79,6 +79,7 @@ export default function Money() {
           ))}
         </ul>
         {crew.length > 0 && <div className="total-row"><span>Total</span><span>{dollars(owedToCrew)}</span></div>}
+        <Link to="/payouts" className="secondary block">Pay crew</Link>
       </section>
     </Layout>
   )
