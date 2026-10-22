@@ -295,7 +295,8 @@ a.topbar-name, a.plain { color: inherit; text-decoration: none; }
 .site-hero p { font-size: 18px; line-height: 1.5; max-width: 620px; opacity: 0.9; }
 .site-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 .site-btn { display: inline-block; padding: 14px 22px; border-radius: 8px; font-weight: 700; text-decoration: none; text-align: center; }
-.site-btn.gold { background: var(--site-accent); color: #fff; }
+.site-btn.gold { background: #fff; color: var(--site-main); }
+.site-sec .site-btn.gold { background: var(--site-main); color: #fff; }
 .site-btn.ghost { border: 2px solid rgba(255, 255, 255, 0.6); color: #fff; }
 .site-rating { margin-top: 20px !important; font-size: 15px !important; color: var(--star); }
 .site-sec { padding: 56px 0; }
