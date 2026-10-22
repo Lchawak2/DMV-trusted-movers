@@ -4,7 +4,7 @@ import { parseDay } from '../../lib/format'
 import { assignmentPay, hoursWorked } from '../../lib/pay'
 import type { Account, Assignment, Job, TimeEntry } from '../../lib/types'
 
-export type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone'> | null; time_entries: TimeEntry[] }
+export type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone' | 'zelle'> | null; time_entries: TimeEntry[] }
 type One<T> = T | T[] | null
 export type JobRow = Job & {
   assignments: CrewRow[]

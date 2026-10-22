@@ -8,7 +8,7 @@ import { JOB_TYPES, PAY_METHODS, type Job, type PayMethod } from '../../lib/type
 import { iso, type CrewRow } from './jobData'
 
 type Row = CrewRow & { jobs: Pick<Job, 'id' | 'job_date' | 'job_type' | 'est_hours' | 'status'> }
-const SELECT = '*, accounts(full_name, email, phone), time_entries(*), jobs!inner(id, job_date, job_type, est_hours, status)'
+const SELECT = '*, accounts(full_name, email, phone, zelle), time_entries(*), jobs!inner(id, job_date, job_type, est_hours, status)'
 
 // Crew are paid after each job: everyone who worked a job up to today and hasn't been paid yet
 export default function Payouts() {
@@ -112,6 +112,7 @@ function OwedRow({ a, onPaid }: { a: Row; onPaid: (a: Row, amount: number, metho
   const [amount, setAmount] = useState(String(due))
   const [method, setMethod] = useState<PayMethod>('zelle')
   const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
   const onClock = a.time_entries.some((t) => !t.clock_out)
   const hours = a.pay_type === 'hourly' ? (a.time_entries.length ? 'hours on the clock' : 'estimated hours') : null
 
@@ -125,6 +126,14 @@ function OwedRow({ a, onPaid }: { a: Row; onPaid: (a: Row, amount: number, metho
             {a.accounts?.phone ? ` · ${a.accounts.phone}` : ''}
           </div>
           {onClock && <div className="small tone-warn">Still on the clock</div>}
+          {a.accounts?.zelle ? (
+            <div className="small">
+              Zelle: <strong>{a.accounts.zelle}</strong>{' '}
+              <button className="link" onClick={() => { navigator.clipboard?.writeText(a.accounts!.zelle!); setCopied(true) }}>{copied ? 'Copied' : 'Copy'}</button>
+            </div>
+          ) : (
+            <div className="small muted">No Zelle saved yet. Add it in People.</div>
+          )}
         </div>
         <strong>{money(due)}</strong>
       </div>

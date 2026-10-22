@@ -8,12 +8,13 @@ export default function Profile() {
   const [fullName, setFullName] = useState(account?.full_name ?? '')
   const [phone, setPhone] = useState(account?.phone ?? '')
   const [language, setLanguage] = useState(account?.language ?? 'en')
+  const [zelle, setZelle] = useState(account?.zelle ?? '')
   const [saved, setSaved] = useState(false)
 
   async function save(e: FormEvent) {
     e.preventDefault()
     if (!account) return
-    await supabase.from('accounts').update({ full_name: fullName, phone, language }).eq('id', account.id)
+    await supabase.from('accounts').update({ full_name: fullName, phone, language, zelle: zelle.trim() || null }).eq('id', account.id)
     await refresh()
     setSaved(true)
   }
@@ -24,6 +25,12 @@ export default function Profile() {
       <form className="card form" onSubmit={save}>
         <label>Full name<input value={fullName} onChange={(e) => { setFullName(e.target.value); setSaved(false) }} /></label>
         <label>Phone<input type="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setSaved(false) }} /></label>
+        {account?.role === 'crew' && (
+          <label>
+            Zelle phone or email
+            <input value={zelle} maxLength={100} placeholder="Where you get paid" onChange={(e) => { setZelle(e.target.value); setSaved(false) }} />
+          </label>
+        )}
         <label>
           Language
           <select value={language} onChange={(e) => { setLanguage(e.target.value); setSaved(false) }}>

@@ -81,6 +81,11 @@ export default function People() {
                   )
                 })}
               </div>
+              <label className="zelle">
+                Zelle
+                <input defaultValue={p.zelle ?? ''} maxLength={100} placeholder="Phone or email"
+                  onBlur={(e) => e.target.value.trim() !== (p.zelle ?? '') && update(p, { zelle: e.target.value.trim() || null })} />
+              </label>
               <div className="row">
                 <button className="link" onClick={() => update(p, { active: !p.active })}>{p.active ? 'Switch off' : 'Switch back on'}</button>
               </div>

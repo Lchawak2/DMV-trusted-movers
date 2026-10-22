@@ -234,3 +234,5 @@ input.pay { width: 84px; padding: 6px 8px; }
 /* Crew payouts */
 .payout-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 .payout-row select { flex: 1; min-width: 0; }
+.zelle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.zelle input { flex: 1; padding: 6px 8px; }

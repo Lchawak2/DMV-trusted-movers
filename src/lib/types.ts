@@ -13,6 +13,7 @@ export interface Account {
   truck_sizes: string[]
   can_lead: boolean
   active: boolean
+  zelle: string | null
 }
 
 export interface Job {
