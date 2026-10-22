@@ -109,6 +109,15 @@ export default function Website() {
         </section>
 
         <section className="card form">
+          <h3>Colors</h3>
+          <div className="row">
+            <label>Main color<input type="color" {...text('main_color')} /></label>
+            <label>Button color<input type="color" {...text('accent_color')} /></label>
+          </div>
+          <button type="button" className="link" onClick={() => change({ main_color: DEFAULT_SITE.main_color, accent_color: DEFAULT_SITE.accent_color })}>Go back to the starting colors</button>
+        </section>
+
+        <section className="card form">
           <h3>Contact</h3>
           <label>Phone<input type="tel" {...text('phone')} placeholder="(240) 555-0123" /></label>
           <label>Email<input type="email" {...text('email')} /></label>

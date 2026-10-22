@@ -18,6 +18,8 @@ export type SiteContent = {
   insurance: string
   hero_photo: string | null
   gallery: string[]
+  main_color: string
+  accent_color: string
 }
 
 export const DEFAULT_SITE: SiteContent = {
@@ -43,6 +45,8 @@ export const DEFAULT_SITE: SiteContent = {
   insurance: '',
   hero_photo: null,
   gallery: [],
+  main_color: '#0f1b2d',
+  accent_color: '#b9a07c',
 }
 
 export type SiteData = { site: SiteContent; review_url: string | null; rating: number | null; ratings: number }
@@ -76,4 +80,10 @@ export function photoUrl(path: string) {
 export function telLink(phone: string) {
   const digits = phone.replace(/\D/g, '')
   return `tel:${digits.length === 10 ? '+1' + digits : '+' + digits}`
+}
+
+// "#0f1b2d" → "15,27,45", for see-through overlays in the main color
+export function rgb(hex: string) {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`
 }

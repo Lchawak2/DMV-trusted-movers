@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { loadSite, photoUrl, telLink, type SiteData } from '../lib/site'
+import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
 
 const STEPS = [
   { title: 'Tell us about your move', text: 'Fill in a short form with your dates, addresses and a few photos. No account needed.' },
@@ -23,7 +23,7 @@ export default function Home() {
   ].filter(Boolean)
 
   return (
-    <div className="site">
+    <div className="site" style={{ '--site-main': site.main_color, '--site-accent': site.accent_color } as CSSProperties}>
       <header className="site-bar">
         <div className="site-wrap site-bar-in">
           <span className="site-name">DMV Trusted Movers</span>
@@ -34,7 +34,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="site-hero" style={site.hero_photo ? { backgroundImage: `linear-gradient(rgba(15,27,45,.72), rgba(15,27,45,.72)), url(${photoUrl(site.hero_photo)})` } : undefined}>
+      <section className="site-hero" style={site.hero_photo ? { backgroundImage: `linear-gradient(rgba(${rgb(site.main_color)},.72), rgba(${rgb(site.main_color)},.72)), url(${photoUrl(site.hero_photo)})` } : undefined}>
         <div className="site-wrap">
           <h1>{site.headline}</h1>
           <p>{site.subheadline}</p>
