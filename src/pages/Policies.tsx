@@ -36,6 +36,7 @@ export default function Policies() {
 
         <h3>Payment</h3>
         <p>The balance (your price, plus any extras, minus the deposit) is due when the move is done. You can pay by card from your booking link. Card payments are handled by Stripe.</p>
+        <p>Tips are never expected. If you add one when you pay, all of it goes to the movers on your job, split evenly.</p>
 
         <h3>Your part</h3>
         <ul>

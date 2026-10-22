@@ -177,3 +177,6 @@ export interface Quote {
   expires_at: string | null
   token: string
 }
+
+// Card tips on a job, split evenly among the movers who worked it (job_tips RPC)
+export type JobTips = { job_id: string; total: number; movers: number; share: number }

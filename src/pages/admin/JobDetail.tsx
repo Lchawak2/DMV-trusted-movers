@@ -8,7 +8,7 @@ import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
-  type Account, type Assignment, type Job, type JobCost, type JobStatus, type TimeEntry, type TruckRental,
+  type Account, type Assignment, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
 } from '../../lib/types'
 
 type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone'>; time_entries: TimeEntry[] }
@@ -486,10 +486,15 @@ function CostsSection({ jobId, costs, onChange }: { jobId: string; costs: JobCos
 
 function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: string; quoteId: string | null; extrasTotal: number; crewPay: number; costs: number }) {
   const [row, setRow] = useState<{ price: number; paid: number } | null>(null)
+  const [tips, setTips] = useState<JobTips | null>(null)
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('job_prices').select('price, paid').eq('job_id', jobId).maybeSingle()
+    const [{ data }, t] = await Promise.all([
+      supabase.from('job_prices').select('price, paid').eq('job_id', jobId).maybeSingle(),
+      supabase.rpc('job_tips', { p_jobs: [jobId] }),
+    ])
     setRow(data ? { price: Number(data.price), paid: Number(data.paid) } : { price: 0, paid: 0 })
+    setTips(((t.data ?? []) as JobTips[])[0] ?? null)
   }, [jobId])
 
   useEffect(() => { load() }, [load])
@@ -517,7 +522,14 @@ function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: 
         <li><span>Truck and other costs</span><span>−{money(costs)}</span></li>
         <li><span>Kept</span><strong className={kept < 0 ? 'warn' : ''}>{money(kept)}</strong></li>
         <li><span>Balance due from customer</span><strong>{money(Math.max(charged - row.paid, 0))}</strong></li>
+        {tips && (
+          <li>
+            <span>Tips by card, for the crew{tips.movers > 1 ? ` (${money(tips.share)} each)` : ''}</span>
+            <strong className="tone-good">{money(tips.total)}</strong>
+          </li>
+        )}
       </ul>
+      {tips && <p className="note">Tips go to the movers on top of their pay, and show in Pay crew. They aren't part of what you keep.</p>}
       {quoteId && charged - row.paid > 0 && <PayLink quoteId={quoteId} due={charged - row.paid} />}
     </section>
   )

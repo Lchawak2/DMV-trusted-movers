@@ -33,6 +33,7 @@ type QuoteView = {
   change_date: string | null
   change_status: 'pending' | 'declined' | null
   earliest_change: string
+  tipped: number
 }
 
 const longDay = (day: string) => parseDay(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -48,6 +49,7 @@ export default function Quote({ token }: { token: string }) {
   const [moving, setMoving] = useState(false)
   const [newDate, setNewDate] = useState('')
   const [moveNote, setMoveNote] = useState('')
+  const [tip, setTip] = useState(0)
   const returning = new URLSearchParams(location.search).has('paid')
 
   async function load() {
@@ -76,10 +78,11 @@ export default function Quote({ token }: { token: string }) {
     location.href = data.url
   }
 
+  // Pays the balance plus the tip picked, or just the tip once the balance is paid
   async function payBalance() {
     setBusy(true)
     setError(null)
-    const { data, error } = await supabase.functions.invoke('deposit', { body: { action: 'balance', token } })
+    const { data, error } = await supabase.functions.invoke('deposit', { body: { action: 'balance', token, tip } })
     const message = error ? await errorText(error) : data?.error
     if (message) { setBusy(false); return setError(message) }
     location.href = data.url
@@ -186,12 +189,20 @@ export default function Quote({ token }: { token: string }) {
                 <li><span>Already paid</span><span>{money(Number(q.total) - q.balance_due)}</span></li>
                 <li><strong>Left to pay</strong><strong>{money(q.balance_due)}</strong></li>
               </ul>
+              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
               {error && <p className="warn">{error}</p>}
-              <button className="primary" disabled={busy} onClick={payBalance}>{busy ? 'Opening payment…' : `Pay ${money(q.balance_due)}`}</button>
+              <button className="primary" disabled={busy} onClick={payBalance}>{busy ? 'Opening payment…' : `Pay ${money(q.balance_due + tip)}`}</button>
               <p className="note">You'll pay securely with Stripe. The total includes anything added on the day, like extra items.</p>
             </>
+          ) : q.tipped > 0 ? (
+            <p className="center-text"><strong>Paid in full.</strong> Thank you for the {money(q.tipped)} tip! It goes to your movers.</p>
           ) : (
-            <p className="center-text"><strong>Paid in full.</strong> Thank you for moving with us.</p>
+            <>
+              <p className="center-text"><strong>Paid in full.</strong> Thank you for moving with us.</p>
+              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
+              {error && <p className="warn">{error}</p>}
+              {tip > 0 && <button className="primary" disabled={busy} onClick={payBalance}>{busy ? 'Opening payment…' : `Tip ${money(tip)}`}</button>}
+            </>
           )}
         </section>
       )}
@@ -255,6 +266,32 @@ export default function Quote({ token }: { token: string }) {
       {q.status === 'expired' && <p className="note center-text">This quote has expired. Reply to our text and we'll send a fresh one.</p>}
       {q.status === 'superseded' && <p className="note center-text">We sent you a newer quote. Please use the latest link.</p>}
     </PublicPage>
+  )
+}
+
+// Tip for the crew: a share of the move total, a custom amount, or none
+function TipPicker({ total, tip, onChange }: { total: number; tip: number; onChange: (n: number) => void }) {
+  const [other, setOther] = useState(false)
+  const choices = total > 0 ? [...new Set([10, 15, 20].map((pct) => Math.max(Math.round((total * pct) / 100), 1)))] : [20, 40, 60]
+  const pick = (n: number) => { setOther(false); onChange(n) }
+  return (
+    <div className="tip-picker">
+      <strong>Add a tip for your crew?</strong>
+      <div className="tip-choices">
+        <button type="button" className={!other && tip === 0 ? 'on' : ''} onClick={() => pick(0)}>No tip</button>
+        {choices.map((n) => (
+          <button type="button" key={n} className={!other && tip === n ? 'on' : ''} onClick={() => pick(n)}>{money(n)}</button>
+        ))}
+        <button type="button" className={other ? 'on' : ''} onClick={() => { setOther(true); onChange(0) }}>Other</button>
+      </div>
+      {other && (
+        <label>Tip amount $
+          <input type="number" min={1} max={1000} step={1} inputMode="decimal" autoFocus
+            onChange={(e) => onChange(Math.min(Math.max(Number(e.target.value) || 0, 0), 1000))} />
+        </label>
+      )}
+      <p className="note">Every dollar goes to the movers who did your move, split evenly.</p>
+    </div>
   )
 }
 
