@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
@@ -14,6 +14,8 @@ import {
 type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone'>; time_entries: TimeEntry[] }
 
 const STATUSES: JobStatus[] = ['scheduled', 'in_progress', 'completed', 'on_hold', 'cancelled']
+const TABS = { job: 'Job', crew: 'Crew', money: 'Money' } as const
+type Tab = keyof typeof TABS
 
 export default function AdminJobDetail() {
   const { id } = useParams() as { id: string }
@@ -23,6 +25,10 @@ export default function AdminJobDetail() {
   const [rental, setRental] = useState<TruckRental | null>(null)
   const [costs, setCosts] = useState<JobCost[]>([])
   const day = useJobDay(id)
+  // The open tab lives in the link (?tab=crew), so alerts can open the right one
+  const [params, setParams] = useSearchParams()
+  const asked = params.get('tab') ?? ''
+  const tab: Tab = asked in TABS ? (asked as Tab) : 'job'
 
   const load = useCallback(async () => {
     const [j, a, r, c] = await Promise.all([
@@ -56,6 +62,9 @@ export default function AdminJobDetail() {
   const totalPay = crew.reduce((s, a) => s + assignmentPay(a, job, a.time_entries), 0)
   const totalCosts = costs.reduce((s, c) => s + Number(c.amount), 0)
 
+  const accepted = crew.filter((a) => a.status === 'accepted').length
+  const crewLabel = job.crew_size ? `Crew ${accepted}/${job.crew_size}` : 'Crew'
+
   return (
     <Layout back="/jobs" title="Job">
       <section className="card">
@@ -70,12 +79,6 @@ export default function AdminJobDetail() {
           <li>{job.from_address}</li>
           {job.to_address && <li>{job.to_address}</li>}
         </ol>
-        <div className="facts">
-          <div><span>Truck</span>{job.truck_size ?? '—'}</div>
-          <div><span>Crew</span>{job.crew_size ?? '—'}</div>
-          <div><span>Hours</span>{job.est_hours ?? '—'}</div>
-        </div>
-        {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
         <label>
           Status
           <select value={job.status} onChange={(e) => setStatus(e.target.value as JobStatus)}>
@@ -85,14 +88,41 @@ export default function AdminJobDetail() {
       </section>
 
       {job.status === 'cancelled' && <CancelledSection job={job} />}
-      <CrewSection job={job} crew={crew} onChange={load} />
-      <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
-      <RentalSection jobId={id} rental={rental} onChange={load} />
-      <CostsSection jobId={id} costs={costs} onChange={load} />
 
-      <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
+      <div className="segmented" role="tablist">
+        {(Object.keys(TABS) as Tab[]).map((t) => (
+          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''}
+            onClick={() => setParams(t === 'job' ? {} : { tab: t }, { replace: true })}>
+            {t === 'crew' ? crewLabel : TABS[t]}
+            {t === 'crew' && job.crew_size != null && accepted < job.crew_size && <span className="seg-dot" />}
+          </button>
+        ))}
+      </div>
 
-      <button className="danger" onClick={remove}>Delete job</button>
+      {tab === 'job' && (
+        <>
+          <section className="card">
+            <div className="facts">
+              <div><span>Truck</span>{job.truck_size ?? '—'}</div>
+              <div><span>Crew</span>{job.crew_size ?? '—'}</div>
+              <div><span>Hours</span>{job.est_hours ?? '—'}</div>
+            </div>
+            {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
+          </section>
+          <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
+          <RentalSection jobId={id} rental={rental} onChange={load} />
+          <button className="danger" onClick={remove}>Delete job</button>
+        </>
+      )}
+
+      {tab === 'crew' && <CrewSection job={job} crew={crew} onChange={load} />}
+
+      {tab === 'money' && (
+        <>
+          <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
+          <CostsSection jobId={id} costs={costs} onChange={load} />
+        </>
+      )}
     </Layout>
   )
 }
