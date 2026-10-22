@@ -30,8 +30,12 @@ type QuoteView = {
   total: number | null
   balance_due: number | null
   balance_payable: boolean | null
+  change_date: string | null
+  change_status: 'pending' | 'declined' | null
+  earliest_change: string
 }
 
+const longDay = (day: string) => parseDay(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
 // The customer's quote, opened from the link in our text or email
@@ -41,6 +45,9 @@ export default function Quote({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
   const [cancelNote, setCancelNote] = useState<string | null>(null)
+  const [moving, setMoving] = useState(false)
+  const [newDate, setNewDate] = useState('')
+  const [moveNote, setMoveNote] = useState('')
   const returning = new URLSearchParams(location.search).has('paid')
 
   async function load() {
@@ -89,6 +96,18 @@ export default function Quote({ token }: { token: string }) {
     setCancelNote(data.refund_failed
       ? "We'll refund your deposit by hand in the next day or two."
       : data.refunded > 0 ? `Your ${money(data.refunded)} deposit is on its way back to your card. Banks take 5 to 10 days to show it.` : null)
+    load()
+  }
+
+  async function askNewDate() {
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.rpc('request_date_change', { p_token: token, p_date: newDate, p_note: moveNote || null })
+    setBusy(false)
+    if (error) return setError(error.message)
+    setMoving(false)
+    setNewDate('')
+    setMoveNote('')
     load()
   }
 
@@ -180,9 +199,26 @@ export default function Quote({ token }: { token: string }) {
       {booked && q.job_status && !q.started && (
         <section className="card form">
           <h3>Need to change or cancel?</h3>
-          <p className="note">To move to a different date, reply to our text or email and we'll find a new time.</p>
-          {!asking ? (
-            <button className="secondary" onClick={() => setAsking(true)}>Cancel my move</button>
+          {q.change_status === 'pending' && q.change_date && (
+            <p className="note">You asked to move to <strong>{longDay(q.change_date)}</strong>. We'll check our crew and confirm. Your move stays on {longDay(q.preferred_date)} until then.</p>
+          )}
+          {q.change_status === 'declined' && q.change_date && (
+            <p className="warn">We can't move you to {longDay(q.change_date)}. Please pick another day, or reply to our text and we'll find one together.</p>
+          )}
+          {moving ? (
+            <>
+              <label>New date<input type="date" min={q.earliest_change} value={newDate} onChange={(e) => setNewDate(e.target.value)} /></label>
+              <label>Anything we should know? (optional)<input value={moveNote} maxLength={500} onChange={(e) => setMoveNote(e.target.value)} placeholder="For example: mornings only" /></label>
+              {error && <p className="warn">{error}</p>}
+              <button className="primary" disabled={busy || !newDate} onClick={askNewDate}>{busy ? 'Sending…' : 'Ask for this date'}</button>
+              <button className="link" onClick={() => { setMoving(false); setError(null) }}>Never mind</button>
+              <p className="note">Same price and arrival time. We'll confirm the new date with you.</p>
+            </>
+          ) : !asking ? (
+            <div className="row">
+              <button className="secondary" onClick={() => { setMoving(true); setError(null) }}>{q.change_status === 'pending' ? 'Pick a different date' : 'Change my date'}</button>
+              <button className="secondary" onClick={() => setAsking(true)}>Cancel my move</button>
+            </div>
           ) : (
             <>
               <p>

@@ -88,6 +88,7 @@ export default function AdminJobDetail() {
       </section>
 
       {job.status === 'cancelled' && <CancelledSection job={job} />}
+      {job.change_status === 'pending' && job.change_date && job.status !== 'cancelled' && <DateChangeSection job={job} onChange={load} />}
 
       <div className="segmented" role="tablist">
         {(Object.keys(TABS) as Tab[]).map((t) => (
@@ -124,6 +125,35 @@ export default function AdminJobDetail() {
         </>
       )}
     </Layout>
+  )
+}
+
+// The customer asked for a new date from their booking link
+function DateChangeSection({ job, onChange }: { job: Job; onChange: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function answer(approve: boolean) {
+    setBusy(true)
+    setError('')
+    const { error } = await supabase.rpc('answer_date_change', { p_job: job.id, p_approve: approve })
+    setBusy(false)
+    if (error) return setError(error.message)
+    onChange()
+  }
+
+  return (
+    <section className="card change-card">
+      <h3>Customer asked for a new date</h3>
+      <p><strong>{dayHeading(job.change_date!)}</strong> instead of {dayHeading(job.job_date)}, same time.</p>
+      {job.change_note && <div className="notes"><span>Note</span>{job.change_note}</div>}
+      <p className="note">Approving moves the job. Check your crew can make the new day, or change them on the Crew tab after.</p>
+      {error && <p className="warn">{error}</p>}
+      <div className="row">
+        <button className="primary" disabled={busy} onClick={() => answer(true)}>Approve</button>
+        <button className="secondary" disabled={busy} onClick={() => answer(false)}>Decline</button>
+      </div>
+    </section>
   )
 }
 
