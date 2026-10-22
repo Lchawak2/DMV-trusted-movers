@@ -208,5 +208,5 @@ export default function CrewJob() {
 function LocationNote({ state }: { state: ReturnType<typeof useShareLocation> }) {
   if (state === 'denied') return <p className="warn small">{t('Location is off for this app. Turn it on in your phone settings so the office can see where the crew is.', 'La ubicación está apagada para esta app. Actívala en los ajustes del teléfono para que la oficina vea dónde está el equipo.')}</p>
   if (state === 'unsupported') return null
-  return <p className="muted small">📍 {t('Your location is shared with the office while you are on the clock. Keep this page open.', 'Tu ubicación se comparte con la oficina mientras trabajas. Mantén esta página abierta.')}</p>
+  return <p className="muted small">📍 {t('Your location is shared with the office while you are on the clock. Keep this page open; the screen stays on until you clock out.', 'Tu ubicación se comparte con la oficina mientras trabajas. Mantén esta página abierta; la pantalla se queda encendida hasta que marques la salida.')}</p>
 }
