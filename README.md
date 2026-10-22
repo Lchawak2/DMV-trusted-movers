@@ -52,3 +52,18 @@ Any static host works. On Vercel or Netlify, import this repo, set `VITE_SUPABAS
 The `deposit` Edge Function (in `supabase/functions/deposit`) opens a Stripe Checkout page for a quote's deposit and books the job once Stripe says it's paid. It's deployed with JWT checks off because guests have no login; it only acts on a valid quote link. It needs one secret, set in Supabase under Edge Functions › Secrets (never in the repo):
 
 - `STRIPE_SECRET_KEY`: the Stripe secret key (`sk_test_…` while testing, `sk_live_…` when you go live)
+
+## Email notifications
+
+The database queues an email in `notifications` when a quote request comes in, when a deposit is paid, and each morning for moves happening the next day. The `notify` Edge Function (in `supabase/functions/notify`) sends what's queued through [Resend](https://resend.com). The database wakes it right away through `pg_net`, and a `pg_cron` job retries anything unsent every 10 minutes. Anything still unsent after 2 days is dropped, so old emails don't pile up while the key is missing.
+
+Who gets what:
+
+- **New quote request:** the admins get the request details and a link to price it.
+- **Deposit paid:** the admins get a note, and the customer gets a receipt.
+- **Day before a move:** the crew who accepted the job get the time and address, and the customer gets a reminder with tips.
+
+Secrets, set in Supabase under Edge Functions › Secrets (never in the repo):
+
+- `RESEND_API_KEY`: the Resend API key. Until it's set, nothing is sent.
+- `NOTIFY_FROM` (optional): a sender on a domain you've verified in Resend, like `DMV Trusted Movers <hello@yourdomain.com>`. Without it, emails come from Resend's test address, which only delivers to the email you signed up to Resend with, so only the admin emails go out until it's set. Sign up to Resend with the same email your admin account uses.
