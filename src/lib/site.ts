@@ -3,9 +3,7 @@ import { supabase } from './supabase'
 // The public website's words and photos. The admin edits them on the Website page;
 // anything left blank falls back to the defaults below.
 export type SiteContent = {
-  eyebrow: string
   headline: string
-  tagline: string
   subheadline: string
   phone: string
   email: string
@@ -25,11 +23,9 @@ export type SiteContent = {
 }
 
 export const DEFAULT_SITE: SiteContent = {
-  eyebrow: 'Available only in the DMV area',
-  headline: 'Reliable Moving Services You Can Trust',
-  tagline: 'Local & Commercial Moving Solutions',
-  subheadline: 'Serving Washington DC, Northern Virginia, and Maryland. Protecting your home, handling your belongings with respect, and delivering on-time.',
-  phone: '(240) 438-0930',
+  headline: 'Moving in DC, Maryland and Virginia, done right',
+  subheadline: 'Homes, apartments and offices. Careful movers, clear prices, and a crew that shows up on time.',
+  phone: '',
   email: 'dmvtrustedmoversservices@gmail.com',
   area: 'Washington DC, Maryland and Northern Virginia',
   hours: 'Every day, 7am to 8pm',

@@ -93,14 +93,12 @@ export default function Website() {
 
         <section className="card form">
           <h3>Top of the page</h3>
-          <label>Small line above the headline<input {...text('eyebrow')} placeholder={DEFAULT_SITE.eyebrow} /></label>
           <label>Headline<input {...text('headline')} placeholder={DEFAULT_SITE.headline} /></label>
-          <label>Line under the headline<input {...text('tagline')} placeholder={DEFAULT_SITE.tagline} /></label>
-          <label>Short description<textarea rows={3} {...text('subheadline')} placeholder={DEFAULT_SITE.subheadline} /></label>
+          <label>Under the headline<textarea rows={3} {...text('subheadline')} placeholder={DEFAULT_SITE.subheadline} /></label>
           <div className="site-edit-photo">
             {site.hero_photo
               ? <img src={photoUrl(site.hero_photo)} alt="" />
-              : <span className="muted small">No background photo. The top of the page is white.</span>}
+              : <span className="muted small">No background photo. The top shows your navy color.</span>}
             <div className="row">
               <label className="secondary file-btn">{site.hero_photo ? 'Change photo' : 'Add background photo'}
                 <input type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files, 'hero')} />
@@ -114,7 +112,7 @@ export default function Website() {
           <h3>Colors</h3>
           <div className="row">
             <label>Main color<input type="color" {...text('main_color')} /></label>
-            <label>Highlight color<input type="color" {...text('accent_color')} /></label>
+            <label>Button color<input type="color" {...text('accent_color')} /></label>
           </div>
           <button type="button" className="link" onClick={() => change({ main_color: DEFAULT_SITE.main_color, accent_color: DEFAULT_SITE.accent_color })}>Go back to the starting colors</button>
         </section>

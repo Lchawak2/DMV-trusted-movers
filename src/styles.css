@@ -67,7 +67,6 @@ button { font: inherit; cursor: pointer; }
 .primary { background: var(--navy); color: #fff; }
 .primary:hover { background: #1e293b; }
 .primary:disabled { opacity: 0.6; }
-.primary:disabled { opacity: 0.6; }
 .secondary { background: #fff; color: var(--text); border: 1px solid var(--line); }
 .danger { background: #fff; color: var(--warn); border: 1px solid #f3c4c0; width: 100%; margin-top: 8px; }
 .block { display: block; width: 100%; margin-top: 12px; }
@@ -286,30 +285,22 @@ input.pay { width: 84px; padding: 6px 8px; }
 a.topbar-name, a.plain { color: inherit; text-decoration: none; }
 .site { --site-main: var(--navy); --site-accent: var(--gold); min-height: 100vh; background: #fff; color: var(--text); }
 .site-wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
-.site-bar { position: sticky; top: 0; z-index: 2; background: rgba(255, 255, 255, 0.95); color: var(--site-main); border-bottom: 1px solid var(--line); }
+.site-bar { position: sticky; top: 0; z-index: 2; background: var(--site-main); color: #fff; }
 .site-bar-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
 .site-name { font-weight: 700; font-size: 18px; }
 .site-nav { display: flex; gap: 16px; font-size: 14px; }
-.site-nav a { color: var(--site-main); text-decoration: none; font-weight: 600; }
-.site-hero { background: #fff center / cover no-repeat; color: var(--site-main); padding: 72px 0 80px; text-align: center; }
-.site-hero.photo { color: #fff; }
-.site-hero h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.1; max-width: 720px; margin: 0 auto 16px; }
-.site-eyebrow { text-transform: uppercase; letter-spacing: 0.04em; font-size: 13px !important; font-weight: 600; margin-bottom: 16px !important; }
-.site-tagline { font-size: 20px !important; font-weight: 600; color: #64748b; }
-.site-hero.photo .site-tagline { color: inherit; }
-.site-hero p { font-size: 17px; line-height: 1.7; max-width: 640px; margin-left: auto; margin-right: auto; color: #64748b; }
-.site-hero.photo p { color: rgba(255, 255, 255, 0.9); }
-.site-cta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 20px; margin-top: 32px; }
+.site-nav a { color: #fff; }
+.site-hero { background: var(--site-main) center / cover no-repeat; color: #fff; padding: 64px 0 72px; }
+.site-hero h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.1; max-width: 720px; margin-bottom: 16px; }
+.site-hero p { font-size: 18px; line-height: 1.5; max-width: 620px; opacity: 0.9; }
+.site-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 .site-btn { display: inline-block; padding: 14px 22px; border-radius: 8px; font-weight: 700; text-decoration: none; text-align: center; }
-.site-btn.main { background: var(--site-main); color: #fff; }
-.site-btn.light { background: #fff; color: var(--site-main); }
-.site-hero.photo .site-btn.main { background: #fff; color: var(--site-main); }
-.site-call { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; text-decoration: none; color: inherit; }
-.site-call-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; color: var(--site-accent); font-size: 16px; }
-.site-rating { margin-top: 20px !important; font-size: 15px !important; color: var(--star) !important; }
+.site-btn.gold { background: var(--site-accent); color: #fff; }
+.site-btn.ghost { border: 2px solid rgba(255, 255, 255, 0.6); color: #fff; }
+.site-rating { margin-top: 20px !important; font-size: 15px !important; color: var(--star); }
 .site-sec { padding: 56px 0; }
 .site-sec.alt { background: var(--bg); }
-.site-sec h2 { font-size: 34px; margin-bottom: 28px; text-align: center; }
+.site-sec h2 { font-size: 28px; margin-bottom: 24px; }
 .site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
 .site-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 0; }
 .site-card p { line-height: 1.5; color: var(--muted); }
