@@ -243,3 +243,9 @@ input.pay { width: 84px; padding: 6px 8px; }
 .payout-row select { flex: 1; min-width: 0; }
 .zelle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
 .zelle input { flex: 1; padding: 6px 8px; }
+
+/* Tabs inside a page, like the job page */
+.segmented { display: flex; gap: 4px; background: var(--line); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+.segmented button { flex: 1; position: relative; min-height: 40px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.segmented button.on { background: var(--card); color: var(--navy); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.seg-dot { position: absolute; top: 8px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
