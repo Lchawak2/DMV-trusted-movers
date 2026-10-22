@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
 import { money, parseDay } from '../lib/format'
 import { JOB_TYPES } from '../lib/types'
 import { BOOK_TYPES } from './Book'
@@ -179,6 +180,8 @@ export default function Quote({ token }: { token: string }) {
         </section>
       )}
 
+      {booked && <SaveMoves token={token} />}
+
       {booked && q.balance_payable && q.balance_due != null && (
         <section className="card form">
           {q.balance_due > 0 ? (
@@ -266,6 +269,40 @@ export default function Quote({ token }: { token: string }) {
       {q.status === 'expired' && <p className="note center-text">This quote has expired. Reply to our text and we'll send a fresh one.</p>}
       {q.status === 'superseded' && <p className="note center-text">We sent you a newer quote. Please use the latest link.</p>}
     </PublicPage>
+  )
+}
+
+// Offer to keep this booking in a customer account, so booking again is quick
+function SaveMoves({ token }: { token: string }) {
+  const { session, account } = useAuth()
+  const [state, setState] = useState<'idle' | 'busy' | 'saved'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  async function save() {
+    setState('busy'); setError(null)
+    const { error } = await supabase.rpc('claim_booking', { p_token: token })
+    if (error) { setError(error.message); setState('idle') } else setState('saved')
+  }
+
+  if (session && account?.role !== 'client') return null
+  return (
+    <section className="card">
+      <h3>Save your moves</h3>
+      {state === 'saved' ? (
+        <p>Saved. You'll find this move under <Link to="/">My moves</Link>, and you can book again from there.</p>
+      ) : session ? (
+        <>
+          <p className="muted">Add this move to your account so it's easy to find and book again.</p>
+          {error && <p className="warn">{error}</p>}
+          <button className="secondary" disabled={state === 'busy'} onClick={save}>{state === 'busy' ? 'Saving…' : 'Add to my account'}</button>
+        </>
+      ) : (
+        <>
+          <p className="muted">Make an account to see all your moves in one place and book again in a minute.</p>
+          <Link className="secondary" to={`/account?booking=${token}`}>Create an account</Link>
+        </>
+      )}
+    </section>
   )
 }
 
