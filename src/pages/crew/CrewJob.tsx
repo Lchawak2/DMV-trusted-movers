@@ -8,6 +8,7 @@ import JobDayChecklist from '../jobday/JobDayChecklist'
 import TruckSteps from '../jobday/TruckSteps'
 import { jobType, t } from '../../lib/lang'
 import { useJobDay } from '../jobday/useJobDay'
+import { useShareLocation } from '../../lib/shareLocation'
 import { OUTBOX_CHANGED, flush, isOffline, pending, queue, type OutboxItem } from '../../lib/outbox'
 import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type JobTips, type TimeEntry, type TruckRental } from '../../lib/types'
 
@@ -86,6 +87,7 @@ export default function CrewJob() {
   }, [account, id])
 
   useEffect(() => { load() }, [load])
+  const sharing = useShareLocation(id, !!entry && !entry.clock_out && assignment?.status === 'accepted')
   // Reload once things saved on the phone have gone through
   useEffect(() => {
     window.addEventListener(OUTBOX_CHANGED, load)
@@ -185,6 +187,7 @@ export default function CrewJob() {
               ) : onClock ? (
                 <>
                   <p className="muted">{t('On the clock since', 'Trabajando desde')} {dateTime(entry!.clock_in)}</p>
+                  <LocationNote state={sharing} />
                   {mustSign && <p className="muted small">{t('Clock out unlocks once the customer has signed.', 'Podrás marcar la salida cuando el cliente firme.')}</p>}
                   <button className="primary" onClick={clockOut} disabled={mustSign}>{t('Clock out', 'Marcar salida')}</button>
                 </>
@@ -200,4 +203,10 @@ export default function CrewJob() {
       {isLead && <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />}
     </Layout>
   )
+}
+
+function LocationNote({ state }: { state: ReturnType<typeof useShareLocation> }) {
+  if (state === 'denied') return <p className="warn small">{t('Location is off for this app. Turn it on in your phone settings so the office can see where the crew is.', 'La ubicación está apagada para esta app. Actívala en los ajustes del teléfono para que la oficina vea dónde está el equipo.')}</p>
+  if (state === 'unsupported') return null
+  return <p className="muted small">📍 {t('Your location is shared with the office while you are on the clock. Keep this page open.', 'Tu ubicación se comparte con la oficina mientras trabajas. Mantén esta página abierta.')}</p>
 }

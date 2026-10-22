@@ -103,7 +103,7 @@ export default function Dashboard() {
       </section>
 
       <section className="card">
-        <div className="card-head"><h3>Today</h3><span className="muted small">{todays.length} {todays.length === 1 ? 'job' : 'jobs'}</span></div>
+        <div className="card-head"><h3>Today</h3><span className="muted small">{todays.length} {todays.length === 1 ? 'job' : 'jobs'} · <Link to="/crew-map">Crew map</Link></span></div>
         {todays.length === 0 && <p className="muted">No jobs today.</p>}
         <ul className="list">
           {todays.map((j) => {

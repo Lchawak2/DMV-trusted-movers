@@ -275,3 +275,6 @@ input.pay { width: 84px; padding: 6px 8px; }
 .star-pick { display: flex; gap: 6px; justify-content: center; }
 .star-pick button { background: none; border: 0; font-size: 36px; line-height: 1; color: #d5d9e0; padding: 4px; }
 .star-pick button.on { color: var(--gold); }
+
+/* Crew map */
+.crew-map { height: 55vh; min-height: 300px; border-radius: 12px; margin-bottom: 12px; z-index: 0; }
