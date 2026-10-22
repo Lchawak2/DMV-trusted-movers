@@ -1,10 +1,11 @@
-import { useState, type ChangeEvent } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { shrink } from '../../lib/photos'
 import { useJobDay, type PhotoWithUrl } from './useJobDay'
 import { t } from '../../lib/lang'
+import { OUTBOX_CHANGED, isOffline, queue, useOutbox } from '../../lib/outbox'
 
 type Tab = 'before' | 'damage'
 
@@ -15,12 +16,26 @@ export default function Photos() {
   const { job, allowed, photos, reload } = useJobDay(id)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const waiting = useOutbox().filter((p) => p.type === 'photo' && p.job_id === id)
+  // Photos saved on the phone show up here until they're sent
+  const [previews, setPreviews] = useState<Record<string, string>>({})
+  useEffect(() => {
+    const urls: Record<string, string> = {}
+    for (const p of waiting) if (p.type === 'photo') urls[p.id] = URL.createObjectURL(p.blob)
+    setPreviews(urls)
+    return () => Object.values(urls).forEach((u) => URL.revokeObjectURL(u))
+  }, [waiting.map((p) => p.id).join()])
+  useEffect(() => {
+    window.addEventListener(OUTBOX_CHANGED, reload)
+    return () => window.removeEventListener(OUTBOX_CHANGED, reload)
+  }, [reload])
 
   if (job === undefined) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Loading…', 'Cargando…')}</p></Layout>
   if (!job || !allowed) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Only the lead on this job can add photos.', 'Solo el líder de este trabajo puede agregar fotos.')}</p></Layout>
 
   const shown = photos.filter((p) => p.kind === tab)
-  const count = (k: Tab) => photos.filter((p) => p.kind === k).length
+  const waitingHere = waiting.filter((p) => p.type === 'photo' && p.kind === tab)
+  const count = (k: Tab) => photos.filter((p) => p.kind === k).length + waiting.filter((p) => p.type === 'photo' && p.kind === k).length
 
   async function add(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -31,10 +46,16 @@ export default function Photos() {
     try {
       for (const file of files) {
         const blob = await shrink(file)
-        const path = `${id}/${crypto.randomUUID()}.jpg`
+        const photoId = crypto.randomUUID()
+        const path = `${id}/${photoId}.jpg`
+        // With no signal, keep the photo on the phone and send it later
+        const keep = () => queue({ id: photoId, type: 'photo', job_id: id, kind: tab, path, blob })
+        if (!navigator.onLine) { await keep(); continue }
         const up = await supabase.storage.from('job-photos').upload(path, blob, { contentType: 'image/jpeg' })
+        if (up.error && isOffline(up.error)) { await keep(); continue }
         if (up.error) throw up.error
-        const row = await supabase.from('job_photos').insert({ job_id: id, kind: tab, storage_path: path })
+        const row = await supabase.from('job_photos').insert({ id: photoId, job_id: id, kind: tab, storage_path: path })
+        if (row.error && isOffline(row.error)) { await keep(); continue }
         if (row.error) {
           await supabase.storage.from('job-photos').remove([path])
           throw row.error
@@ -66,6 +87,12 @@ export default function Photos() {
 
       <div className="photo-grid">
         {tab === 'before' && shown.map((p) => <Thumb key={p.id} photo={p} onRemoved={reload} />)}
+        {waitingHere.map((p) => (
+          <div className="photo waiting" key={p.id}>
+            {previews[p.id] && <img src={previews[p.id]} alt="" />}
+            <span className="photo-badge">{p.error ? t("Couldn't upload", 'No se subió') : t('Waiting for signal', 'Esperando señal')}</span>
+          </div>
+        ))}
         <label className={`photo-add${busy ? ' faded' : ''}`}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" />

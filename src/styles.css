@@ -264,3 +264,8 @@ input.pay { width: 84px; padding: 6px 8px; }
 .profit-costs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .inline-select { width: auto; max-width: 60%; padding: 4px 6px; font-size: 13px; }
 .truck-steps { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* Things saved on the phone with no signal, waiting to upload */
+.outbox-bar { background: #fbeed6; color: #8a4f00; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.photo.waiting img { opacity: .6; }
+.photo-badge { position: absolute; left: 4px; bottom: 4px; right: 4px; background: rgba(15, 27, 45, .8); color: #fff; font-size: 11px; border-radius: 4px; padding: 2px 4px; text-align: center; }
