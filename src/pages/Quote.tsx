@@ -22,6 +22,10 @@ type QuoteView = {
   expires_at: string | null
   status: 'sent' | 'accepted' | 'expired' | 'superseded'
   deposit_paid: boolean
+  deposit_refunded: boolean
+  job_status: string | null
+  free_cancel_until: string | null
+  started: boolean | null
 }
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -31,6 +35,8 @@ export default function Quote({ token }: { token: string }) {
   const [q, setQ] = useState<QuoteView | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [asking, setAsking] = useState(false)
+  const [cancelNote, setCancelNote] = useState<string | null>(null)
   const returning = new URLSearchParams(location.search).has('paid')
 
   async function load() {
@@ -59,6 +65,20 @@ export default function Quote({ token }: { token: string }) {
     location.href = data.url
   }
 
+  async function cancel() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.functions.invoke('deposit', { body: { action: 'cancel', token } })
+    const message = error ? await errorText(error, 'We could not cancel online. Please call or text us.') : data?.error
+    setBusy(false)
+    if (message) return setError(message)
+    setAsking(false)
+    setCancelNote(data.refund_failed
+      ? "We'll refund your deposit by hand in the next day or two."
+      : data.refunded > 0 ? `Your ${money(data.refunded)} deposit is on its way back to your card. Banks take 5 to 10 days to show it.` : null)
+    load()
+  }
+
   if (q === undefined || (busy && returning)) {
     return <PublicPage sub="Your quote"><p className="muted center">{returning ? 'Checking your payment…' : 'Loading…'}</p></PublicPage>
   }
@@ -67,11 +87,22 @@ export default function Quote({ token }: { token: string }) {
   }
 
   const date = parseDay(q.preferred_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-  const booked = q.status === 'accepted'
+  const cancelled = q.job_status === 'cancelled'
+  const booked = q.status === 'accepted' && !cancelled
+  const free = !!q.free_cancel_until && new Date(q.free_cancel_until) > new Date()
 
   return (
-    <PublicPage sub={booked ? 'Booking confirmed' : `Quote for ${q.first_name}`}>
-      {booked ? (
+    <PublicPage sub={cancelled ? 'Booking cancelled' : booked ? 'Booking confirmed' : `Quote for ${q.first_name}`}>
+      {cancelled ? (
+        <section className="card center">
+          <h2>Your move is cancelled</h2>
+          <p>{date}</p>
+          {cancelNote && <p className="note">{cancelNote}</p>}
+          {!cancelNote && q.deposit_refunded && <p className="note">Your deposit was refunded to your card.</p>}
+          {!cancelNote && q.deposit_paid && <p className="note">Questions about your deposit? Reply to our text.</p>}
+          <p className="note">Want to book again? Reply to our text and we'll send a new quote.</p>
+        </section>
+      ) : booked ? (
         <section className="card center">
           <div className="done-mark">✓</div>
           <h2>You're booked</h2>
@@ -113,6 +144,27 @@ export default function Quote({ token }: { token: string }) {
         </section>
       )}
 
+      {booked && q.job_status && !q.started && (
+        <section className="card form">
+          <h3>Need to change or cancel?</h3>
+          <p className="note">To move to a different date, reply to our text or email and we'll find a new time.</p>
+          {!asking ? (
+            <button className="secondary" onClick={() => setAsking(true)}>Cancel my move</button>
+          ) : (
+            <>
+              <p>
+                {free
+                  ? q.deposit_paid ? `You're more than 72 hours out, so your ${money(q.deposit)} deposit will be refunded to your card.` : "You're more than 72 hours out, so there's no charge."
+                  : q.deposit_paid ? `Your move is less than 72 hours away, so the ${money(q.deposit)} deposit is kept.` : 'Your move is less than 72 hours away.'}
+              </p>
+              {error && <p className="warn">{error}</p>}
+              <button className="danger" disabled={busy} onClick={cancel}>{busy ? 'Cancelling…' : 'Yes, cancel my move'}</button>
+              <button className="link" onClick={() => { setAsking(false); setError(null) }}>Keep my booking</button>
+            </>
+          )}
+        </section>
+      )}
+
       {q.status === 'sent' && (
         <section className="card form">
           {q.deposit > 0 ? (
@@ -138,11 +190,11 @@ export default function Quote({ token }: { token: string }) {
 }
 
 // supabase-js hides the function's message inside the response
-async function errorText(error: unknown): Promise<string> {
+async function errorText(error: unknown, fallback = 'Payment could not be started. Please try again.'): Promise<string> {
   const ctx = (error as { context?: Response }).context
   try {
     const body = await ctx?.json()
     if (body?.error) return body.error
   } catch { /* not JSON */ }
-  return 'Payment could not be started. Please try again.'
+  return fallback
 }

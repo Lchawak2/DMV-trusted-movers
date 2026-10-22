@@ -42,6 +42,7 @@ export default function AdminJobDetail() {
   if (!job) return <Layout back="/jobs"><p className="muted center">Loading…</p></Layout>
 
   async function setStatus(status: JobStatus) {
+    if (status === 'cancelled' && !confirm('Cancel this job? Everyone on the crew who hasn\'t been paid is taken off it.')) return
     await supabase.from('jobs').update({ status }).eq('id', id)
     load()
   }
@@ -83,6 +84,7 @@ export default function AdminJobDetail() {
         </label>
       </section>
 
+      {job.status === 'cancelled' && <CancelledSection job={job} />}
       <CrewSection job={job} crew={crew} onChange={load} />
       <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
       <RentalSection jobId={id} rental={rental} onChange={load} />
@@ -92,6 +94,51 @@ export default function AdminJobDetail() {
 
       <button className="danger" onClick={remove}>Delete job</button>
     </Layout>
+  )
+}
+
+// Who cancelled, and the card deposit: refunded, or kept with a button to refund it
+function CancelledSection({ job }: { job: Job }) {
+  const [deposits, setDeposits] = useState<{ amount: number; status: string }[] | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = useCallback(() => {
+    if (!job.quote_id) return setDeposits([])
+    supabase.from('payments').select('amount, status').eq('quote_id', job.quote_id).eq('kind', 'deposit').in('status', ['paid', 'refunded'])
+      .then(({ data }) => setDeposits((data ?? []) as { amount: number; status: string }[]))
+  }, [job.quote_id])
+  useEffect(() => { load() }, [load])
+
+  const held = (deposits ?? []).filter((d) => d.status === 'paid').reduce((s, d) => s + Number(d.amount), 0)
+  const refunded = (deposits ?? []).filter((d) => d.status === 'refunded').reduce((s, d) => s + Number(d.amount), 0)
+
+  async function refund() {
+    if (!confirm(`Refund ${money(held)} to the customer's card?`)) return
+    setBusy(true)
+    setError('')
+    const { data, error: e } = await supabase.functions.invoke('deposit', { body: { action: 'refund', job_id: job.id } })
+    setBusy(false)
+    if (e || data?.error) setError(data?.error ?? 'The refund did not go through. Try again, or refund it in Stripe.')
+    load()
+  }
+
+  return (
+    <section className="card">
+      <h3>Cancelled</h3>
+      <p className="muted">
+        {job.cancelled_by === 'customer' ? 'The customer cancelled' : 'You cancelled'}
+        {job.cancelled_at ? ` on ${dateTime(job.cancelled_at)}` : ''}.
+      </p>
+      {refunded > 0 && <p className="tone-good">Deposit of {money(refunded)} refunded to their card.</p>}
+      {held > 0 && (
+        <>
+          <p>You're keeping the {money(held)} deposit.</p>
+          {error && <p className="warn">{error}</p>}
+          <button className="secondary" disabled={busy} onClick={refund}>{busy ? 'Refunding…' : `Refund ${money(held)}`}</button>
+        </>
+      )}
+    </section>
   )
 }
 
