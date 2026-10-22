@@ -33,6 +33,9 @@ export interface Job {
   is_open: boolean
   open_pay: number | null
   open_pay_type: 'flat' | 'hourly'
+  quote_id: string | null
+  cancelled_at: string | null
+  cancelled_by: 'customer' | 'admin' | null
 }
 
 export interface Assignment {

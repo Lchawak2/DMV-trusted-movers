@@ -153,6 +153,24 @@ async function moveReminder(jobId: string): Promise<Email[]> {
   return emails
 }
 
+async function jobCancelled(jobId: string): Promise<Email[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, move_requests(customers(full_name, phone))').eq('id', jobId).maybeSingle()
+  if (!j) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string; phone: string | null } | null } | null)?.customers
+  return [{
+    to: await admins(),
+    subject: `Cancelled: ${c?.full_name ?? 'Customer'}, ${day(j.job_date)}`,
+    text: lines(
+      `${c?.full_name ?? 'A customer'} cancelled their move on ${day(j.job_date)} from their booking link.`,
+      'The crew on it were taken off the job. Card deposits are refunded automatically when they cancel 72 hours or more ahead.',
+      c?.phone && `Phone: ${c.phone}`,
+      '',
+      `See the job: ${LIVE_SITE}/jobs/${jobId}`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -163,7 +181,7 @@ async function send(key: string, e: Email) {
 }
 
 const builders: Record<string, (id: string) => Promise<Email[]>> = {
-  new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder,
+  new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
 }
 
 Deno.serve(async () => {
