@@ -235,6 +235,7 @@ input.pay { width: 84px; padding: 6px 8px; }
 .bell-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--gold); }
 .bell-dot.deposit_paid { background: var(--green); }
 .bell-dot.move_reminder { background: var(--amber); }
+.bell-dot.open_spots { background: var(--warn); }
 .bell-item.new { background: #fbf6ee; }
 
 /* Crew payouts */

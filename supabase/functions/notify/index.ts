@@ -208,6 +208,28 @@ async function jobCancelled(jobId: string): Promise<Email[]> {
   }]
 }
 
+async function openSpots(jobId: string): Promise<Email[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, window_start, window_end, from_address, status, move_requests(customers(full_name))')
+    .eq('id', jobId).maybeSingle()
+  if (!j || j.status !== 'scheduled') return []
+  // Skip a job that filled up since the alert was queued
+  const { data: short } = await db.rpc('job_crew_short', { p_job: jobId })
+  if (!short) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string } | null } | null)?.customers
+  const movers = `${short} more ${short === 1 ? 'mover' : 'movers'}`
+  return [{
+    to: await admins(),
+    subject: `Crew not full: ${c?.full_name ?? j.from_address}, needs ${movers}`,
+    text: lines(
+      `The move on ${day(j.job_date)}, ${slot(j.window_start, j.window_end)}, still needs ${movers}.`,
+      `${c?.full_name ? `${c.full_name}, ` : ''}${j.from_address}`,
+      '',
+      `Add crew: ${LIVE_SITE}/jobs/${jobId}`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -219,7 +241,7 @@ async function send(key: string, e: Email) {
 
 const builders: Record<string, (id: string) => Promise<Email[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
-  balance_paid: balancePaid,
+  balance_paid: balancePaid, open_spots: openSpots,
 }
 
 Deno.serve(async () => {
