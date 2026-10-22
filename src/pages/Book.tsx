@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
 import { shrink } from '../lib/photos'
-import { HOME_SIZES } from '../lib/types'
+import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -37,6 +37,7 @@ export default function Book() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState<{ photosFailed: boolean } | null>(null)
@@ -58,6 +59,7 @@ export default function Book() {
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
       p_preferred_date: date, p_arrival_window: arrival || null, p_notes: notes || null,
+      p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
     const id = data as string
@@ -155,6 +157,13 @@ export default function Book() {
             <label>Phone<input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
             <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
           </div>
+          <label>
+            How did you hear about us? (optional)
+            <select value={source} onChange={(e) => setSource(e.target.value)}>
+              <option value="">Choose</option>
+              {Object.entries(LEAD_SOURCES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </label>
         </section>
 
         {error && <p className="warn">{error}</p>}

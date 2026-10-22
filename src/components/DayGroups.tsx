@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { dayHeading } from '../lib/format'
+import { t } from '../lib/lang'
 import type { Job } from '../lib/types'
 
 export default function DayGroups<T extends { job: Job }>({ items, render, empty }: {
@@ -20,7 +21,7 @@ export default function DayGroups<T extends { job: Job }>({ items, render, empty
         <section key={day}>
           <h3 className="day">
             <span>{dayHeading(day)}</span>
-            <span>{list.length} {list.length === 1 ? 'job' : 'jobs'}</span>
+            <span>{list.length} {list.length === 1 ? t('job', 'trabajo') : t('jobs', 'trabajos')}</span>
           </h3>
           {list.map(render)}
         </section>

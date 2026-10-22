@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { setLang } from './lang'
 import type { Account } from './types'
 
 interface AuthState {
@@ -19,11 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadAccount(s: Session | null) {
     if (!s) {
+      setLang('en')
       setAccount(null)
       return
     }
     const { data } = await supabase.from('accounts').select('*').eq('id', s.user.id).maybeSingle()
-    setAccount(data as Account | null)
+    const acct = data as Account | null
+    // Admin screens are English only
+    setLang(acct?.role === 'admin' ? 'en' : acct?.language)
+    setAccount(acct)
   }
 
   useEffect(() => {

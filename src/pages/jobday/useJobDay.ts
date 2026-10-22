@@ -2,8 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import type { Assignment, Job, JobExtra, JobPhoto, JobSignoff } from '../../lib/types'
+import { isOffline } from '../../lib/outbox'
 
 export type PhotoWithUrl = JobPhoto & { url: string | null }
+
+type Cached = { job: Job; allowed: boolean; photos: JobPhoto[]; extras: JobExtra[]; signoff: JobSignoff | null }
+const cacheKey = (id: string) => `job-day:${id}`
 
 // Everything the job-day screens need. The accepted lead or an admin can use them;
 // the database enforces that, this only decides what to show.
@@ -28,6 +32,20 @@ export function useJobDay(jobId: string) {
       supabase.from('job_extras').select('*').eq('job_id', jobId).order('created_at'),
       supabase.from('job_signoffs').select('*').eq('job_id', jobId).maybeSingle(),
     ])
+    // No signal: use what this phone saw last time, so the lead can still take photos and clock out
+    if (j.error && isOffline(j.error)) {
+      try {
+        const c = JSON.parse(localStorage.getItem(cacheKey(jobId)) ?? 'null') as Cached | null
+        if (c) {
+          setJob(c.job)
+          setAllowed(c.allowed)
+          setPhotos(c.photos.map((r) => ({ ...r, url: null })))
+          setExtras(c.extras)
+          setSignoff(c.signoff)
+        }
+      } catch { /* no saved copy */ }
+      return
+    }
     const mine = a.data as Assignment | null
     setJob(j.data as Job | null)
     setAllowed(isAdmin || (mine?.role === 'lead' && mine.status === 'accepted'))
@@ -45,6 +63,10 @@ export function useJobDay(jobId: string) {
       setPrices(Object.fromEntries((data ?? []).map((r: { extra_id: string; amount: number }) => [r.extra_id, Number(r.amount)])))
     }
     setSignoff(s.data as JobSignoff | null)
+    if (j.data && !isAdmin) {
+      const c: Cached = { job: j.data as Job, allowed: mine?.role === 'lead' && mine.status === 'accepted', photos: rows, extras: extraRows, signoff: s.data as JobSignoff | null }
+      try { localStorage.setItem(cacheKey(jobId), JSON.stringify(c)) } catch { /* storage full or blocked */ }
+    }
   }, [account, isAdmin, jobId])
 
   useEffect(() => { load() }, [load])

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading } from '../../lib/format'
 import { EXTRA_KINDS } from '../../lib/types'
 import { useJobDay } from './useJobDay'
+import { t } from '../../lib/lang'
 
 export default function Sign() {
   const { id } = useParams() as { id: string }
@@ -17,8 +18,8 @@ export default function Sign() {
   const [error, setError] = useState<string | null>(null)
   const pad = useRef<HTMLCanvasElement>(null)
 
-  if (job === undefined) return <Layout back={`/jobs/${id}`}><p className="muted center">Loading…</p></Layout>
-  if (!job || !allowed) return <Layout back={`/jobs/${id}`}><p className="muted center">Only the lead on this job can collect the signature.</p></Layout>
+  if (job === undefined) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Loading…', 'Cargando…')}</p></Layout>
+  if (!job || !allowed) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Only the lead on this job can collect the signature.', 'Solo el líder de este trabajo puede tomar la firma.')}</p></Layout>
 
   const damage = photos.filter((p) => p.kind === 'damage')
 
@@ -69,7 +70,9 @@ export default function Sign() {
 
   return (
     <Layout back={`/jobs/${id}`} title="Customer sign-off">
-      <p className="note">Hand the phone to the customer. Prices aren't shown here; the customer gets the final bill from the office.</p>
+      <p className="note">{t("Hand the phone to the customer. Prices aren't shown here; the customer gets the final bill from the office.",
+        'Dale el teléfono al cliente. Aquí no se muestran precios; el cliente recibe la cuenta final de la oficina.')}</p>
+      {/* From here down the customer reads it, so it stays in English */}
       {summary}
       <form className="form" onSubmit={submit}>
         <label>Customer name<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" required /></label>

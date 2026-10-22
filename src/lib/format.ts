@@ -1,3 +1,5 @@
+import { locale, t } from './lang'
+
 // Dates come from Postgres as 'YYYY-MM-DD'; parse as local dates so they don't shift a day.
 export function parseDay(day: string): Date {
   const [y, m, d] = day.split('-').map(Number)
@@ -9,9 +11,9 @@ export function dayHeading(day: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const diff = Math.round((date.getTime() - today.getTime()) / 86_400_000)
-  const label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  if (diff === 0) return `Today · ${label}`
-  if (diff === 1) return `Tomorrow · ${label}`
+  const label = date.toLocaleDateString(locale(), { weekday: 'short', month: 'short', day: 'numeric' })
+  if (diff === 0) return `${t('Today', 'Hoy')} · ${label}`
+  if (diff === 1) return `${t('Tomorrow', 'Mañana')} · ${label}`
   return label
 }
 
@@ -20,9 +22,9 @@ export function countdown(day: string, time: string | null): string {
   const start = parseDay(day)
   start.setHours(h, m)
   const hours = Math.round((start.getTime() - Date.now()) / 3_600_000)
-  if (hours < 0) return 'Started'
-  if (hours < 48) return `Starts in ${hours} hours`
-  return `In ${Math.round(hours / 24)} days`
+  if (hours < 0) return t('Started', 'Ya empezó')
+  if (hours < 48) return t(`Starts in ${hours} hours`, `Empieza en ${hours} horas`)
+  return t(`In ${Math.round(hours / 24)} days`, `En ${Math.round(hours / 24)} días`)
 }
 
 export function clock(time: string | null): string {
@@ -30,15 +32,16 @@ export function clock(time: string | null): string {
   const [h, m] = time.split(':').map(Number)
   const d = new Date()
   d.setHours(h, m)
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return d.toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit' })
 }
 
 export function windowText(start: string | null, end: string | null): string {
-  if (!start) return 'Time to be set'
+  if (!start) return t('Time to be set', 'Hora por confirmar')
   if (!end) return clock(start)
   const [a, b] = [clock(start), clock(end)]
+  const to = t('to', 'a')
   // '8:00 AM' + '9:00 AM' reads as '8:00 to 9:00 AM'
-  return a.slice(-2) === b.slice(-2) ? `${a.slice(0, -3)} to ${b}` : `${a} to ${b}`
+  return locale() === 'en-US' && a.slice(-2) === b.slice(-2) ? `${a.slice(0, -3)} ${to} ${b}` : `${a} ${to} ${b}`
 }
 
 export function money(n: number | string | null | undefined): string {
@@ -47,7 +50,7 @@ export function money(n: number | string | null | undefined): string {
 
 export function dateTime(iso: string | null): string {
   if (!iso) return ''
-  return new Date(iso).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return new Date(iso).toLocaleString(locale(), { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 // <input type="datetime-local"> wants local 'YYYY-MM-DDTHH:mm'
