@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import Login from './pages/Login'
+import Home from './pages/Home'
 import Book from './pages/Book'
 import Quote from './pages/Quote'
 import Policies from './pages/Policies'
@@ -17,6 +18,7 @@ import JobForm from './pages/admin/JobForm'
 import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
 import CrewMap from './pages/admin/CrewMap'
+import Website from './pages/admin/Website'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
 import FindJob from './pages/crew/FindJob'
@@ -32,10 +34,15 @@ export default function App() {
   // Customers ask for a quote without signing in
   if (pathname === '/book') return <Book />
   if (pathname === '/policies') return <Policies />
+  // The public website; /site shows it to signed-in people too
+  if (pathname === '/site') return <Home />
   const quote = pathname.match(/^\/quote\/([0-9a-f-]{36})$/)
   if (quote) return <Quote token={quote[1]} />
   if (loading) return <div className="center muted">Loading…</div>
-  if (!session) return pathname === '/account' ? <CustomerAccount /> : <Login />
+  if (!session) {
+    if (pathname === '/') return <Home />
+    return pathname === '/account' ? <CustomerAccount /> : <Login />
+  }
   if (!account) return <div className="center muted">Setting up your account…</div>
 
   if (!account.active) return <Pending />
@@ -59,6 +66,7 @@ export default function App() {
         <Route path="/requests/:id" element={<RequestDetail />} />
         <Route path="/people" element={<People />} />
         <Route path="/crew-map" element={<CrewMap />} />
+        <Route path="/website" element={<Website />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

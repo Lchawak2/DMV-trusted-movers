@@ -133,6 +133,11 @@ export default function Dashboard() {
         <span><span className="money-bar-sub">This week</span>{dollars(weekMoney.charged)} booked · {dollars(weekMoney.kept)} kept</span>
         <span className="money-bar-go">Money ›</span>
       </Link>
+
+      <Link to="/website" className="money-bar">
+        <span><span className="money-bar-sub">Website</span>Edit your words, prices and photos</span>
+        <span className="money-bar-go">Edit ›</span>
+      </Link>
     </Layout>
   )
 }

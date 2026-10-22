@@ -31,7 +31,7 @@ export default function Login() {
 
   return (
     <div className="login">
-      <h1>DMV Trusted Movers</h1>
+      <h1><Link to="/" className="plain">DMV Trusted Movers</Link></h1>
       <p className="muted">{mode === 'signin' ? 'Sign in to your account' : 'Create an account'}</p>
       <form onSubmit={submit} className="card form">
         {mode === 'signup' && (
