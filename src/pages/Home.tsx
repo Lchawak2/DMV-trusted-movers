@@ -34,13 +34,15 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="site-hero" style={site.hero_photo ? { backgroundImage: `linear-gradient(rgba(${rgb(site.main_color)},.72), rgba(${rgb(site.main_color)},.72)), url(${photoUrl(site.hero_photo)})` } : undefined}>
+      <section className={site.hero_photo ? 'site-hero photo' : 'site-hero'} style={site.hero_photo ? { backgroundImage: `linear-gradient(rgba(${rgb(site.main_color)},.72), rgba(${rgb(site.main_color)},.72)), url(${photoUrl(site.hero_photo)})` } : undefined}>
         <div className="site-wrap">
+          {site.eyebrow && <p className="site-eyebrow">{site.eyebrow}</p>}
           <h1>{site.headline}</h1>
+          {site.tagline && <p className="site-tagline">{site.tagline}</p>}
           <p>{site.subheadline}</p>
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">Get a free quote</Link>
-            {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">Call {site.phone}</a>}
+            <Link to="/book" className="site-btn main">Get a Free Quote</Link>
+            {site.phone && <a href={telLink(site.phone)} className="site-call"><span className="site-call-icon">✆</span>{site.phone}</a>}
           </div>
           {ratings > 0 && rating !== null && (
             <p className="site-rating">{'★'.repeat(Math.round(rating))} {rating} from {ratings} {ratings === 1 ? 'customer' : 'customers'}</p>
@@ -84,7 +86,7 @@ export default function Home() {
               <li key={i}><h3>{s.title}</h3><p>{s.text}</p></li>
             ))}
           </ol>
-          <Link to="/book" className="site-btn gold">Start my quote</Link>
+          <Link to="/book" className="site-btn main">Start my quote</Link>
         </div>
       </section>
 
@@ -136,7 +138,7 @@ export default function Home() {
 
       <footer className="site-foot">
         <div className="site-wrap">
-          <Link to="/book" className="site-btn gold">Get a free quote</Link>
+          <Link to="/book" className="site-btn light">Get a Free Quote</Link>
           {licenses.length > 0 && <p>{licenses.join(' · ')}</p>}
           <nav>
             <Link to="/policies#terms">Terms</Link>
