@@ -3,6 +3,7 @@ import { useAuth } from './lib/auth'
 import Login from './pages/Login'
 import Book from './pages/Book'
 import Quote from './pages/Quote'
+import Policies from './pages/Policies'
 import Pending from './pages/Pending'
 import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
@@ -27,6 +28,7 @@ export default function App() {
 
   // Customers ask for a quote without signing in
   if (pathname === '/book') return <Book />
+  if (pathname === '/policies') return <Policies />
   const quote = pathname.match(/^\/quote\/([0-9a-f-]{36})$/)
   if (quote) return <Quote token={quote[1]} />
   if (loading) return <div className="center muted">Loading…</div>

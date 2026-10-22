@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useState, type FormEvent } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
@@ -158,7 +159,7 @@ export default function Book() {
 
         {error && <p className="warn">{error}</p>}
         <button className="primary" disabled={busy}>{busy ? 'Sending…' : 'Send request'}</button>
-        <p className="note center-text">No account needed. We review every request and send you a price.</p>
+        <p className="note center-text">No account needed. We review every request and send you a price. By sending, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#privacy">privacy policy</Link>.</p>
       </form>
     </PublicPage>
   )

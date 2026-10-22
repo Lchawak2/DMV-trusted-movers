@@ -13,6 +13,11 @@ export default function PublicPage({ sub, children }: { sub: string; children: R
         <Link to="/" className="topbar-link">Sign in</Link>
       </header>
       <main className="content">{children}</main>
+      <footer className="public-foot">
+        <Link to="/policies#terms">Terms</Link>
+        <Link to="/policies#cancellation">Cancellation</Link>
+        <Link to="/policies#privacy">Privacy</Link>
+      </footer>
     </div>
   )
 }
