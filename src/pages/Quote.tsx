@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
@@ -208,7 +209,7 @@ export default function Quote({ token }: { token: string }) {
               </ul>
               {error && <p className="warn">{error}</p>}
               <button className="primary" disabled={busy} onClick={pay}>{busy ? 'Opening payment…' : `Pay ${money(q.deposit)} and book`}</button>
-              <p className="note">You'll pay securely with Stripe. Free cancellation up to 72 hours before your move. After that the deposit is kept.</p>
+              <p className="note">You'll pay securely with Stripe. Free cancellation up to 72 hours before your move. After that the deposit is kept. By paying, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#cancellation">cancellation policy</Link>.</p>
             </>
           ) : (
             <p>To book, just reply to our text or email and say yes.</p>
