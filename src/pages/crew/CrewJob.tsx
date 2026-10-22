@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
 import JobDayChecklist from '../jobday/JobDayChecklist'
+import TruckSteps from '../jobday/TruckSteps'
 import { useJobDay } from '../jobday/useJobDay'
 import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type JobTips, type TimeEntry, type TruckRental } from '../../lib/types'
 
@@ -117,6 +118,7 @@ export default function CrewJob() {
                   {rental.company} {rental.truck_size} · Confirmation {rental.confirmation ?? '—'}<br />
                   Pick up {dateTime(rental.pickup_at)} at {rental.pickup_location}<br />
                   Return {dateTime(rental.return_at)} at {rental.return_location}
+                  <TruckSteps jobId={job.id} rental={rental} onChange={load} />
                 </div>
               )}
               {entry?.clock_out ? (

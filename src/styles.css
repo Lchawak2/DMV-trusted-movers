@@ -262,3 +262,5 @@ input.pay { width: 84px; padding: 6px 8px; }
 .profit { border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; }
 .profit .list { margin: 0; }
 .profit-costs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.inline-select { width: auto; max-width: 60%; padding: 4px 6px; font-size: 13px; }
+.truck-steps { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }

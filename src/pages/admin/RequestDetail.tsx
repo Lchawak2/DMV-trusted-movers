@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, parseDay, smsLink } from '../../lib/format'
-import { JOB_TYPES, TRUCK_SIZES, type RequestStatus } from '../../lib/types'
+import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, TRUCK_SIZES, type LostReason, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
 import ProfitPreview from './ProfitPreview'
 import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
@@ -20,6 +20,7 @@ export default function RequestDetail() {
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({ price: '', deposit: '', crew_size: '2', truck_size: '', est_hours: '', arrival_window: '', note: '' })
   const [depositPaid, setDepositPaid] = useState(true)
+  const [losing, setLosing] = useState(false)
 
   async function load() {
     const { data } = await supabase.from('move_requests').select(REQUEST_SELECT).eq('id', id).single()
@@ -64,6 +65,18 @@ export default function RequestDetail() {
 
   async function setStatus(status: RequestStatus) {
     await supabase.from('move_requests').update({ status }).eq('id', id)
+    load()
+  }
+
+  // Customer said no, or never answered: close it with the reason, so the Done tab can show why quotes are lost
+  async function markLost(reason: LostReason) {
+    await supabase.from('move_requests').update({ status: 'declined', lost_reason: reason }).eq('id', id)
+    setLosing(false)
+    load()
+  }
+
+  async function setSource(source: string) {
+    await supabase.from('move_requests').update({ lead_source: source || null }).eq('id', id)
     load()
   }
 
@@ -124,6 +137,14 @@ export default function RequestDetail() {
           {r.special_items.length > 0 && <li><span>Special items</span><span>{r.special_items.join(', ')}</span></li>}
           {r.notes && <li className="stack"><strong>Notes</strong><span>{r.notes}</span></li>}
           <li><span>Sent</span><span className="muted">{dateTime(r.created_at)}</span></li>
+          <li>
+            <span>Heard about us</span>
+            <select className="inline-select" value={r.lead_source ?? ''} onChange={(e) => setSource(e.target.value)} aria-label="Heard about us">
+              <option value="">Not known</option>
+              {Object.entries(LEAD_SOURCES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </li>
+          {r.status === 'declined' && r.lost_reason && <li><span>Lost because</span><span>{LOST_REASONS[r.lost_reason]}</span></li>}
         </ul>
         {crossesStateLine(r) && <p className="flag">Crosses a state line, so it's an interstate move.</p>}
         {earlier > 0 && <p className="flag">This customer has {earlier} other {earlier === 1 ? 'request' : 'requests'}.</p>}
@@ -190,7 +211,19 @@ export default function RequestDetail() {
                 <label className="check"><input type="checkbox" checked={depositPaid} onChange={(e) => setDepositPaid(e.target.checked)} /> Deposit of {money(q.deposit)} received</label>
               )}
               <button type="button" className="primary" disabled={busy} onClick={book}>Book it and create the job</button>
-              <button type="button" className="link" onClick={() => setStatus('declined')}>Customer said no</button>
+              {r.status === 'declined' ? null : losing ? (
+                <div className="form">
+                  <strong>Why didn't they book?</strong>
+                  <div className="chips">
+                    {Object.entries(LOST_REASONS).map(([k, v]) => (
+                      <button type="button" key={k} className="chip" onClick={() => markLost(k as LostReason)}>{v}</button>
+                    ))}
+                  </div>
+                  <button type="button" className="link" onClick={() => setLosing(false)}>Never mind</button>
+                </div>
+              ) : (
+                <button type="button" className="link" onClick={() => setLosing(true)}>Customer said no</button>
+              )}
             </>
           )}
         </section>

@@ -69,6 +69,8 @@ export interface TruckRental {
   pickup_at: string | null
   return_location: string | null
   return_at: string | null
+  picked_up_at: string | null
+  returned_at: string | null
 }
 
 export interface JobCost {
@@ -158,7 +160,21 @@ export interface MoveRequest {
   arrival_window: string | null
   notes: string | null
   status: RequestStatus
+  lead_source: LeadSource | null
+  lost_reason: LostReason | null
   created_at: string
+}
+
+export type LeadSource = 'google' | 'social' | 'friend' | 'review_site' | 'repeat' | 'other'
+export const LEAD_SOURCES: Record<LeadSource, string> = {
+  google: 'Google search', social: 'Facebook or Instagram', friend: 'Friend or family',
+  review_site: 'Yelp, Thumbtack or Angi', repeat: 'Moved with us before', other: 'Other',
+}
+
+export type LostReason = 'price' | 'other_mover' | 'date' | 'no_reply' | 'changed_plans' | 'other'
+export const LOST_REASONS: Record<LostReason, string> = {
+  price: 'Price too high', other_mover: 'Booked another mover', date: "Date didn't work",
+  no_reply: 'Stopped replying', changed_plans: 'Changed plans', other: 'Other',
 }
 
 export interface Quote {

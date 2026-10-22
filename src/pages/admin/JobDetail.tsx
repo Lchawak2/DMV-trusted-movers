@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import JobDayChecklist from '../jobday/JobDayChecklist'
+import TruckSteps from '../jobday/TruckSteps'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
@@ -383,6 +384,7 @@ function RentalSection({ jobId, rental, onChange }: { jobId: string; rental: Tru
           <p><strong>{rental.company}</strong> {rental.truck_size} · Confirmation {rental.confirmation ?? '—'}</p>
           <p>Pick up {dateTime(rental.pickup_at)} at {rental.pickup_location ?? '—'}</p>
           <p>Return {dateTime(rental.return_at)} at {rental.return_location ?? '—'}</p>
+          <TruckSteps jobId={jobId} rental={rental} onChange={onChange} />
         </div>
       )}
       {editing && (
