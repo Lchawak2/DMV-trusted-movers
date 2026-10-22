@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import Bell from './Bell'
 
 export default function Layout({ title, back, children }: { title?: string; back?: string; children: ReactNode }) {
   const { account } = useAuth()
@@ -19,7 +20,10 @@ export default function Layout({ title, back, children }: { title?: string; back
           </div>
         )}
         {title && back && <div className="topbar-title">{title}</div>}
-        <NavLink to="/profile" className="avatar">{(name[0] ?? '?').toUpperCase()}</NavLink>
+        <div className="topbar-right">
+          {account?.role === 'admin' && <Bell />}
+          <NavLink to="/profile" className="avatar">{(name[0] ?? '?').toUpperCase()}</NavLink>
+        </div>
       </header>
       <main className="content">{children}</main>
       <nav className="tabbar">
