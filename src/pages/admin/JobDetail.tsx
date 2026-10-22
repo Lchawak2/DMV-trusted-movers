@@ -5,7 +5,7 @@ import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
-import { dateTime, dayHeading, fromLocalInput, money, toLocalInput, windowText } from '../../lib/format'
+import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type TimeEntry, type TruckRental,
@@ -90,7 +90,7 @@ export default function AdminJobDetail() {
       <RentalSection jobId={id} rental={rental} onChange={load} />
       <CostsSection jobId={id} costs={costs} onChange={load} />
 
-      <MoneySection jobId={id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
+      <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
 
       <button className="danger" onClick={remove}>Delete job</button>
     </Layout>
@@ -352,6 +352,35 @@ function RentalSection({ jobId, rental, onChange }: { jobId: string; rental: Tru
   )
 }
 
+// Booked-online jobs: the customer pays the balance by card from their booking link
+function PayLink({ quoteId, due }: { quoteId: string; due: number }) {
+  const [info, setInfo] = useState<{ link: string; phone: string | null; name: string } | null>(null)
+  const [copied, setCopied] = useState('')
+
+  useEffect(() => {
+    supabase.from('quotes').select('token, move_requests(customers(full_name, phone))').eq('id', quoteId).maybeSingle()
+      .then(({ data }) => {
+        if (!data) return
+        const c = (data.move_requests as unknown as { customers: { full_name: string; phone: string | null } | null } | null)?.customers
+        setInfo({ link: `${location.origin}/quote/${data.token}`, phone: c?.phone ?? null, name: c?.full_name.split(' ')[0] ?? '' })
+      })
+  }, [quoteId])
+
+  if (!info) return null
+  const text = `Hi ${info.name}, thanks for moving with DMV Trusted Movers! Your balance is ${money(due)}. You can pay by card here: ${info.link}`
+  const copy = (what: string, value: string) => { navigator.clipboard?.writeText(value); setCopied(what) }
+  return (
+    <>
+      <div className="row">
+        {info.phone && <a className="primary small-btn" href={smsLink(info.phone, text)}>Text payment link</a>}
+        <button className="secondary small-btn" onClick={() => copy('message', text)}>{copied === 'message' ? 'Copied' : 'Copy message'}</button>
+        <button className="secondary small-btn" onClick={() => copy('link', info.link)}>{copied === 'link' ? 'Copied' : 'Copy link'}</button>
+      </div>
+      <p className="muted small">{info.phone ? 'Texting opens your phone\'s messages app. On a computer, copy the message and send it from your phone.' : 'No phone number on file. Copy the message and send it another way.'}</p>
+    </>
+  )
+}
+
 function CostsSection({ jobId, costs, onChange }: { jobId: string; costs: JobCost[]; onChange: () => void }) {
   const [kind, setKind] = useState('Truck rental')
   const [amount, setAmount] = useState('')
@@ -395,7 +424,7 @@ function CostsSection({ jobId, costs, onChange }: { jobId: string; costs: JobCos
   )
 }
 
-function MoneySection({ jobId, extrasTotal, crewPay, costs }: { jobId: string; extrasTotal: number; crewPay: number; costs: number }) {
+function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: string; quoteId: string | null; extrasTotal: number; crewPay: number; costs: number }) {
   const [row, setRow] = useState<{ price: number; paid: number } | null>(null)
 
   const load = useCallback(async () => {
@@ -429,6 +458,7 @@ function MoneySection({ jobId, extrasTotal, crewPay, costs }: { jobId: string; e
         <li><span>Kept</span><strong className={kept < 0 ? 'warn' : ''}>{money(kept)}</strong></li>
         <li><span>Balance due from customer</span><strong>{money(Math.max(charged - row.paid, 0))}</strong></li>
       </ul>
+      {quoteId && charged - row.paid > 0 && <PayLink quoteId={quoteId} due={charged - row.paid} />}
     </section>
   )
 }

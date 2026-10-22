@@ -61,3 +61,11 @@ export function toLocalInput(iso: string | null): string {
 export function fromLocalInput(value: string): string | null {
   return value ? new Date(value).toISOString() : null
 }
+
+// A link that opens the phone's texting app with the message filled in.
+// iPhones read the message after "&body=", Android phones after "?body=".
+export function smsLink(phone: string, body: string) {
+  const to = phone.replace(/[^\d+]/g, '')
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  return `sms:${to}${ios ? '&' : '?'}body=${encodeURIComponent(body)}`
+}
