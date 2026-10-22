@@ -9,10 +9,10 @@ export default function PublicPage({ sub, children }: { sub: string; children: R
     <div className="app public">
       <header className="topbar">
         <div>
-          <div className="topbar-name">DMV Trusted Movers</div>
+          <Link to="/" className="topbar-name">DMV Trusted Movers</Link>
           <div className="topbar-sub">{sub}</div>
         </div>
-        <Link to="/" className="topbar-link">{session ? 'My moves' : 'Sign in'}</Link>
+        <Link to={session ? '/' : '/login'} className="topbar-link">{session ? 'My moves' : 'Sign in'}</Link>
       </header>
       <main className="content">{children}</main>
       <footer className="public-foot">

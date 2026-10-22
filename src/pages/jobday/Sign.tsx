@@ -102,7 +102,7 @@ function SignaturePad({ canvas, onInk }: { canvas: RefObject<HTMLCanvasElement>;
     ctx.lineWidth = 2.5
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.strokeStyle = '#0f1b2d'
+    ctx.strokeStyle = '#0f172a'
   }, [canvas])
 
   const point = (e: PointerEvent<HTMLCanvasElement>) => {
