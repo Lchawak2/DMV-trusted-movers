@@ -155,7 +155,7 @@ async function moveReminder(jobId: string): Promise<Email[]> {
 
 async function balancePaid(paymentId: string): Promise<Email[]> {
   const { data: p } = await db.from('payments')
-    .select('amount, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email)))')
+    .select('amount, provider_ref, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email)))')
     .eq('id', paymentId).maybeSingle()
   const q = p?.quotes as unknown as {
     token: string; jobs: { id: string; job_date: string }[] | { id: string; job_date: string } | null
@@ -164,11 +164,15 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
   const job = Array.isArray(q?.jobs) ? q!.jobs[0] : q?.jobs
   if (!p || !q || !job) return []
   const c = q.move_requests.customers
+  // A tip paid in the same checkout
+  const { data: tip } = await db.from('payments').select('amount')
+    .eq('provider_ref', p.provider_ref).eq('kind', 'tip').eq('status', 'paid').maybeSingle()
   const emails: Email[] = [{
     to: await admins(),
-    subject: `Balance paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
+    subject: `Balance paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}${tip ? ` + ${money(tip.amount)} tip` : ''}`,
     text: lines(
       `${c?.full_name ?? 'A customer'} paid the ${money(p.amount)} balance by card for the move on ${day(job.job_date)}.`,
+      tip && `They also tipped the crew ${money(tip.amount)}. It's added to each mover's pay in Pay crew.`,
       '',
       `See the job: ${LIVE_SITE}/jobs/${job.id}`,
     ),
@@ -180,7 +184,8 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
       text: lines(
         `Hi ${c.full_name.split(' ')[0]},`,
         '',
-        `We received your ${money(p.amount)} card payment for your move on ${day(job.job_date)}.`,
+        `We received your ${money(Number(p.amount) + Number(tip?.amount ?? 0))} card payment for your move on ${day(job.job_date)}.`,
+        tip && `That includes a ${money(tip.amount)} tip for your crew. Thank you!`,
         `Your booking: ${LIVE_SITE}/quote/${q.token}`,
         '',
         'Thank you for choosing DMV Trusted Movers.',
@@ -188,6 +193,29 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
     })
   }
   return emails
+}
+
+async function tipPaid(paymentId: string): Promise<Email[]> {
+  const { data: p } = await db.from('payments')
+    .select('amount, quotes(jobs(id, job_date), move_requests(customers(full_name)))')
+    .eq('id', paymentId).maybeSingle()
+  const q = p?.quotes as unknown as {
+    jobs: { id: string; job_date: string }[] | { id: string; job_date: string } | null
+    move_requests: { customers: { full_name: string } | null }
+  } | null
+  const job = Array.isArray(q?.jobs) ? q!.jobs[0] : q?.jobs
+  if (!p || !q || !job) return []
+  const c = q.move_requests.customers
+  return [{
+    to: await admins(),
+    subject: `Tip for the crew: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
+    text: lines(
+      `${c?.full_name ?? 'A customer'} tipped the crew ${money(p.amount)} by card for the move on ${day(job.job_date)}.`,
+      "It's split evenly among the movers and added to their pay in Pay crew.",
+      '',
+      `See the job: ${LIVE_SITE}/jobs/${job.id}`,
+    ),
+  }]
 }
 
 async function jobCancelled(jobId: string): Promise<Email[]> {
@@ -261,7 +289,7 @@ async function send(key: string, e: Email) {
 
 const builders: Record<string, (id: string) => Promise<Email[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
-  balance_paid: balancePaid, open_spots: openSpots, date_change: dateChange,
+  balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange,
 }
 
 Deno.serve(async () => {

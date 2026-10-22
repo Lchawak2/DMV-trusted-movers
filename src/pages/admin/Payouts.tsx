@@ -4,7 +4,7 @@ import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dayHeading, money } from '../../lib/format'
 import { assignmentPay } from '../../lib/pay'
-import { JOB_TYPES, PAY_METHODS, type Job, type PayMethod } from '../../lib/types'
+import { JOB_TYPES, PAY_METHODS, type Job, type JobTips, type PayMethod } from '../../lib/types'
 import { iso, type CrewRow } from './jobData'
 
 type Row = CrewRow & { jobs: Pick<Job, 'id' | 'job_date' | 'job_type' | 'est_hours' | 'status'> }
@@ -14,6 +14,8 @@ const SELECT = '*, accounts(full_name, email, phone, zelle), time_entries(*), jo
 export default function Payouts() {
   const [owed, setOwed] = useState<Row[] | null>(null)
   const [paid, setPaid] = useState<Row[]>([])
+  // Each mover's share of card tips, by job
+  const [tips, setTips] = useState<Record<string, number>>({})
   const [error, setError] = useState('')
 
   async function load() {
@@ -25,6 +27,8 @@ export default function Payouts() {
         .not('paid_at', 'is', null).order('paid_at', { ascending: false }).limit(20),
     ])
     const rows = (o.data ?? []) as Row[]
+    const { data: t } = await supabase.rpc('job_tips', { p_jobs: [...new Set(rows.map((a) => a.jobs.id))] })
+    setTips(Object.fromEntries(((t ?? []) as JobTips[]).map((x) => [x.job_id, Number(x.share)])))
     setOwed(rows.sort((a, b) => a.jobs.job_date.localeCompare(b.jobs.job_date)))
     setPaid((p.data ?? []) as Row[])
   }
@@ -49,7 +53,7 @@ export default function Payouts() {
   // Group by job so each job reads as one payday
   const jobs = new Map<string, Row[]>()
   for (const a of owed) jobs.set(a.jobs.id, [...(jobs.get(a.jobs.id) ?? []), a])
-  const total = owed.reduce((s, a) => s + assignmentPay(a, a.jobs, a.time_entries), 0)
+  const total = owed.reduce((s, a) => s + assignmentPay(a, a.jobs, a.time_entries) + (tips[a.jobs.id] ?? 0), 0)
 
   return (
     <Layout back="/money" title="Pay crew">
@@ -76,7 +80,7 @@ export default function Payouts() {
               <Link to={`/jobs/${job.id}`}><h3>{JOB_TYPES[job.job_type] ?? job.job_type} · {dayHeading(job.job_date)}</h3></Link>
             </div>
             <ul className="list">
-              {crew.map((a) => <OwedRow key={a.id} a={a} onPaid={markPaid} />)}
+              {crew.map((a) => <OwedRow key={a.id} a={a} tip={tips[a.jobs.id] ?? 0} onPaid={markPaid} />)}
             </ul>
           </section>
         )
@@ -107,9 +111,12 @@ export default function Payouts() {
   )
 }
 
-function OwedRow({ a, onPaid }: { a: Row; onPaid: (a: Row, amount: number, method: PayMethod) => Promise<void> }) {
-  const due = Math.round(assignmentPay(a, a.jobs, a.time_entries) * 100) / 100
+function OwedRow({ a, tip, onPaid }: { a: Row; tip: number; onPaid: (a: Row, amount: number, method: PayMethod) => Promise<void> }) {
+  const pay = Math.round(assignmentPay(a, a.jobs, a.time_entries) * 100) / 100
+  const due = Math.round((pay + tip) * 100) / 100
   const [amount, setAmount] = useState(String(due))
+  // Tips load after the rows, so refresh the suggested amount when they arrive
+  useEffect(() => { setAmount(String(due)) }, [due])
   const [method, setMethod] = useState<PayMethod>('zelle')
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -125,6 +132,7 @@ function OwedRow({ a, onPaid }: { a: Row; onPaid: (a: Row, amount: number, metho
             {a.role === 'lead' ? 'Lead' : 'Helper'} · {a.pay_type === 'hourly' ? `${money(a.crew_pay)}/hr × ${hours}` : 'flat pay'}
             {a.accounts?.phone ? ` · ${a.accounts.phone}` : ''}
           </div>
+          {tip > 0 && <div className="small tone-good">{money(pay)} pay + {money(tip)} tip from the customer</div>}
           {onClock && <div className="small tone-warn">Still on the clock</div>}
           {a.accounts?.zelle ? (
             <div className="small">

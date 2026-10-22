@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
 import JobDayChecklist from '../jobday/JobDayChecklist'
 import { useJobDay } from '../jobday/useJobDay'
-import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type TimeEntry, type TruckRental } from '../../lib/types'
+import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type JobTips, type TimeEntry, type TruckRental } from '../../lib/types'
 
 export default function CrewJob() {
   const { id } = useParams() as { id: string }
@@ -15,6 +15,7 @@ export default function CrewJob() {
   const [assignment, setAssignment] = useState<Assignment | null>(null)
   const [rental, setRental] = useState<TruckRental | null>(null)
   const [entry, setEntry] = useState<TimeEntry | null>(null)
+  const [tips, setTips] = useState<JobTips | null>(null)
   const [error, setError] = useState<string | null>(null)
   const day = useJobDay(id)
 
@@ -29,12 +30,14 @@ export default function CrewJob() {
     setAssignment(mine)
     if (mine?.status === 'accepted') {
       // Only the accepted lead can read the rental (enforced by the database)
-      const [r, t] = await Promise.all([
+      const [r, t, tip] = await Promise.all([
         supabase.from('truck_rentals').select('*').eq('job_id', id).maybeSingle(),
         supabase.from('time_entries').select('*').eq('assignment_id', mine.id).order('clock_in', { ascending: false }).limit(1).maybeSingle(),
+        supabase.rpc('job_tips', { p_jobs: [id] }),
       ])
       setRental(r.data as TruckRental | null)
       setEntry(t.data as TimeEntry | null)
+      setTips(((tip.data ?? []) as JobTips[])[0] ?? null)
     }
   }, [account, id])
 
@@ -77,6 +80,7 @@ export default function CrewJob() {
             <div className="job-amount">
               <div>{money(assignment.crew_pay)}</div>
               <div className="job-sub">{assignment.pay_type === 'hourly' ? 'Your pay per hour' : 'Your pay'}</div>
+              {tips && <div className="job-sub">+ {money(tips.share)} tip</div>}
               {assignment.paid_at && <div className="job-sub">Paid {money(assignment.paid_amount)} · {PAY_METHODS[assignment.paid_method!]}</div>}
             </div>
           </div>

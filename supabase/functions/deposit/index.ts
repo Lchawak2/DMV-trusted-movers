@@ -2,7 +2,8 @@
 // POST { action: 'start', token } -> { url } to send the customer to Stripe's payment page
 // POST { action: 'confirm', token } -> { paid } after they come back; a paid deposit books the job
 // POST { action: 'cancel', token } -> { refunded } the customer cancels; 72+ hours ahead the deposit is refunded
-// POST { action: 'balance', token } -> { url } after the move, to pay what's left (price plus extras, minus paid)
+// POST { action: 'balance', token, tip? } -> { url } after the move, to pay what's left (price plus extras,
+//   minus paid) plus an optional tip for the crew, or a tip on its own once the balance is paid
 // POST { action: 'refund', job_id } -> { refunded } the admin (signed in) refunds a cancelled job's deposit
 // Deployed with verify_jwt off: guests have no login, so the function checks the quote token itself.
 // The quote token in the customer's link is the only key a guest has, so every lookup goes through it.
@@ -71,23 +72,24 @@ async function confirm(quoteId: string): Promise<boolean> {
   return true
 }
 
-// Settle balance payments: record the ones Stripe says are paid. With close_open set, also close any
-// checkout still open, so a customer who opens the payment page twice can't pay twice.
+// Settle balance and tip payments: record the checkouts Stripe says are paid. With close_open set, also
+// close any checkout still open, so a customer who opens the payment page twice can't pay twice.
+// A checkout's balance and tip rows share its session id, so each session is checked once.
 async function confirmFinals(quoteId: string, closeOpen = false): Promise<boolean> {
-  const { data: payments } = await db.from('payments').select('id, provider_ref')
-    .eq('quote_id', quoteId).eq('kind', 'final').eq('status', 'pending').not('provider_ref', 'is', null)
+  const { data: payments } = await db.from('payments').select('provider_ref')
+    .eq('quote_id', quoteId).in('kind', ['final', 'tip']).eq('status', 'pending').not('provider_ref', 'is', null)
   let paid = false
-  for (const p of payments ?? []) {
-    const session = await stripe(`checkout/sessions/${p.provider_ref}`)
+  for (const ref of new Set((payments ?? []).map((p) => p.provider_ref as string))) {
+    const session = await stripe(`checkout/sessions/${ref}`)
     if (session.payment_status === 'paid') {
-      const { error } = await db.rpc('record_final_payment', { p_payment: p.id })
+      const { error } = await db.rpc('record_checkout', { p_ref: ref })
       if (error) throw new Error(error.message)
       paid = true
     } else if (session.status === 'expired') {
-      await db.from('payments').update({ status: 'expired' }).eq('id', p.id)
+      await db.from('payments').update({ status: 'expired' }).eq('provider_ref', ref).eq('status', 'pending')
     } else if (closeOpen && session.status === 'open') {
-      await stripe(`checkout/sessions/${p.provider_ref}/expire`, {})
-      await db.from('payments').update({ status: 'expired' }).eq('id', p.id)
+      await stripe(`checkout/sessions/${ref}/expire`, {})
+      await db.from('payments').update({ status: 'expired' }).eq('provider_ref', ref).eq('status', 'pending')
     }
   }
   return paid
@@ -126,7 +128,7 @@ async function isAdmin(req: Request): Promise<boolean> {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   try {
-    const { action, token, job_id } = await req.json()
+    const { action, token, job_id, tip } = await req.json()
 
     if (action === 'refund') {
       if (!(await isAdmin(req))) return reply({ error: 'Only the admin can refund.' }, 403)
@@ -153,25 +155,39 @@ Deno.serve(async (req) => {
       if (bal.status === 'cancelled') return reply({ error: 'This move was cancelled.' }, 409)
       if (!bal.payable) return reply({ error: 'You can pay the balance once your move is done.' }, 409)
       const cents = Math.round(Number(bal.balance) * 100)
-      if (cents < 50) return reply({ error: 'Nothing is left to pay. Thank you!' }, 409)
+      const tipCents = Math.round(Number(tip ?? 0) * 100)
+      if (!Number.isFinite(tipCents) || tipCents < 0 || tipCents > 100000) return reply({ error: 'Please pick a tip up to $1,000.' }, 400)
+      if (tipCents > 0 && tipCents < 100) return reply({ error: 'Tips start at $1.' }, 400)
+      if (cents + tipCents < 50) return reply({ error: 'Nothing is left to pay. Thank you!' }, 409)
 
       const request = quote.move_requests as unknown as { preferred_date: string; customers: { email: string | null } | null }
       const site = siteFor(req.headers.get('origin'))
+      const items = [
+        ...(cents > 0 ? [{ cents, name: `Moving balance for ${request.preferred_date}` }] : []),
+        ...(tipCents > 0 ? [{ cents: tipCents, name: 'Tip for your moving crew' }] : []),
+      ]
       const form: Record<string, string> = {
         mode: 'payment',
-        'line_items[0][quantity]': '1',
-        'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': String(cents),
-        'line_items[0][price_data][product_data][name]': `Moving balance for ${request.preferred_date}`,
         client_reference_id: quote.id,
         'metadata[quote_id]': quote.id,
-        'metadata[kind]': 'final',
+        'metadata[kind]': cents > 0 ? 'final' : 'tip',
         success_url: `${site}/quote/${token}?paid=1`,
         cancel_url: `${site}/quote/${token}`,
       }
+      items.forEach((item, i) => {
+        form[`line_items[${i}][quantity]`] = '1'
+        form[`line_items[${i}][price_data][currency]`] = 'usd'
+        form[`line_items[${i}][price_data][unit_amount]`] = String(item.cents)
+        form[`line_items[${i}][price_data][product_data][name]`] = item.name
+      })
       if (request.customers?.email) form.customer_email = request.customers.email
       const session = await stripe('checkout/sessions', form)
-      await db.from('payments').insert({ quote_id: quote.id, kind: 'final', amount: cents / 100, status: 'pending', provider_ref: session.id })
+      const rows = [
+        ...(cents > 0 ? [{ kind: 'final', amount: cents / 100 }] : []),
+        ...(tipCents > 0 ? [{ kind: 'tip', amount: tipCents / 100 }] : []),
+      ].map((r) => ({ ...r, quote_id: quote.id, status: 'pending', provider_ref: session.id }))
+      const { error: insertError } = await db.from('payments').insert(rows)
+      if (insertError) throw new Error(insertError.message)
       return reply({ url: session.url })
     }
 
