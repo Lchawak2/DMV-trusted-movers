@@ -5,6 +5,7 @@ import DayGroups from '../../components/DayGroups'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { money } from '../../lib/format'
+import { t } from '../../lib/lang'
 import type { Assignment, Job } from '../../lib/types'
 
 type Row = { job: Job; assignment: Assignment }
@@ -29,19 +30,19 @@ export default function MyJobs() {
   return (
     <Layout>
       {rows === null ? (
-        <p className="muted center">Loading…</p>
+        <p className="muted center">{t('Loading…', 'Cargando…')}</p>
       ) : (
         <DayGroups
           items={rows}
-          empty="No upcoming jobs. New offers will show up here."
+          empty={t('No upcoming jobs. New offers will show up here.', 'No tienes trabajos próximos. Las nuevas ofertas aparecerán aquí.')}
           render={({ job, assignment }) => (
             <JobCard
               key={assignment.id}
               job={job}
               amount={money(assignment.crew_pay)}
-              amountLabel={assignment.pay_type === 'hourly' ? 'Your pay per hour' : 'Your pay'}
-              badge={assignment.status === 'offered' ? 'New offer · respond' : undefined}
-              footer={<p className="muted small">You're the {assignment.role}</p>}
+              amountLabel={assignment.pay_type === 'hourly' ? t('Your pay per hour', 'Tu pago por hora') : t('Your pay', 'Tu pago')}
+              badge={assignment.status === 'offered' ? t('New offer · respond', 'Nueva oferta · responde') : undefined}
+              footer={<p className="muted small">{assignment.role === 'lead' ? t("You're the lead", 'Eres el líder') : t("You're a helper", 'Eres ayudante')}</p>}
             />
           )}
         />

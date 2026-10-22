@@ -5,6 +5,7 @@ import JobCard from '../../components/JobCard'
 import DayGroups from '../../components/DayGroups'
 import { supabase } from '../../lib/supabase'
 import { money } from '../../lib/format'
+import { t } from '../../lib/lang'
 import type { Job } from '../../lib/types'
 
 type Row = { job: Job; spotsLeft: number }
@@ -46,26 +47,26 @@ export default function FindJob() {
   return (
     <Layout>
       {rows === null ? (
-        <p className="muted center">Loading…</p>
+        <p className="muted center">{t('Loading…', 'Cargando…')}</p>
       ) : (
         <DayGroups
           items={rows}
-          empty="No open jobs right now. Posted jobs will show up here."
+          empty={t('No open jobs right now. Posted jobs will show up here.', 'No hay trabajos abiertos ahora. Los trabajos publicados aparecerán aquí.')}
           render={({ job, spotsLeft }) => (
             <JobCard
               key={job.id}
               job={job}
               amount={money(job.open_pay ?? 0)}
-              amountLabel={job.open_pay_type === 'hourly' ? 'Your pay per hour' : 'Your pay'}
+              amountLabel={job.open_pay_type === 'hourly' ? t('Your pay per hour', 'Tu pago por hora') : t('Your pay', 'Tu pago')}
               footer={
                 <>
-                  <p className="muted small">{spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left · you'd join as a helper</p>
+                  <p className="muted small">{spotsLeft === 1 ? t('1 spot left', 'Queda 1 lugar') : t(`${spotsLeft} spots left`, `Quedan ${spotsLeft} lugares`)} · {t("you'd join as a helper", 'entrarías como ayudante')}</p>
                   {error?.jobId === job.id && <p className="warn">{error.text}</p>}
                 </>
               }
               action={
                 <button className="primary block" disabled={busy === job.id} onClick={() => claim(job)}>
-                  {busy === job.id ? 'Claiming…' : 'Claim this job'}
+                  {busy === job.id ? t('Claiming…', 'Tomando…') : t('Claim this job', 'Tomar este trabajo')}
                 </button>
               }
             />

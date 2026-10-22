@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
 import JobDayChecklist from '../jobday/JobDayChecklist'
 import TruckSteps from '../jobday/TruckSteps'
+import { jobType, t } from '../../lib/lang'
 import { useJobDay } from '../jobday/useJobDay'
 import { JOB_TYPES, PAY_METHODS, type Assignment, type Job, type JobTips, type TimeEntry, type TruckRental } from '../../lib/types'
 
@@ -31,20 +32,20 @@ export default function CrewJob() {
     setAssignment(mine)
     if (mine?.status === 'accepted') {
       // Only the accepted lead can read the rental (enforced by the database)
-      const [r, t, tip] = await Promise.all([
+      const [r, te, tip] = await Promise.all([
         supabase.from('truck_rentals').select('*').eq('job_id', id).maybeSingle(),
         supabase.from('time_entries').select('*').eq('assignment_id', mine.id).order('clock_in', { ascending: false }).limit(1).maybeSingle(),
         supabase.rpc('job_tips', { p_jobs: [id] }),
       ])
       setRental(r.data as TruckRental | null)
-      setEntry(t.data as TimeEntry | null)
+      setEntry(te.data as TimeEntry | null)
       setTips(((tip.data ?? []) as JobTips[])[0] ?? null)
     }
   }, [account, id])
 
   useEffect(() => { load() }, [load])
 
-  if (!job || !assignment) return <Layout back="/"><p className="muted center">{job === null ? 'Loading…' : 'Job not found.'}</p></Layout>
+  if (!job || !assignment) return <Layout back="/"><p className="muted center">{job === null ? t('Loading…', 'Cargando…') : t('Job not found.', 'No se encontró el trabajo.')}</p></Layout>
 
   async function respond(accept: boolean) {
     setError(null)
@@ -70,7 +71,7 @@ export default function CrewJob() {
   const mapsLink = (address: string) => `https://maps.google.com/?q=${encodeURIComponent(address)}`
 
   return (
-    <Layout back="/" title="Job">
+    <Layout back="/" title={t('Job', 'Trabajo')}>
       <section className="job-card">
         <div className="job-head">
           <div className="job-head-row">
@@ -80,33 +81,33 @@ export default function CrewJob() {
             </div>
             <div className="job-amount">
               <div>{money(assignment.crew_pay)}</div>
-              <div className="job-sub">{assignment.pay_type === 'hourly' ? 'Your pay per hour' : 'Your pay'}</div>
-              {tips && <div className="job-sub">+ {money(tips.share)} tip</div>}
-              {assignment.paid_at && <div className="job-sub">Paid {money(assignment.paid_amount)} · {PAY_METHODS[assignment.paid_method!]}</div>}
+              <div className="job-sub">{assignment.pay_type === 'hourly' ? t('Your pay per hour', 'Tu pago por hora') : t('Your pay', 'Tu pago')}</div>
+              {tips && <div className="job-sub">+ {money(tips.share)} {t('tip', 'propina')}</div>}
+              {assignment.paid_at && <div className="job-sub">{t('Paid', 'Pagado')} {money(assignment.paid_amount)} · {PAY_METHODS[assignment.paid_method!]}</div>}
             </div>
           </div>
         </div>
         <div className="job-body">
           <div className="facts">
-            <div><span>Role</span>{assignment.role === 'lead' ? 'Lead' : 'Helper'}</div>
-            <div><span>Job</span>{JOB_TYPES[job.job_type] ?? job.job_type}</div>
-            <div><span>Hours</span>{job.est_hours ?? '—'}</div>
+            <div><span>{t('Role', 'Rol')}</span>{assignment.role === 'lead' ? t('Lead', 'Líder') : t('Helper', 'Ayudante')}</div>
+            <div><span>{t('Job', 'Trabajo')}</span>{jobType(job.job_type, JOB_TYPES[job.job_type])}</div>
+            <div><span>{t('Hours', 'Horas')}</span>{job.est_hours ?? '—'}</div>
           </div>
           <div className="facts">
-            <div><span>Truck</span>{job.truck_size ?? '—'}</div>
-            <div><span>Crew</span>{job.crew_size ?? '—'}</div>
-            <div><span>Size</span>{job.home_size ?? '—'}</div>
+            <div><span>{t('Truck', 'Camión')}</span>{job.truck_size ?? '—'}</div>
+            <div><span>{t('Crew', 'Equipo')}</span>{job.crew_size ?? '—'}</div>
+            <div><span>{t('Size', 'Tamaño')}</span>{job.home_size ?? '—'}</div>
           </div>
           <ol className="route">
             <li><a href={mapsLink(job.from_address)} target="_blank" rel="noreferrer">{job.from_address}</a></li>
             {job.to_address && <li><a href={mapsLink(job.to_address)} target="_blank" rel="noreferrer">{job.to_address}</a></li>}
           </ol>
-          {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
+          {job.access_notes && <div className="notes"><span>{t('Access', 'Acceso')}</span>{job.access_notes}</div>}
 
           {assignment.status === 'offered' && (
             <div className="row">
-              <button className="primary" onClick={() => respond(true)}>Accept job</button>
-              <button className="secondary" onClick={() => respond(false)}>Decline</button>
+              <button className="primary" onClick={() => respond(true)}>{t('Accept job', 'Aceptar trabajo')}</button>
+              <button className="secondary" onClick={() => respond(false)}>{t('Decline', 'Rechazar')}</button>
             </div>
           )}
 
@@ -114,23 +115,23 @@ export default function CrewJob() {
             <>
               {rental && (
                 <div className="notes">
-                  <span>Truck pickup</span>
-                  {rental.company} {rental.truck_size} · Confirmation {rental.confirmation ?? '—'}<br />
-                  Pick up {dateTime(rental.pickup_at)} at {rental.pickup_location}<br />
-                  Return {dateTime(rental.return_at)} at {rental.return_location}
+                  <span>{t('Truck pickup', 'Recoger el camión')}</span>
+                  {rental.company} {rental.truck_size} · {t('Confirmation', 'Confirmación')} {rental.confirmation ?? '—'}<br />
+                  {t('Pick up', 'Recoger')} {dateTime(rental.pickup_at)} {t('at', 'en')} {rental.pickup_location}<br />
+                  {t('Return', 'Devolver')} {dateTime(rental.return_at)} {t('at', 'en')} {rental.return_location}
                   <TruckSteps jobId={job.id} rental={rental} onChange={load} />
                 </div>
               )}
               {entry?.clock_out ? (
-                <p className="muted">Clocked out {dateTime(entry.clock_out)}.</p>
+                <p className="muted">{t('Clocked out', 'Salida marcada')} {dateTime(entry.clock_out)}.</p>
               ) : onClock ? (
                 <>
-                  <p className="muted">On the clock since {dateTime(entry!.clock_in)}</p>
-                  {mustSign && <p className="muted small">Clock out unlocks once the customer has signed.</p>}
-                  <button className="primary" onClick={clockOut} disabled={mustSign}>Clock out</button>
+                  <p className="muted">{t('On the clock since', 'Trabajando desde')} {dateTime(entry!.clock_in)}</p>
+                  {mustSign && <p className="muted small">{t('Clock out unlocks once the customer has signed.', 'Podrás marcar la salida cuando el cliente firme.')}</p>}
+                  <button className="primary" onClick={clockOut} disabled={mustSign}>{t('Clock out', 'Marcar salida')}</button>
                 </>
               ) : (
-                <button className="primary" onClick={clockIn}>Clock in</button>
+                <button className="primary" onClick={clockIn}>{t('Clock in', 'Marcar entrada')}</button>
               )}
             </>
           )}
