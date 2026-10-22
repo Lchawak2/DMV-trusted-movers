@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
@@ -43,6 +43,7 @@ export default function Profile() {
         <button className="primary">{t('Save', 'Guardar')}</button>
         {saved && <p className="note">{t('Saved.', 'Guardado.')}</p>}
       </form>
+      {account?.role === 'admin' && <ReviewLink />}
       {account?.role === 'admin' && <TestText phone={account.phone} />}
       <p className="muted">{t('Signed in as', 'Conectado como')} {account?.email} · {account?.role}</p>
       <button className="secondary" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
@@ -72,5 +73,37 @@ function TestText({ phone }: { phone: string | null }) {
         {!phone ? 'Add your phone above first' : state === 'busy' ? 'Sending…' : 'Send me a test text'}
       </button>
     </section>
+  )
+}
+
+// Where the Leave a Google review button sends customers
+function ReviewLink() {
+  const [url, setUrl] = useState('')
+  const [state, setState] = useState<'idle' | 'saved'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.from('settings').select('review_url').maybeSingle().then(({ data }) => setUrl(data?.review_url ?? ''))
+  }, [])
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    const value = url.trim()
+    if (value && !value.startsWith('https://')) return setError('The link should start with https://')
+    const { error } = await supabase.from('settings').update({ review_url: value || null, updated_at: new Date().toISOString() }).eq('id', true)
+    if (error) return setError(error.message)
+    setState('saved')
+  }
+
+  return (
+    <form className="card form" onSubmit={save}>
+      <h3>Google review link</h3>
+      <p className="muted small">After a move, customers rate it on their booking page and get a button to this link. In your Google Business Profile, tap "Ask for reviews" to copy it.</p>
+      <label>Link<input type="url" value={url} placeholder="https://g.page/r/..." onChange={(e) => { setUrl(e.target.value); setState('idle') }} /></label>
+      {error && <p className="warn">{error}</p>}
+      {state === 'saved' && <p className="note">Saved.</p>}
+      <button className="secondary">Save link</button>
+    </form>
   )
 }

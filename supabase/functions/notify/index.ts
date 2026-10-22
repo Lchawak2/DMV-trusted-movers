@@ -225,7 +225,8 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
         '',
         `We received your ${money(Number(p.amount) + Number(tip?.amount ?? 0))} card payment for your move on ${day(job.job_date)}.`,
         tip && `That includes a ${money(tip.amount)} tip for your crew. Thank you!`,
-        `Your booking: ${LIVE_SITE}/quote/${q.token}`,
+        '',
+        `How did we do? Rate your move: ${LIVE_SITE}/quote/${q.token}`,
         '',
         'Thank you for choosing DMV Trusted Movers.',
       ),
@@ -317,6 +318,25 @@ async function dateChange(jobId: string): Promise<Email[]> {
   }]
 }
 
+async function review(jobId: string): Promise<Out[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, job_reviews(rating, comment), move_requests(customers(full_name, phone))').eq('id', jobId).maybeSingle()
+  const rv = (Array.isArray(j?.job_reviews) ? j!.job_reviews[0] : j?.job_reviews) as { rating: number; comment: string | null } | undefined
+  if (!j || !rv) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string; phone: string | null } | null } | null)?.customers
+  return [{
+    to: await admins(),
+    subject: `${'★'.repeat(rv.rating)}${'☆'.repeat(5 - rv.rating)} from ${c?.full_name ?? 'a customer'}`,
+    text: lines(
+      `${c?.full_name ?? 'A customer'} rated their move on ${day(j.job_date)} ${rv.rating} out of 5.`,
+      rv.comment && `"${rv.comment}"`,
+      rv.rating < 4 && c?.phone && `Worth a call: ${c.phone}`,
+      '',
+      `See the job: ${LIVE_SITE}/jobs/${jobId}`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -340,7 +360,7 @@ async function sendText(to: string, body: string) {
 
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
-  balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange,
+  balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
 }
 
 Deno.serve(async () => {

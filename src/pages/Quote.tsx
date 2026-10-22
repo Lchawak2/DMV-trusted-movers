@@ -35,6 +35,9 @@ type QuoteView = {
   change_status: 'pending' | 'declined' | null
   earliest_change: string
   tipped: number
+  rating: number | null
+  review_comment: string | null
+  review_url: string | null
 }
 
 const longDay = (day: string) => parseDay(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -180,6 +183,8 @@ export default function Quote({ token }: { token: string }) {
         </section>
       )}
 
+      {booked && q.job_status === 'completed' && <RateMove token={token} q={q} onDone={load} />}
+
       {booked && <SaveMoves token={token} />}
 
       {booked && q.balance_payable && q.balance_due != null && (
@@ -269,6 +274,57 @@ export default function Quote({ token }: { token: string }) {
       {q.status === 'expired' && <p className="note center-text">This quote has expired. Reply to our text and we'll send a fresh one.</p>}
       {q.status === 'superseded' && <p className="note center-text">We sent you a newer quote. Please use the latest link.</p>}
     </PublicPage>
+  )
+}
+
+// After the move: stars and a comment come to us; everyone also gets the Google review link
+function RateMove({ token, q, onDone }: { token: string; q: QuoteView; onDone: () => void }) {
+  const [rating, setRating] = useState(q.rating ?? 0)
+  const [comment, setComment] = useState(q.review_comment ?? '')
+  const [editing, setEditing] = useState(!q.rating)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit() {
+    setBusy(true); setError(null)
+    const { error } = await supabase.rpc('rate_move', { p_token: token, p_rating: rating, p_comment: comment || null })
+    setBusy(false)
+    if (error) return setError(error.message)
+    setEditing(false)
+    onDone()
+  }
+
+  return (
+    <section className="card form">
+      {editing ? (
+        <>
+          <h3>How did we do?</h3>
+          <div className="star-pick" role="radiogroup" aria-label="Rating">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                className={n <= rating ? 'on' : ''} onClick={() => setRating(n)}>★</button>
+            ))}
+          </div>
+          <label>{rating && rating < 4 ? 'What could we have done better?' : 'Anything to tell us? (optional)'}
+            <textarea rows={3} maxLength={2000} value={comment} onChange={(e) => setComment(e.target.value)} />
+          </label>
+          {error && <p className="warn">{error}</p>}
+          <button className="primary" disabled={!rating || busy} onClick={submit}>{busy ? 'Sending…' : 'Send'}</button>
+        </>
+      ) : (
+        <>
+          <h3>Thanks for your feedback!</h3>
+          <p className="stars center-text">{'★'.repeat(rating)}{'☆'.repeat(5 - rating)}</p>
+          {q.review_url && (
+            <>
+              <p className="center-text">A Google review helps other families find movers they can trust.</p>
+              <a className="primary block" href={q.review_url} target="_blank" rel="noreferrer">Leave a Google review</a>
+            </>
+          )}
+          <button className="link" onClick={() => setEditing(true)}>Change my rating</button>
+        </>
+      )}
+    </section>
   )
 }
 

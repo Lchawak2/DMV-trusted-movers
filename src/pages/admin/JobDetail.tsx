@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import SendText from '../../components/SendText'
+import ReviewSection from './ReviewSection'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
@@ -112,6 +113,7 @@ export default function AdminJobDetail() {
             </div>
             {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
           </section>
+          {job.status === 'completed' && <ReviewSection jobId={id} quoteId={job.quote_id} />}
           <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
           <RentalSection jobId={id} rental={rental} onChange={load} />
           <button className="danger" onClick={remove}>Delete job</button>
