@@ -7,6 +7,7 @@ import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
+import SendText from '../../components/SendText'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
@@ -433,6 +434,7 @@ function PayLink({ quoteId, due }: { quoteId: string; due: number }) {
   const copy = (what: string, value: string) => { navigator.clipboard?.writeText(value); setCopied(what) }
   return (
     <>
+      {info.phone && <SendText to={info.phone} body={text} label="Text payment link from the business number" />}
       <div className="row">
         {info.phone && <a className="primary small-btn" href={smsLink(info.phone, text)}>Text payment link</a>}
         <button className="secondary small-btn" onClick={() => copy('message', text)}>{copied === 'message' ? 'Copied' : 'Copy message'}</button>

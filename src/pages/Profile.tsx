@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import { t } from '../lib/lang'
+import { sendText } from '../lib/texting'
 
 export default function Profile() {
   const { account, refresh } = useAuth()
@@ -42,8 +43,34 @@ export default function Profile() {
         <button className="primary">{t('Save', 'Guardar')}</button>
         {saved && <p className="note">{t('Saved.', 'Guardado.')}</p>}
       </form>
+      {account?.role === 'admin' && <TestText phone={account.phone} />}
       <p className="muted">{t('Signed in as', 'Conectado como')} {account?.email} · {account?.role}</p>
       <button className="secondary" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
     </Layout>
+  )
+}
+
+// Checks the Twilio setup by texting the admin's own phone
+function TestText({ phone }: { phone: string | null }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'sent'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  async function send() {
+    if (!phone) return
+    setState('busy'); setError(null)
+    const err = await sendText(phone, 'DMV Trusted Movers: this is a test text. Texting from the app works!')
+    if (err) { setError(err); setState('idle') } else setState('sent')
+  }
+
+  return (
+    <section className="card form">
+      <h3>Texting</h3>
+      <p className="muted small">Sends a test text from your Twilio number to your phone above, to check the setup.</p>
+      {error && <p className="warn">{error}</p>}
+      {state === 'sent' && <p className="note">Sent. It should arrive in a few seconds.</p>}
+      <button className="secondary" disabled={!phone || state === 'busy'} onClick={send}>
+        {!phone ? 'Add your phone above first' : state === 'busy' ? 'Sending…' : 'Send me a test text'}
+      </button>
+    </section>
   )
 }

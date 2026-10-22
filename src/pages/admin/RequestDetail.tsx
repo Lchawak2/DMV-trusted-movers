@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, parseDay, smsLink } from '../../lib/format'
+import SendText from '../../components/SendText'
+import { useTexting } from '../../lib/texting'
 import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, TRUCK_SIZES, type LostReason, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
 import ProfitPreview from './ProfitPreview'
@@ -21,6 +23,7 @@ export default function RequestDetail() {
   const [form, setForm] = useState({ price: '', deposit: '', crew_size: '2', truck_size: '', est_hours: '', arrival_window: '', note: '' })
   const [depositPaid, setDepositPaid] = useState(true)
   const [losing, setLosing] = useState(false)
+  const canText = useTexting()
 
   async function load() {
     const { data } = await supabase.from('move_requests').select(REQUEST_SELECT).eq('id', id).single()
@@ -198,8 +201,9 @@ export default function RequestDetail() {
         <section className="card form">
           <h3>Send the quote</h3>
           <pre className="quote-text">{quoteText}</pre>
+          {c?.phone && <SendText to={c.phone} body={quoteText} label="Text it from the business number" />}
           <div className="row">
-            {sms(quoteText) && <a href={sms(quoteText)!} className="primary">Text it</a>}
+            {sms(quoteText) && <a href={sms(quoteText)!} className={canText ? 'secondary' : 'primary'}>{canText ? 'Text from my phone' : 'Text it'}</a>}
             {mail(quoteText) && <a href={mail(quoteText)!} className="secondary">Email it</a>}
           </div>
           {r.status === 'accepted' ? (
