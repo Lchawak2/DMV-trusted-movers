@@ -5,8 +5,6 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { SUPPLIES } from '../lib/prices'
-import Stepper from '../components/Stepper'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -22,16 +20,6 @@ export const ARRIVAL_WINDOWS = ['Morning (8 to 10 AM)', 'Midday (11 AM to 1 PM)'
 const PARKING = ['Street', 'Driveway', 'Loading dock', 'Parking garage']
 const MAX_PHOTOS = 8
 
-// The boxes and supplies the customer counted go at the top of their notes, where the office sees them when pricing
-function withSupplies(notes: string, supplies: Record<string, number>) {
-  const wanted = SUPPLIES.filter((x) => supplies[x.name] > 0).map((x) => `${supplies[x.name]} ${x.name.toLowerCase()}`)
-  const text = [
-    wanted.length ? `Supplies wanted: ${wanted.join(', ')}` : 'Supplies wanted: none',
-    notes.trim(),
-  ].filter(Boolean).join('\n')
-  return text || null
-}
-
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 // The price the database worked out right after the form was sent, with its quote link
@@ -42,7 +30,7 @@ type Instant = {
 
 // The answers behind an instant price, kept for this browser tab so "Change my answers" can bring them back
 type Answers = {
-  type: string; from: Place; to: Place; size: string; items: string[]; supplies: Record<string, number>
+  type: string; from: Place; to: Place; size: string; items: string[]
   date: string; arrival: string; notes: string; name: string; phone: string; email: string; source: string
 }
 type Draft = { answers: Answers; request: string; token: string }
@@ -57,22 +45,16 @@ type RequestAnswers = {
   full_name: string; phone: string | null; email: string | null
 }
 
-// Turn a saved request back into form answers; the box counts come from the "Supplies wanted" line withSupplies wrote
+// Turn a saved request back into form answers
 function fromRequest(r: RequestAnswers): Answers {
   const place = (address: string | null, floor: number | null, elevator: boolean | null, parking: string | null): Place =>
     ({ address: address ?? '', floor: floor === null ? '' : String(floor), elevator: elevator === null ? '' : elevator ? 'yes' : 'no', parking: parking ?? '' })
   const lines = (r.notes ?? '').split('\n')
-  const supplies: Record<string, number> = {}
-  if (lines[0]?.startsWith('Supplies wanted:')) {
-    for (const part of lines.shift()!.slice('Supplies wanted:'.length).split(',')) {
-      const m = part.trim().match(/^(\d+) (.+)$/)
-      const x = m && SUPPLIES.find((s) => s.name.toLowerCase() === m[2])
-      if (x) supplies[x.name] = Number(m![1])
-    }
-  }
-  if (lines[0]?.startsWith('Distance: ')) lines.shift() // older requests asked how far apart
+  // older requests started with the boxes they wanted and how far apart the places were
+  if (lines[0]?.startsWith('Supplies wanted:')) lines.shift()
+  if (lines[0]?.startsWith('Distance: ')) lines.shift()
   return {
-    type: r.move_type, size: r.home_size ?? '', items: r.special_items ?? [], supplies,
+    type: r.move_type, size: r.home_size ?? '', items: r.special_items ?? [],
     from: place(r.from_address, r.from_floor, r.from_elevator, r.from_parking), to: place(r.to_address, r.to_floor, r.to_elevator, r.to_parking),
     date: r.preferred_date, arrival: r.arrival_window ?? '', notes: lines.join('\n'),
     name: r.full_name, phone: r.phone ?? '', email: r.email ?? '', source: r.lead_source ?? '',
@@ -96,7 +78,6 @@ export default function Book() {
   const [to, setTo] = useState<Place>(emptyPlace)
   const [size, setSize] = useState('')
   const [items, setItems] = useState<string[]>([])
-  const [supplies, setSupplies] = useState<Record<string, number>>({})
   const [photos, setPhotos] = useState<File[]>([])
   const [date, setDate] = useState('')
   const [arrival, setArrival] = useState('')
@@ -113,7 +94,7 @@ export default function Book() {
   const [params] = useSearchParams()
 
   function restore(a: Answers) {
-    setType(a.type); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items); setSupplies(a.supplies)
+    setType(a.type); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items)
     setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
   }
 
@@ -166,7 +147,7 @@ export default function Book() {
       p_move_type: type, p_home_size: size || null, p_special_items: items,
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
-      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies),
+      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: notes.trim() || null,
       p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
@@ -184,10 +165,10 @@ export default function Book() {
       }
     }
     // Simple moves get their price and booking link now; the rest wait for the office
-    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies, p_replaces: replaces })
+    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: {}, p_replaces: replaces })
     const instant = quick.error ? null : (quick.data as Instant | null)
     if (instant) {
-      saveDraft({ request: id, token: instant.token, answers: { type, from, to, size, items, supplies, date, arrival, notes, name, phone, email, source } })
+      saveDraft({ request: id, token: instant.token, answers: { type, from, to, size, items, date, arrival, notes, name, phone, email, source } })
     }
     setBusy(false)
     setReplaces(null)
@@ -263,21 +244,6 @@ export default function Book() {
           {photos.length > 0 && (
             <div className="small">{photos.length} {photos.length === 1 ? 'photo' : 'photos'} added · <button type="button" className="link" onClick={() => setPhotos([])}>Remove</button></div>
           )}
-          <div><strong>How many boxes do you need?</strong></div>
-          <div className="small muted">We bring them and add them to your price. Have your own boxes? Leave these at 0.</div>
-          {SUPPLIES.filter((x) => x.box).map((x) => (
-            <div className="calc-row" key={x.name}>
-              <span>{x.name} <small>${x.price} {x.per}</small></span>
-              <Stepper value={supplies[x.name] ?? 0} onChange={(n) => setSupplies({ ...supplies, [x.name]: n })} label={x.name.toLowerCase()} />
-            </div>
-          ))}
-          <div className="small muted">Other supplies (optional)</div>
-          {SUPPLIES.filter((x) => !x.box).map((x) => (
-            <div className="calc-row" key={x.name}>
-              <span>{x.name} <small>${x.price} {x.per}</small></span>
-              <Stepper value={supplies[x.name] ?? 0} onChange={(n) => setSupplies({ ...supplies, [x.name]: n })} label={x.name.toLowerCase()} />
-            </div>
-          ))}
           <label>
             Anything else we should know?
             <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000}

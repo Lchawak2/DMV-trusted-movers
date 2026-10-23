@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import { MOVE_RATE, MOVE_START_HOURS, SMALL_MIN_HOURS, SUPPLIES, TILES, TRIP_FEE } from '../lib/prices'
+import { MOVE_RATE, MOVE_START_HOURS, SMALL_MIN_HOURS, TILES, TRIP_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 const INCLUDED = [
+  'Moving blankets and plastic wrap to protect your furniture',
   'No extra charge for stairs or elevators',
   'No extra charge for paying by card',
   'Free cancellation up to 72 hours before your move',
@@ -44,7 +45,7 @@ export default function Pricing() {
           </div>
           <ul className="price-rules">
             <li><strong>Moves:</strong> one flat price covers the truck, gas and the first {MOVE_START_HOURS} hours. Takes longer? {dollars(MOVE_RATE)} an hour, only for the time used.</li>
-            <li><strong>You pack, we move.</strong> Want us to pack too? Book Packing.</li>
+            <li><strong>You pack, we move.</strong> Please have your boxes packed before we arrive. Want us to pack too? Book Packing.</li>
             <li><strong>Moving more than 50 miles?</strong> Call us first and we'll price it for you.</li>
             <li><strong>Loading help and packing:</strong> {SMALL_MIN_HOURS} hour minimum, plus a {dollars(TRIP_FEE)} trip fee.</li>
             <li><strong>Your price:</strong> fill out our <Link to="/book">quote form</Link> and see your price right away.</li>
@@ -54,18 +55,6 @@ export default function Pricing() {
 
       <section className="site-sec alt">
         <div className="site-wrap">
-          <h2>Boxes and supplies</h2>
-          <p className="site-lead">We bring them on moving day. Tell us how many on your quote form, or skip them if you have your own.</p>
-          <div className="site-prices">
-            {SUPPLIES.map((x) => (
-              <div className="site-price" key={x.name}><span>{x.name}</span><strong>{dollars(x.price)} {x.per}</strong></div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="site-sec">
-        <div className="site-wrap">
           <h2>Always included</h2>
           <ul className="price-included">
             {INCLUDED.map((t) => <li key={t}>{t}</li>)}
@@ -73,7 +62,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      <section className="site-sec alt">
+      <section className="site-sec">
         <div className="site-wrap">
           <h2>How you pay</h2>
           <p className="site-lead">Your price shows up as soon as you send the quote form, and you can book it right there. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>

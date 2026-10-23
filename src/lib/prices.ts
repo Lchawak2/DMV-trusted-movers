@@ -18,15 +18,3 @@ export const TILES = [
   { name: 'Loading help', price: LABOR_RATE, per: 'an hour, your truck' },
   { name: 'Packing', price: PACK_RATE, per: 'an hour per packer' },
 ]
-
-// Boxes and supplies we bring; listed on the Prices page and counted on the booking form
-export const SUPPLIES = [
-  { name: 'Small boxes', price: 3, per: 'each', box: true },
-  { name: 'Medium boxes', price: 4, per: 'each', box: true },
-  { name: 'Large boxes', price: 5, per: 'each', box: true },
-  { name: 'Wardrobe boxes', price: 25, per: 'each', box: true },
-  { name: 'Moving blankets', price: 5, per: 'each', box: false },
-  { name: 'Plastic wrap', price: 35, per: 'a roll', box: false },
-  { name: 'Packing tape', price: 5, per: 'a roll', box: false },
-]
-
