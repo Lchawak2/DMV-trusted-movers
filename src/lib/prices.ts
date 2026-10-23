@@ -5,9 +5,9 @@
 // Home moves: one flat price per size for 2 movers, truck and gas, up to a set number of hours.
 // Past those hours, extra time is MOVE_RATE an hour.
 export const HOME_MOVES = [
-  { size: 'Studio', price: 599, hours: 3 },
-  { size: '1 bedroom', price: 749, hours: 4 },
-  { size: '2 bedrooms', price: 949, hours: 6 },
+  { size: 'Studio', price: 545, hours: 3 },
+  { size: '1 bedroom', price: 695, hours: 4 },
+  { size: '2 bedrooms', price: 895, hours: 6 },
 ]
 export const MOVE_FROM = HOME_MOVES[0].price
 export const MOVE_RATE = 149
