@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Book from './pages/Book'
 import Quote from './pages/Quote'
 import Policies from './pages/Policies'
+import Pricing from './pages/Pricing'
 import Pending from './pages/Pending'
 import CustomerAccount from './pages/CustomerAccount'
 import MyMoves from './pages/customer/MyMoves'
@@ -35,6 +36,7 @@ export default function App() {
   // Customers ask for a quote without signing in
   if (pathname === '/book') return <Book />
   if (pathname === '/policies') return <Policies />
+  if (pathname === '/pricing') return <Pricing />
   // The public website; /site shows it to signed-in people too
   if (pathname === '/site') return <Home />
   const quote = pathname.match(/^\/quote\/([0-9a-f-]{36})$/)
