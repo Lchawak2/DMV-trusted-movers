@@ -49,7 +49,7 @@ export default function Pricing() {
           <ul className="price-rules">
             <li><strong>{MIN_HOURS} hour minimum.</strong></li>
             <li><strong>{dollars(TRAVEL_FEE)} travel fee, one time.</strong> It covers driving the truck to you and back, up to {INCLUDED_MILES} miles. After that it's {dollars(PER_MILE)} a mile.</li>
-            <li><strong>Need more hands?</strong> Each extra mover is {dollars(EXTRA_MOVER)} more an hour.</li>
+            {CREW_RATES.length > 1 && <li><strong>Need more hands?</strong> Each extra mover is {dollars(EXTRA_MOVER)} more an hour.</li>}
           </ul>
         </div>
       </section>

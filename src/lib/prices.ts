@@ -1,10 +1,9 @@
 // Our price list, shown on the public Prices page (/pricing). Change the numbers here.
 
-// Movers and a truck, per hour
+// Movers and a truck, per hour. Only 2-mover crews for now; add 3 movers at $199
+// and 4 at $249 here once there are more movers.
 export const CREW_RATES = [
   { movers: 2, rate: 149 },
-  { movers: 3, rate: 199 },
-  { movers: 4, rate: 249 },
 ]
 export const EXTRA_MOVER = 50
 export const MIN_HOURS = 3
@@ -17,11 +16,7 @@ export const PER_MILE = 2
 const TYPICAL = [
   { name: 'Studio', movers: 2, hours: 3 },
   { name: '1 bedroom apartment', movers: 2, hours: 4 },
-  { name: '2 bedroom apartment', movers: 3, hours: 6 },
-  { name: '2 bedroom house or townhome', movers: 3, hours: 7 },
-  { name: '3 bedroom house', movers: 4, hours: 7 },
-  { name: '4 bedroom house', movers: 4, hours: 9 },
-  { name: 'Small office (up to 1,500 sq ft)', movers: 3, hours: 5 },
+  { name: '2 bedroom apartment', movers: 2, hours: 7 },
 ]
 
 // Small jobs and other help, priced on their own
