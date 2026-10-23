@@ -426,3 +426,9 @@ label.file-btn { flex-direction: row; justify-content: center; color: var(--text
 .tab-count { display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 9px; background: var(--amber); color: var(--navy); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
 .needs-banner { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; color: var(--text); font-weight: 600; text-decoration: none; }
 .needs-banner .level { display: inline-block; margin-right: 8px; vertical-align: 1px; }
+
+/* Price plan: one card per size, two or three across on a computer */
+.plan-grid { display: grid; gap: 0 12px; }
+.plan-trucks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 8px; }
+@media (min-width: 700px) { .plan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1300px) { .plan-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

@@ -13,6 +13,7 @@ import AdminJobs from './pages/admin/Jobs'
 import Dashboard from './pages/admin/Dashboard'
 import Money from './pages/admin/Money'
 import Payouts from './pages/admin/Payouts'
+import PricePlan from './pages/admin/PricePlan'
 import Requests from './pages/admin/Requests'
 import RequestDetail from './pages/admin/RequestDetail'
 import JobForm from './pages/admin/JobForm'
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="/jobs/:id/sign" element={<Sign />} />
         <Route path="/money" element={<Money />} />
         <Route path="/payouts" element={<Payouts />} />
+        <Route path="/price-plan" element={<PricePlan />} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/requests/:id" element={<RequestDetail />} />
         <Route path="/people" element={<People />} />

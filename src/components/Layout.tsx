@@ -65,6 +65,7 @@ export default function Layout({ title, back, children }: { title?: string; back
         {account?.role === 'admin' && (
           <>
             <NavLink to="/requests" className="side-only">Quote requests</NavLink>
+            <NavLink to="/price-plan" className="side-only">Price plan</NavLink>
             <NavLink to="/crew-map" className="side-only">Crew map</NavLink>
             <NavLink to="/website" className="side-only">Website</NavLink>
             <NavLink to="/profile" className="side-only">Profile</NavLink>

@@ -11,6 +11,8 @@ export const HOME_MOVES = [
   { size: '3 bedrooms', price: 946, hours: 6 },
 ]
 export const MOVE_FROM = HOME_MOVES[0].price
+// Small office (1 to 10 people); bigger offices come to the admin to price
+export const SMALL_OFFICE = { size: 'Small office', price: 899, hours: 5 }
 export const MOVE_RATE = 149
 // Saturday and Sunday home and office moves cost this much more
 export const WEEKEND_FEE = 100
