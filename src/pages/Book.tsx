@@ -38,7 +38,10 @@ function withSupplies(notes: string, supplies: Record<string, number>, distance:
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 // The price the database worked out right after the form was sent, with its quote link
-type Instant = { lines: { label: string; amount: number }[]; price: number; deposit: number; token: string }
+type Instant = {
+  lines: { label: string; amount: number }[]; price: number; deposit: number; token: string
+  hours: number; included_hours: number; extra_rate: number; likely: number
+}
 
 // The answers behind an instant price, kept for this browser tab so "Change my answers" can bring them back
 type Answers = {
@@ -213,6 +216,10 @@ export default function Book() {
                 {sent.instant.lines.map((l) => <li key={l.label}><span>{l.label}</span><strong>{dollars(l.amount)}</strong></li>)}
                 <li className="sum"><span>Your price</span><strong>{dollars(sent.instant.price)}</strong></li>
               </ul>
+              <p className="small">
+                Takes more than {sent.instant.included_hours} hours? Extra time is {dollars(sent.instant.extra_rate)} an hour, and you only pay for the time we use.
+                {sent.instant.hours > sent.instant.included_hours && ` Most ${size ? size.toLowerCase() + ' ' : ''}moves like yours take about ${sent.instant.hours} hours, about ${dollars(sent.instant.likely)} in total.`}
+              </p>
               <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
               <button type="button" className="secondary est-book" onClick={changeAnswers}>Change my answers</button>
               <p className="small muted">No extra charge for stairs or paying by card. Free cancellation up to 72 hours before your move. This price is good for 3 days.</p>
