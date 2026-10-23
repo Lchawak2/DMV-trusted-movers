@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import {
-  CREW_RATES, EXTRA_MOVER, INCLUDED_MILES, MIN_HOURS, OTHER_PRICES, PER_MILE, TRAVEL_FEE, typicalMoves,
-} from '../lib/prices'
+import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -35,55 +33,20 @@ export default function Pricing() {
 
       <section className="site-sec">
         <div className="site-wrap">
-          <h2>Our price</h2>
+          <h2>Our prices by the hour</h2>
           <div className="price-tiles">
-            {CREW_RATES.map((r) => (
-              <div className="price-tile" key={r.movers}>
-                <span>{r.movers} movers</span>
-                <strong>{dollars(r.rate)}</strong>
-                <span>an hour</span>
+            {HOURLY.map((h) => (
+              <div className="price-tile" key={h.name}>
+                <span>{h.name}</span>
+                <strong>{dollars(h.rate)}</strong>
+                <span>{h.per}</span>
               </div>
             ))}
-            <div className="price-tile">
-              <span>Truck</span>
-              <strong>{dollars(TRAVEL_FEE)}</strong>
-              <span>one time</span>
-            </div>
           </div>
           <ul className="price-rules">
-            <li><strong>{MIN_HOURS} hour minimum.</strong></li>
-            <li><strong>The truck includes gas and up to {INCLUDED_MILES} miles.</strong> Longer trips are {dollars(PER_MILE)} for each extra mile.</li>
-            {CREW_RATES.length > 1 && <li><strong>Need more hands?</strong> Each extra mover is {dollars(EXTRA_MOVER)} more an hour.</li>}
+            <li><strong>{MIN_HOURS} hour minimum for moves.</strong> {SMALL_MIN_HOURS} hours for loading help and packing.</li>
+            <li><strong>Your free quote shows the full price, truck included,</strong> before you book.</li>
           </ul>
-        </div>
-      </section>
-
-      <section className="site-sec alt">
-        <div className="site-wrap">
-          <h2>What most moves cost</h2>
-          <div className="site-prices wide">
-            {typicalMoves().map((m) => (
-              <div className="site-price" key={m.name}>
-                <span>{m.name}<small>{m.movers} movers, about {m.hours} hours</small></span>
-                <strong>about {dollars(m.price)}</strong>
-              </div>
-            ))}
-          </div>
-          <p className="muted small">These include the truck. Your price depends on how much you have and how far you're going. Bigger homes and offices get a free custom quote.</p>
-        </div>
-      </section>
-
-      <section className="site-sec">
-        <div className="site-wrap">
-          <h2>Small jobs and other help</h2>
-          <div className="site-prices wide">
-            {OTHER_PRICES.map((p) => (
-              <div className="site-price" key={p.name}>
-                <span>{p.name}<small>{p.detail}</small></span>
-                <strong>{p.price}</strong>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
