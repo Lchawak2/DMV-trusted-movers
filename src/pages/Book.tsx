@@ -135,7 +135,9 @@ export default function Book() {
 
   const office = type === 'office_move'
   // No small item jobs for now; those requests used to be "Few items"
-  const sizes = HOME_SIZES.filter((s) => s !== 'Few items' && (office ? s.includes('office') : !s.includes('office')))
+  // Home moves start at 1 bedroom (studios book as 1 bedroom)
+  const sizes = HOME_SIZES.filter((s) => s !== 'Few items' && (office ? s.includes('office') : !s.includes('office'))
+    && !(type === 'full_move' && s === 'Studio'))
   const oneAddress = type === 'labor_only' || type === 'junk_haul' || type === 'packing'
 
   async function submit(e: FormEvent) {
@@ -231,7 +233,7 @@ export default function Book() {
           <div className="chips">
             {sizes.map((s) => {
               const flat = type === 'full_move' ? HOME_MOVES.find((m) => m.size === s) : undefined
-              return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}{flat && ` · ${dollars(flat.price)} · up to ${flat.hours} hrs`}</button>
+              return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{flat?.label ?? s}{flat && ` · ${dollars(flat.price)} · up to ${flat.hours} hrs`}</button>
             })}
           </div>
           {type === 'full_move' && <p className="note">Each hour past the hours included adds {dollars(MOVE_RATE)}.</p>}

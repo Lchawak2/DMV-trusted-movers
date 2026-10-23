@@ -6,7 +6,7 @@ import { START_COSTS, cardFees, moverPay, saveCosts, useCosts, type Costs } from
 import { TRUCK_SIZES } from '../../lib/types'
 import { dollars } from './jobData'
 
-const PLANS = [...HOME_MOVES, SMALL_OFFICE]
+const PLANS: { size: string; label?: string; price: number; hours: number }[] = [...HOME_MOVES, SMALL_OFFICE]
 
 // Same truck the instant quote picks (private.instant_price)
 const truckFor = (size: string, hours: number) => (size === '2 bedrooms' || size === '3 bedrooms' || hours >= 6 ? '22 ft' : '16 ft')
@@ -64,7 +64,7 @@ export default function PricePlan() {
           return (
             <section className="card" key={p.size}>
               <div className="card-head">
-                <h3>{p.size}</h3>
+                <h3>{p.label ?? p.size}</h3>
                 <strong>{dollars(r.price)}</strong>
               </div>
               <div className="muted small">Up to {p.hours} hours{weekend ? `, includes ${dollars(WEEKEND_FEE)} weekend move` : ''}</div>
@@ -94,7 +94,7 @@ export default function PricePlan() {
           <label>On weekends<input type="number" min={0} inputMode="numeric" value={month.weekends} onChange={(e) => setMonth({ ...month, weekends: num(e.target.value) })} /></label>
         </div>
         <label>Most are<select value={month.size} onChange={(e) => setMonth({ ...month, size: e.target.value })}>
-          {PLANS.map((p) => <option key={p.size}>{p.size}</option>)}
+          {PLANS.map((p) => <option key={p.size} value={p.size}>{p.label ?? p.size}</option>)}
         </select></label>
         <div className="total-row"><span>You'd keep about</span><span className={monthKept < 0 ? 'warn' : 'tone-good'}>{dollars(monthKept)} a month</span></div>
         <p className="note">Before your own pay if you work the moves, and before taxes.</p>
