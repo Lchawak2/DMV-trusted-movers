@@ -68,10 +68,9 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="dash-grid">
       <h2 className="dash-date">{parseDay(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
-
       <Insights />
+      <div className="dash-grid">
 
       <section className="card">
         <div className="card-head"><h3>Needs you</h3><span className="muted small">{todos.length ? 'most urgent first' : ''}</span></div>
