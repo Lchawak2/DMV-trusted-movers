@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState, type FormEvent } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
@@ -37,6 +37,20 @@ const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 // The price the database worked out right after the form was sent, with its quote link
 type Instant = { lines: { label: string; amount: number }[]; price: number; deposit: number; token: string }
 
+// The answers behind an instant price, kept for this browser tab so "Change my answers" can bring them back
+type Answers = {
+  type: string; from: Place; to: Place; size: string; items: string[]; supplies: Record<string, number>
+  date: string; arrival: string; notes: string; name: string; phone: string; email: string; source: string
+}
+type Draft = { answers: Answers; request: string; token: string }
+const DRAFT_KEY = 'quote-answers'
+export function savedDraft(): Draft | null {
+  try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? 'null') } catch { return null }
+}
+function saveDraft(d: Draft) {
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)) } catch { /* private mode: change from the price screen still works */ }
+}
+
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
 type Place = { address: string; floor: string; elevator: string; parking: string }
@@ -59,8 +73,31 @@ export default function Book() {
   const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sent, setSent] = useState<{ photosFailed: boolean; instant: Instant | null } | null>(null)
+  const [sent, setSent] = useState<{ photosFailed: boolean; instant: Instant | null; request: string } | null>(null)
+  const [replaces, setReplaces] = useState<string | null>(null)
   const { account } = useAuth()
+  const [params] = useSearchParams()
+
+  function restore(a: Answers) {
+    setType(a.type); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items); setSupplies(a.supplies)
+    setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
+  }
+
+  // Coming back from the booking page with "Change my answers"
+  useEffect(() => {
+    const token = params.get('change')
+    const draft = savedDraft()
+    if (!token || draft?.token !== token) return
+    restore(draft.answers)
+    setReplaces(draft.request)
+  }, [params])
+
+  function changeAnswers() {
+    if (!sent) return
+    setReplaces(sent.request)
+    setSent(null)
+    window.scrollTo(0, 0)
+  }
 
   // A signed-in customer booking again: fill in their details
   useEffect(() => {
@@ -104,9 +141,14 @@ export default function Book() {
       }
     }
     // Simple moves get their price and booking link now; the rest wait for the office
-    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies })
+    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies, p_replaces: replaces })
+    const instant = quick.error ? null : (quick.data as Instant | null)
+    if (instant) {
+      saveDraft({ request: id, token: instant.token, answers: { type, from, to, size, items, supplies, date, arrival, notes, name, phone, email, source } })
+    }
     setBusy(false)
-    setSent({ photosFailed, instant: quick.error ? null : (quick.data as Instant | null) })
+    setReplaces(null)
+    setSent({ photosFailed, instant, request: id })
     window.scrollTo(0, 0)
   }
 
@@ -124,6 +166,7 @@ export default function Book() {
                 <li className="sum"><span>Your price</span><strong>{dollars(sent.instant.price)}</strong></li>
               </ul>
               <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
+              <button type="button" className="secondary est-book" onClick={changeAnswers}>Change my answers</button>
               <p className="small muted">No extra charge for stairs or paying by card. Free cancellation up to 72 hours before your move. This price is good for 3 days.</p>
             </>
           ) : (
@@ -138,7 +181,7 @@ export default function Book() {
   return (
     <PublicPage sub="Get a moving quote">
       <form onSubmit={submit} className="form">
-        <p className="est-intro">Answer a few questions and <strong>see your price right away</strong>, with every part listed.</p>
+        <p className="est-intro">{replaces ? 'Change anything below and send again for your new price.' : <>Answer a few questions and <strong>see your price right away</strong>, with every part listed.</>}</p>
         <section className="card">
           <h3>What do you need?</h3>
           <div className="chips">

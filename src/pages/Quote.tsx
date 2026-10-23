@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { money, parseDay } from '../lib/format'
 import { JOB_TYPES } from '../lib/types'
-import { BOOK_TYPES } from './Book'
+import { BOOK_TYPES, savedDraft } from './Book'
 
 type QuoteView = {
   first_name: string
@@ -264,6 +264,7 @@ export default function Quote({ token }: { token: string }) {
               </ul>
               {error && <p className="warn">{error}</p>}
               <button className="primary" disabled={busy} onClick={pay}>{busy ? 'Opening payment…' : `Pay ${money(q.deposit)} and book`}</button>
+              {savedDraft()?.token === token && <Link to={`/book?change=${token}`} className="secondary">Change my answers</Link>}
               <p className="note">You'll pay securely with Stripe. Free cancellation up to 72 hours before your move. After that the deposit is kept. By paying, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#cancellation">cancellation policy</Link>.</p>
             </>
           ) : (

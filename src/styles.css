@@ -208,7 +208,7 @@ input.pay { width: 84px; padding: 6px 8px; }
 .public { padding-bottom: 24px; }
 .topbar-link { color: #fff; font-size: 14px; }
 .chip.big { padding: 8px 12px; font-size: 14px; font-weight: 600; min-height: 40px; }
-.est-book { display: block; text-decoration: none; text-align: center; margin-bottom: 8px; }
+.est-book { display: block; width: 100%; text-decoration: none; text-align: center; margin-bottom: 8px; }
 .est-intro { margin: 0; font-size: 17px; }
 .est-lines { list-style: none; padding: 0; margin: 0 0 12px; text-align: left; display: grid; gap: 8px; }
 .est-lines li { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
