@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
-import { MOVE_START } from '../lib/prices'
+import { MOVE_FROM } from '../lib/prices'
 import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
 
 const STEPS = [
@@ -59,7 +59,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <p className="site-lead">Moves start at <strong>${MOVE_START}</strong>, truck included.</p>
+            <p className="site-lead">Home moves from <strong>${MOVE_FROM}</strong>, truck included.</p>
           )}
           <Link to="/pricing" className="site-more">See all our prices</Link>
         </div>

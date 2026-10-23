@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
+import { HOME_MOVES } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -227,7 +228,10 @@ export default function Book() {
           <h3>{office ? 'How big is the office?' : 'How big is the move?'}</h3>
           <div className="small muted">Pick one so we can show your price.</div>
           <div className="chips">
-            {sizes.map((s) => <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}</button>)}
+            {sizes.map((s) => {
+              const flat = type === 'full_move' ? HOME_MOVES.find((m) => m.size === s) : undefined
+              return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}{flat && ` · ${dollars(flat.price)}`}</button>
+            })}
           </div>
           <div className="small muted">Big or special items</div>
           <div className="chips">
