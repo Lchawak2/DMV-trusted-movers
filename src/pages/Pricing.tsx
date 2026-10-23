@@ -47,7 +47,7 @@ export default function Pricing() {
           <ul className="price-rules">
             <li><strong>Home moves:</strong> one flat price for 2 movers, the truck and gas, for up to the hours shown. Each hour past that adds {dollars(MOVE_RATE)}.</li>
             <li><strong>Saturday and Sunday:</strong> home and office moves are {dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.</li>
-            <li><strong>3 bedrooms or more:</strong> we'll price it for you.</li>
+            <li><strong>4 bedrooms or more:</strong> we'll price it for you.</li>
             <li><strong>You pack, we move.</strong> Please have your boxes packed before we arrive. Want us to pack too? Book Packing.</li>
             <li><strong>Moving more than 50 miles?</strong> Call us first and we'll price it for you.</li>
             <li><strong>Loading help and packing:</strong> {SMALL_MIN_HOURS} hour minimum, plus a {dollars(TRIP_FEE)} trip fee.</li>
