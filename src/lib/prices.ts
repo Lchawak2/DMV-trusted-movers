@@ -8,7 +8,7 @@ export const HOME_MOVES = [
   { size: 'Studio', price: 545, hours: 3 },
   { size: '1 bedroom', price: 695, hours: 4 },
   { size: '2 bedrooms', price: 895, hours: 5 },
-  { size: '3 bedrooms', price: 946, hours: 7 },
+  { size: '3 bedrooms', price: 946, hours: 6 },
 ]
 export const MOVE_FROM = HOME_MOVES[0].price
 export const MOVE_RATE = 149
