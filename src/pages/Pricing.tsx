@@ -45,7 +45,7 @@ export default function Pricing() {
           <ul className="price-rules">
             <li><strong>Moves:</strong> one starting price covers the truck, gas and the first 2 hours.</li>
             <li><strong>Loading help and packing:</strong> {SMALL_MIN_HOURS} hour minimum, plus a {dollars(TRIP_FEE)} trip fee.</li>
-            <li><strong>Your price:</strong> fill out our <Link to="/book">quote form</Link> and see your estimate right away.</li>
+            <li><strong>Your price:</strong> fill out our <Link to="/book">quote form</Link> and see your price right away.</li>
           </ul>
         </div>
       </section>
@@ -74,7 +74,7 @@ export default function Pricing() {
       <section className="site-sec alt">
         <div className="site-wrap">
           <h2>How you pay</h2>
-          <p className="site-lead">Your price shows up as soon as you send the quote form. We confirm it by text or email. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>
+          <p className="site-lead">Your price shows up as soon as you send the quote form, and you can book it right there. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>
           <div className="site-cta">
             <Link to="/book" className="site-btn gold">See my price</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">Call {site.phone}</a>}

@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { SUPPLIES, estimate, type Estimate } from '../lib/prices'
+import { SUPPLIES } from '../lib/prices'
 import Stepper from '../components/Stepper'
 
 // What customers can ask for; keys match JOB_TYPES
@@ -23,19 +23,19 @@ const PARKING = ['Street', 'Driveway', 'Loading dock', 'Parking garage']
 const MAX_PHOTOS = 8
 
 // The boxes and supplies the customer counted go at the top of their notes, where the office sees them when pricing
-// along with the estimate they were shown
-function withSupplies(notes: string, supplies: Record<string, number>, est: Estimate | null) {
+function withSupplies(notes: string, supplies: Record<string, number>) {
   const wanted = SUPPLIES.filter((x) => supplies[x.name] > 0).map((x) => `${supplies[x.name]} ${x.name.toLowerCase()}`)
   const text = [
     wanted.length ? `Supplies wanted: ${wanted.join(', ')}` : 'Supplies wanted: none',
-    est ? `Estimate shown to customer: ${range(est)}` : '',
     notes.trim(),
   ].filter(Boolean).join('\n')
   return text || null
 }
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
-const range = ({ low, high }: { low: number; high: number }) => (low === high ? dollars(low) : `${dollars(low)} to ${dollars(high)}`)
+
+// The price the database worked out right after the form was sent, with its quote link
+type Instant = { lines: { label: string; amount: number }[]; price: number; deposit: number; token: string }
 
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
@@ -59,7 +59,7 @@ export default function Book() {
   const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sent, setSent] = useState<{ photosFailed: boolean; est: Estimate | null } | null>(null)
+  const [sent, setSent] = useState<{ photosFailed: boolean; instant: Instant | null } | null>(null)
   const { account } = useAuth()
 
   // A signed-in customer booking again: fill in their details
@@ -79,7 +79,6 @@ export default function Book() {
     if (!phone.trim() && !email.trim()) return setError('Please give a phone number or an email so we can send your price.')
     setError(null)
     setBusy(true)
-    const est = estimate(type, size, supplies, items)
     const elevator = (v: string) => (v === '' ? null : v === 'yes')
     const floor = (v: string) => (v === '' ? null : Number(v))
     const { data, error } = await supabase.rpc('submit_move_request', {
@@ -87,7 +86,7 @@ export default function Book() {
       p_move_type: type, p_home_size: size || null, p_special_items: items,
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
-      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies, est),
+      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies),
       p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
@@ -104,8 +103,10 @@ export default function Book() {
         photosFailed = true
       }
     }
+    // Simple moves get their price and booking link now; the rest wait for the office
+    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies })
     setBusy(false)
-    setSent({ photosFailed, est })
+    setSent({ photosFailed, instant: quick.error ? null : (quick.data as Instant | null) })
     window.scrollTo(0, 0)
   }
 
@@ -115,15 +116,15 @@ export default function Book() {
         <section className="card center">
           <div className="done-mark">✓</div>
           <h2>Thanks, {name.split(' ')[0]}!</h2>
-          {sent.est ? (
+          {sent.instant ? (
             <>
-              <p>Here is your estimated price.</p>
+              <p>Here is your price.</p>
               <ul className="est-lines">
-                {sent.est.lines.map((l) => <li key={l.label}><span>{l.label}</span><strong>{range(l)}</strong></li>)}
-                {sent.est.later.length > 0 && <li><span>{sent.est.later.join(', ')}</span><strong>added to your exact price</strong></li>}
-                <li className="sum"><span>Estimated total</span><strong>{range(sent.est)}</strong></li>
+                {sent.instant.lines.map((l) => <li key={l.label}><span>{l.label}</span><strong>{dollars(l.amount)}</strong></li>)}
+                <li className="sum"><span>Your price</span><strong>{dollars(sent.instant.price)}</strong></li>
               </ul>
-              <p className="small muted">Smaller loads land at the low end. No extra charge for stairs or paying by card. We'll look over your details and send your exact price {phone ? 'by text' : 'by email'}.</p>
+              <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
+              <p className="small muted">No extra charge for stairs or paying by card. Free cancellation up to 72 hours before your move. This price is good for 3 days.</p>
             </>
           ) : (
             <p>We got your request. We'll look it over and send your price {phone ? 'by text' : 'by email'}.</p>
