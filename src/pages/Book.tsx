@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { SUPPLIES } from '../lib/prices'
+import { DRIVE_FEE, SUPPLIES } from '../lib/prices'
 import Stepper from '../components/Stepper'
 
 // What customers can ask for; keys match JOB_TYPES
@@ -21,12 +21,15 @@ export const SPECIAL_ITEMS = ['Piano', 'Safe', 'Gym equipment', 'Pool table', 'L
 export const ARRIVAL_WINDOWS = ['Morning (8 to 10 AM)', 'Midday (11 AM to 1 PM)', 'Afternoon (2 to 4 PM)', 'Flexible']
 const PARKING = ['Street', 'Driveway', 'Loading dock', 'Parking garage']
 const MAX_PHOTOS = 8
+const DISTANCES: Record<string, string> = { near: 'Under 20 miles', mid: '20 to 50 miles', far: 'Over 50 miles' }
 
-// The boxes and supplies the customer counted go at the top of their notes, where the office sees them when pricing
-function withSupplies(notes: string, supplies: Record<string, number>) {
+// The boxes and supplies the customer counted, and how far apart the places are, go at the top of their notes,
+// where the office sees them when pricing
+function withSupplies(notes: string, supplies: Record<string, number>, distance: string) {
   const wanted = SUPPLIES.filter((x) => supplies[x.name] > 0).map((x) => `${supplies[x.name]} ${x.name.toLowerCase()}`)
   const text = [
     wanted.length ? `Supplies wanted: ${wanted.join(', ')}` : 'Supplies wanted: none',
+    DISTANCES[distance] ? `Distance: ${DISTANCES[distance]}` : '',
     notes.trim(),
   ].filter(Boolean).join('\n')
   return text || null
@@ -39,7 +42,7 @@ type Instant = { lines: { label: string; amount: number }[]; price: number; depo
 
 // The answers behind an instant price, kept for this browser tab so "Change my answers" can bring them back
 type Answers = {
-  type: string; from: Place; to: Place; size: string; items: string[]; supplies: Record<string, number>
+  type: string; from: Place; to: Place; distance: string; size: string; items: string[]; supplies: Record<string, number>
   date: string; arrival: string; notes: string; name: string; phone: string; email: string; source: string
 }
 type Draft = { answers: Answers; request: string; token: string }
@@ -67,8 +70,13 @@ function fromRequest(r: RequestAnswers): Answers {
       if (x) supplies[x.name] = Number(m![1])
     }
   }
+  let distance = ''
+  if (lines[0]?.startsWith('Distance: ')) {
+    const label = lines.shift()!.slice('Distance: '.length)
+    distance = Object.keys(DISTANCES).find((k) => DISTANCES[k] === label) ?? ''
+  }
   return {
-    type: r.move_type, size: r.home_size ?? '', items: r.special_items ?? [], supplies,
+    type: r.move_type, distance, size: r.home_size ?? '', items: r.special_items ?? [], supplies,
     from: place(r.from_address, r.from_floor, r.from_elevator, r.from_parking), to: place(r.to_address, r.to_floor, r.to_elevator, r.to_parking),
     date: r.preferred_date, arrival: r.arrival_window ?? '', notes: lines.join('\n'),
     name: r.full_name, phone: r.phone ?? '', email: r.email ?? '', source: r.lead_source ?? '',
@@ -90,6 +98,7 @@ export default function Book() {
   const [type, setType] = useState('full_move')
   const [from, setFrom] = useState<Place>(emptyPlace)
   const [to, setTo] = useState<Place>(emptyPlace)
+  const [distance, setDistance] = useState('')
   const [size, setSize] = useState('')
   const [items, setItems] = useState<string[]>([])
   const [supplies, setSupplies] = useState<Record<string, number>>({})
@@ -109,7 +118,7 @@ export default function Book() {
   const [params] = useSearchParams()
 
   function restore(a: Answers) {
-    setType(a.type); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items); setSupplies(a.supplies)
+    setType(a.type); setFrom(a.from); setTo(a.to); setDistance(a.distance ?? ''); setSize(a.size); setItems(a.items); setSupplies(a.supplies)
     setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
   }
 
@@ -162,7 +171,7 @@ export default function Book() {
       p_move_type: type, p_home_size: size || null, p_special_items: items,
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
-      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies),
+      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies, oneAddress ? '' : distance),
       p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
@@ -180,10 +189,10 @@ export default function Book() {
       }
     }
     // Simple moves get their price and booking link now; the rest wait for the office
-    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies, p_replaces: replaces })
+    const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: supplies, p_replaces: replaces, p_distance: oneAddress ? null : distance || null })
     const instant = quick.error ? null : (quick.data as Instant | null)
     if (instant) {
-      saveDraft({ request: id, token: instant.token, answers: { type, from, to, size, items, supplies, date, arrival, notes, name, phone, email, source } })
+      saveDraft({ request: id, token: instant.token, answers: { type, from, to, distance, size, items, supplies, date, arrival, notes, name, phone, email, source } })
     }
     setBusy(false)
     setReplaces(null)
@@ -228,10 +237,22 @@ export default function Book() {
               <button type="button" key={k} className={`chip big${type === k ? ' on' : ''}`} onClick={() => { setType(k); setSize('') }}>{label}</button>
             ))}
           </div>
+          {(type === 'full_move' || type === 'small_move' || type === 'office_move') && <div className="small muted">You pack, we move. Want us to pack too? Pick Packing.</div>}
         </section>
 
         <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
         {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} />}
+        {!oneAddress && (
+          <section className="card form">
+            <h3>How far apart are the two places?</h3>
+            <div className="chips">
+              {Object.entries(DISTANCES).map(([k, label]) => (
+                <button type="button" key={k} className={`chip big${distance === k ? ' on' : ''}`} onClick={() => setDistance(k)}>{label}</button>
+              ))}
+            </div>
+            <div className="small muted">{distance === 'mid' ? `Adds $${DRIVE_FEE} for the longer drive.` : distance === 'far' ? "We'll work out your price and send it to you." : 'Pick one so we can show your price.'}</div>
+          </section>
+        )}
 
         <section className="card form">
           <h3>{office ? 'How big is the office?' : 'How big is the move?'}</h3>
