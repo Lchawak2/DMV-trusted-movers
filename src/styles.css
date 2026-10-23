@@ -214,6 +214,7 @@ input.pay { width: 84px; padding: 6px 8px; }
 .est-lines li { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .est-lines strong { white-space: nowrap; }
 .est-lines li.sum { border: 0; font-size: 18px; color: var(--navy); }
+.est-extra { margin: 0 0 12px; padding: 10px 12px; border: 2px solid var(--navy); border-radius: 10px; color: var(--navy); }
 .done-mark { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%; background: #e3f2e9; color: #1a6b3c; display: grid; place-items: center; font-size: 30px; font-weight: 700; }
 .center-text { text-align: center; }
 .public-foot { display: flex; justify-content: center; gap: 16px; font-size: 13px; color: var(--muted); padding: 8px 16px 0; }
@@ -338,6 +339,7 @@ a.topbar-name, a.plain { color: inherit; text-decoration: none; }
 .price-tile strong { font-size: clamp(28px, 7vw, 40px); line-height: 1.1; color: var(--site-main); }
 .price-tile span { color: var(--muted); }
 .price-tile span:first-child { color: var(--text); font-weight: 600; }
+.price-tile span.extra { color: var(--text); font-size: 14px; font-weight: 600; }
 .price-rules, .price-included { max-width: 720px; padding-left: 20px; margin: 0; display: grid; gap: 10px; font-size: 17px; line-height: 1.5; }
 .site-foot { background: var(--site-main); color: rgba(255, 255, 255, 0.8); padding: 40px 0; font-size: 14px; text-align: center; }
 .site-foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin: 20px 0 12px; }

@@ -189,7 +189,7 @@ export default function Quote({ token }: { token: string }) {
           {q.arrival_window && <li><span>Crew arrives</span><span>{q.arrival_window}</span></li>}
           {q.crew_size && <li><span>Movers</span><span>{q.crew_size}, with a lead mover</span></li>}
           {q.truck_size && <li><span>Truck</span><span>{q.truck_size}, fuel included</span></li>}
-          {q.est_hours && <li><span>Time</span><span>About {q.est_hours} hours</span></li>}
+          {q.est_hours && <li><span>Time included</span><span>Up to {q.est_hours} hours</span></li>}
           <li className="stack"><strong>{q.to_address ? 'From' : 'Address'}</strong><span>{q.from_address}</span></li>
           {q.to_address && <li className="stack"><strong>To</strong><span>{q.to_address}</span></li>}
         </ul>

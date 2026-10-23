@@ -21,7 +21,7 @@ export const SMALL_MIN_HOURS = 2
 export const TRIP_FEE = 49
 
 export const TILES = [
-  ...HOME_MOVES.map((m) => ({ name: m.size, price: m.price, per: `up to ${m.hours} hours` })),
-  { name: 'Loading help', price: LABOR_RATE, per: 'an hour, your truck' },
-  { name: 'Packing', price: PACK_RATE, per: 'an hour per packer' },
+  ...HOME_MOVES.map((m) => ({ name: m.size, price: m.price, per: `up to ${m.hours} hours`, extra: `+$${MOVE_RATE} each extra hour` })),
+  { name: 'Loading help', price: LABOR_RATE, per: 'an hour, your truck', extra: '' },
+  { name: 'Packing', price: PACK_RATE, per: 'an hour per packer', extra: '' },
 ]

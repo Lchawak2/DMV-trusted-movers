@@ -40,11 +40,12 @@ export default function Pricing() {
                 <span>{h.name}</span>
                 <strong>{dollars(h.price)}</strong>
                 <span>{h.per}</span>
+                {h.extra && <span className="extra">{h.extra}</span>}
               </div>
             ))}
           </div>
           <ul className="price-rules">
-            <li><strong>Home moves:</strong> one flat price for 2 movers, the truck and gas. Takes longer than the hours included? {dollars(MOVE_RATE)} an hour, only for the extra time.</li>
+            <li><strong>Home moves:</strong> one flat price for 2 movers, the truck and gas, for up to the hours shown. Each hour past that adds {dollars(MOVE_RATE)}.</li>
             <li><strong>Saturday and Sunday:</strong> home and office moves are {dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.</li>
             <li><strong>3 bedrooms or more:</strong> we'll price it for you.</li>
             <li><strong>You pack, we move.</strong> Please have your boxes packed before we arrive. Want us to pack too? Book Packing.</li>

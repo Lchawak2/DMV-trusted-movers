@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { HOME_MOVES, WEEKEND_FEE } from '../lib/prices'
+import { HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -192,8 +192,8 @@ export default function Book() {
                 {sent.instant.lines.map((l) => <li key={l.label}><span>{l.label}</span><strong>{dollars(l.amount)}</strong></li>)}
                 <li className="sum"><span>Your price</span><strong>{dollars(sent.instant.price)}</strong></li>
               </ul>
-              <p className="small">
-                Takes more than {sent.instant.included_hours} hours? Extra time is {dollars(sent.instant.extra_rate)} an hour, and you only pay for the time we use.
+              <p className="est-extra">
+                Includes up to <strong>{sent.instant.included_hours} hours</strong>. Each extra hour adds <strong>{dollars(sent.instant.extra_rate)}</strong>.
               </p>
               <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
               <button type="button" className="secondary est-book" onClick={changeAnswers}>Change my answers</button>
@@ -231,9 +231,10 @@ export default function Book() {
           <div className="chips">
             {sizes.map((s) => {
               const flat = type === 'full_move' ? HOME_MOVES.find((m) => m.size === s) : undefined
-              return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}{flat && ` · ${dollars(flat.price)}`}</button>
+              return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}{flat && ` · ${dollars(flat.price)} · up to ${flat.hours} hrs`}</button>
             })}
           </div>
+          {type === 'full_move' && <p className="note">Each hour past the hours included adds {dollars(MOVE_RATE)}.</p>}
           <div className="small muted">Big or special items</div>
           <div className="chips">
             {SPECIAL_ITEMS.map((s) => (
