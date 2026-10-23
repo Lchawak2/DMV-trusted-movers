@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
 import PriceCalculator from '../components/PriceCalculator'
-import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS } from '../lib/prices'
+import { SMALL_MIN_HOURS, TILES, TRIP_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -33,18 +33,19 @@ export default function Pricing() {
 
       <section className="site-sec">
         <div className="site-wrap">
-          <h2>Our prices by the hour</h2>
+          <h2>Our prices</h2>
           <div className="price-tiles">
-            {HOURLY.map((h) => (
+            {TILES.map((h) => (
               <div className="price-tile" key={h.name}>
                 <span>{h.name}</span>
-                <strong>{dollars(h.rate)}</strong>
+                <strong>{dollars(h.price)}</strong>
                 <span>{h.per}</span>
               </div>
             ))}
           </div>
           <ul className="price-rules">
-            <li><strong>{MIN_HOURS} hour minimum for moves.</strong> {SMALL_MIN_HOURS} hours for loading help and packing.</li>
+            <li><strong>Moves:</strong> one starting price covers the truck, gas and the first 2 hours.</li>
+            <li><strong>Loading help and packing:</strong> {SMALL_MIN_HOURS} hour minimum, plus a {dollars(TRIP_FEE)} trip fee.</li>
             <li><strong>Want the full cost?</strong> <a href="#calculator">Work it out below</a>, truck and supplies included.</li>
           </ul>
         </div>
