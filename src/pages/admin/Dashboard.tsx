@@ -69,10 +69,8 @@ export default function Dashboard() {
   return (
     <Layout>
       <h2 className="dash-date">{parseDay(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
-      <Insights />
-      <div className="dash-grid">
-
-      <section className="card">
+      {/* What needs doing comes first, on its own, before the numbers */}
+      <section className="card needs-you">
         <div className="card-head"><h3>Needs you</h3><span className="muted small">{todos.length ? 'most urgent first' : ''}</span></div>
         {todos.length === 0 && <p className="muted">Nothing needs you right now.</p>}
         <ul className="list">
@@ -90,6 +88,8 @@ export default function Dashboard() {
           </button>
         )}
       </section>
+      <Insights />
+      <div className="dash-grid">
 
       <section className="card">
         <div className="card-head"><h3>This week</h3><span className="muted small">Jobs booked of {CREWS_PER_DAY}</span></div>

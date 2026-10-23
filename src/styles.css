@@ -400,3 +400,4 @@ label.file-btn { flex-direction: row; justify-content: center; color: var(--text
 }
 .brand { display: inline-flex; align-items: center; gap: 8px; }
 .topbar-sub.brand { gap: 5px; }
+.needs-you { border-left: 4px solid var(--navy); }
