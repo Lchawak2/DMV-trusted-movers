@@ -258,7 +258,7 @@ input.pay { width: 84px; padding: 6px 8px; }
 .tip-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px; }
 .tip-choices button { padding: 10px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); font: inherit; }
 .tip-choices button.on { border-color: var(--navy); background: var(--navy); color: #fff; font-weight: 600; }
-.bell-dot.tip_paid { background: var(--green); }
+.bell-dot.tip_paid, .bell-dot.crew_accepted { background: var(--green); }
 
 /* Profit preview on the quote form (admin only) */
 .profit { border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px; }

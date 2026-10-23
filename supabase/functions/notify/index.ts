@@ -337,6 +337,29 @@ async function review(jobId: string): Promise<Out[]> {
   }]
 }
 
+async function crewAccepted(assignmentId: string): Promise<Email[]> {
+  const { data: a } = await db.from('assignments')
+    .select('job_id, status, accounts(full_name), jobs(job_date, window_start, window_end, from_address, crew_size, status, move_requests(customers(full_name)))')
+    .eq('id', assignmentId).maybeSingle()
+  const j = a?.jobs as unknown as { job_date: string; window_start: string | null; window_end: string | null; from_address: string; crew_size: number | null; status: string; move_requests: { customers: { full_name: string } | null } | null } | null
+  // Skip one who dropped out again before the email went out
+  if (!a || a.status !== 'accepted' || !j || j.status === 'cancelled') return []
+  const who = (a.accounts as unknown as { full_name: string | null } | null)?.full_name ?? 'A mover'
+  const c = j.move_requests?.customers
+  const { count } = await db.from('assignments').select('id', { count: 'exact', head: true }).eq('job_id', a.job_id).eq('status', 'accepted')
+  const filled = j.crew_size ? ` (${count ?? 0} of ${j.crew_size} filled)` : ''
+  return [{
+    to: await admins(),
+    subject: `${who} took a spot: ${c?.full_name ?? j.from_address}${filled}`,
+    text: lines(
+      `${who} is on the move on ${day(j.job_date)}, ${slot(j.window_start, j.window_end)}${filled}.`,
+      `${c?.full_name ? `${c.full_name}, ` : ''}${j.from_address}`,
+      '',
+      `See the crew: ${LIVE_SITE}/jobs/${a.job_id}?tab=crew`,
+    ),
+  }]
+}
+
 async function send(key: string, e: Email) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -361,6 +384,7 @@ async function sendText(to: string, body: string) {
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
   balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
+  crew_accepted: crewAccepted,
 }
 
 Deno.serve(async () => {
