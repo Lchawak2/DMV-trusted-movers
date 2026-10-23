@@ -1,6 +1,8 @@
--- Instant prices charge only what is sure: the starting price (first 2 hours), boxes and the
--- drive fee. Extra time is not charged up front; the crew adds it on the day as a Time extra,
--- only if the move runs past 2 hours. The quote also says what the move usually comes to.
+-- Instant prices charge only what is sure: the flat starting price (first 2 hours) and boxes.
+-- Extra time is not charged up front; the crew adds it on the day as a Time extra, only if the
+-- move runs past 2 hours. Drive time is on the clock, so there is no distance question or drive
+-- fee any more (p_distance is kept so older forms still work, and is ignored). The quote also
+-- says what the move usually comes to.
 
 create or replace function private.instant_price(p_type text, p_size text, p_supplies jsonb, p_items text[])
 returns jsonb language plpgsql immutable set search_path = '' as $$
@@ -67,7 +69,6 @@ declare
   r public.move_requests;
   est jsonb;
   deposit constant numeric := 50;
-  drive_fee constant numeric := 99;
   q public.quotes;
 begin
   select * into r from public.move_requests where id = p_request for update;
@@ -85,15 +86,8 @@ begin
   end if;
 
   if p_supplies is not null and jsonb_typeof(p_supplies) <> 'object' then return null; end if;
-  if r.move_type not in ('labor_only', 'packing') and coalesce(p_distance, '') not in ('near', 'mid') then return null; end if;
   est := private.instant_price(r.move_type, r.home_size, coalesce(p_supplies, '{}'), r.special_items);
   if est is null then return null; end if;
-
-  if p_distance = 'mid' and r.move_type not in ('labor_only', 'packing') then
-    est := jsonb_set(est, '{lines}', (est -> 'lines') || jsonb_build_array(jsonb_build_object('label', 'Longer drive (20 to 50 miles)', 'amount', drive_fee)));
-    est := jsonb_set(est, '{price}', to_jsonb((est ->> 'price')::numeric + drive_fee));
-    est := jsonb_set(est, '{likely}', to_jsonb((est ->> 'likely')::numeric + drive_fee));
-  end if;
 
   insert into public.quotes (request_id, price, deposit, crew_size, truck_size, est_hours, arrival_window, note, status, sent_at, expires_at)
   values (r.id, (est ->> 'price')::numeric, deposit, 2, est ->> 'truck', (est ->> 'hours')::numeric, r.arrival_window,

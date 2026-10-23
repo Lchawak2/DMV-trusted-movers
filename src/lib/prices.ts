@@ -6,8 +6,6 @@
 export const MOVE_START = 449
 export const MOVE_START_HOURS = 2
 export const MOVE_RATE = 149
-export const TRUCK_MILES = 20 // the starting price covers moves up to this many miles apart
-export const DRIVE_FEE = 99 // moves 20 to 50 miles apart; farther ones are priced by the office
 
 // Help without our truck: per hour plus a one-time trip fee
 export const LABOR_RATE = 120 // 2 movers
