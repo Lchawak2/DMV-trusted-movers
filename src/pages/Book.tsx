@@ -44,7 +44,37 @@ type Answers = {
 }
 type Draft = { answers: Answers; request: string; token: string }
 const DRAFT_KEY = 'quote-answers'
-export function savedDraft(): Draft | null {
+
+// A saved request as quote_answers returns it
+type RequestAnswers = {
+  request: string; move_type: string; home_size: string | null; special_items: string[]
+  from_address: string; from_floor: number | null; from_elevator: boolean | null; from_parking: string | null
+  to_address: string | null; to_floor: number | null; to_elevator: boolean | null; to_parking: string | null
+  preferred_date: string; arrival_window: string | null; notes: string | null; lead_source: string | null
+  full_name: string; phone: string | null; email: string | null
+}
+
+// Turn a saved request back into form answers; the box counts come from the "Supplies wanted" line withSupplies wrote
+function fromRequest(r: RequestAnswers): Answers {
+  const place = (address: string | null, floor: number | null, elevator: boolean | null, parking: string | null): Place =>
+    ({ address: address ?? '', floor: floor === null ? '' : String(floor), elevator: elevator === null ? '' : elevator ? 'yes' : 'no', parking: parking ?? '' })
+  const lines = (r.notes ?? '').split('\n')
+  const supplies: Record<string, number> = {}
+  if (lines[0]?.startsWith('Supplies wanted:')) {
+    for (const part of lines.shift()!.slice('Supplies wanted:'.length).split(',')) {
+      const m = part.trim().match(/^(\d+) (.+)$/)
+      const x = m && SUPPLIES.find((s) => s.name.toLowerCase() === m[2])
+      if (x) supplies[x.name] = Number(m![1])
+    }
+  }
+  return {
+    type: r.move_type, size: r.home_size ?? '', items: r.special_items ?? [], supplies,
+    from: place(r.from_address, r.from_floor, r.from_elevator, r.from_parking), to: place(r.to_address, r.to_floor, r.to_elevator, r.to_parking),
+    date: r.preferred_date, arrival: r.arrival_window ?? '', notes: lines.join('\n'),
+    name: r.full_name, phone: r.phone ?? '', email: r.email ?? '', source: r.lead_source ?? '',
+  }
+}
+function savedDraft(): Draft | null {
   try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? 'null') } catch { return null }
 }
 function saveDraft(d: Draft) {
@@ -83,13 +113,22 @@ export default function Book() {
     setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
   }
 
-  // Coming back from the booking page with "Change my answers"
+  // Coming back from the booking page with "Change my answers": use this tab's copy, or ask the database
   useEffect(() => {
     const token = params.get('change')
+    if (!token) return
     const draft = savedDraft()
-    if (!token || draft?.token !== token) return
-    restore(draft.answers)
-    setReplaces(draft.request)
+    if (draft?.token === token) {
+      restore(draft.answers)
+      setReplaces(draft.request)
+      return
+    }
+    supabase.rpc('quote_answers', { p_token: token }).then(({ data }) => {
+      if (!data) return
+      const a = fromRequest(data as RequestAnswers)
+      restore(a)
+      setReplaces((data as RequestAnswers).request)
+    })
   }, [params])
 
   function changeAnswers() {
