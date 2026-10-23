@@ -19,6 +19,7 @@ import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
 import CrewMap from './pages/admin/CrewMap'
 import Website from './pages/admin/Website'
+import Search from './pages/admin/Search'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
 import FindJob from './pages/crew/FindJob'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/people" element={<People />} />
         <Route path="/crew-map" element={<CrewMap />} />
         <Route path="/website" element={<Website />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

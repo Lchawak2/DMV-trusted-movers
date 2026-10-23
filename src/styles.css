@@ -354,4 +354,22 @@ label.file-btn { flex-direction: row; justify-content: center; color: var(--text
   .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   .dash-grid > * { margin: 0; }
   .site-save { bottom: 0; }
+  .tabbar .side-brand { padding-bottom: 14px; }
+  .side-search { padding: 0 4px 8px; }
+  .side-search input {
+    width: 100%; border: 0; border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 14px;
+    background: rgba(255, 255, 255, 0.1); color: #fff;
+  }
+  .side-search input::placeholder { color: #94a3b8; }
+  .side-group { color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; padding: 16px 12px 4px; }
+  .table-card { padding: 0; overflow: hidden; }
+  .table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .table tbody tr { cursor: pointer; }
+  .table tbody tr:hover { background: var(--bg); }
+  .table tbody tr:last-child td { border-bottom: 0; }
+  .table td a { color: var(--text); font-weight: 600; text-decoration: none; }
+  .table-addr { max-width: 260px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 }

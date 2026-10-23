@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useState, type FormEvent, type ReactNode } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import Bell from './Bell'
 import { t } from '../lib/lang'
 import { discard, useOutbox } from '../lib/outbox'
+import { useWide } from '../lib/useWide'
 
 export default function Layout({ title, back, children }: { title?: string; back?: string; children: ReactNode }) {
   const { account } = useAuth()
@@ -11,6 +12,7 @@ export default function Layout({ title, back, children }: { title?: string; back
   const waiting = useOutbox()
   const failed = waiting.filter((w) => w.error)
   const portal = account?.role === 'admin' ? 'Admin' : t('Crew Portal', 'Portal del equipo')
+  const wide = useWide()
 
   return (
     <div className="app">
@@ -45,31 +47,54 @@ export default function Layout({ title, back, children }: { title?: string; back
         )}
         {children}
       </main>
-      <nav className="tabbar">
-        <div className="side-brand side-only">DMV Trusted Movers</div>
-        {account?.role === 'crew' && <NavLink to="/find">{t('Find Job', 'Buscar trabajo')}</NavLink>}
-        {account?.role === 'admin' ? (
-          <>
-            <NavLink to="/" end>Dashboard</NavLink>
-            <NavLink to="/jobs">Jobs</NavLink>
-            <NavLink to="/money">Money</NavLink>
-          </>
-        ) : (
-          <NavLink to="/" end>{t('My Jobs', 'Mis trabajos')}</NavLink>
-        )}
-        {account?.role === 'admin' && <NavLink to="/people">People</NavLink>}
-        {/* On a computer the menu runs down the side, with room for the pages phones reach from the dashboard */}
-        {account?.role === 'admin' && (
-          <>
-            <NavLink to="/requests" className="side-only">Quote requests</NavLink>
-            <NavLink to="/crew-map" className="side-only">Crew map</NavLink>
-            <NavLink to="/website" className="side-only">Website</NavLink>
-            <NavLink to="/profile" className="side-only">Profile</NavLink>
-          </>
-        )}
-        {/* Admin reaches Profile from the avatar, so the tab bar fits four tabs */}
-        {account?.role !== 'admin' && <NavLink to="/profile">{t('Profile', 'Perfil')}</NavLink>}
-      </nav>
+      {account?.role === 'admin' && wide ? <SideMenu /> : (
+        <nav className="tabbar">
+          <div className="side-brand side-only">DMV Trusted Movers</div>
+          {account?.role === 'crew' && <NavLink to="/find">{t('Find Job', 'Buscar trabajo')}</NavLink>}
+          {account?.role === 'admin' ? (
+            <>
+              <NavLink to="/" end>Dashboard</NavLink>
+              <NavLink to="/jobs">Jobs</NavLink>
+              <NavLink to="/money">Money</NavLink>
+              <NavLink to="/people">People</NavLink>
+            </>
+          ) : (
+            <NavLink to="/" end>{t('My Jobs', 'Mis trabajos')}</NavLink>
+          )}
+          {/* Admin reaches Profile from the avatar, so the tab bar fits four tabs */}
+          {account?.role !== 'admin' && <NavLink to="/profile">{t('Profile', 'Perfil')}</NavLink>}
+        </nav>
+      )}
     </div>
+  )
+}
+
+// On a computer the admin menu runs down the side with every page, grouped, and a search box
+function SideMenu() {
+  const navigate = useNavigate()
+  const [q, setQ] = useState('')
+  function search(e: FormEvent) {
+    e.preventDefault()
+    if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`)
+  }
+  return (
+    <nav className="tabbar">
+      <div className="side-brand">DMV Trusted Movers</div>
+      <form className="side-search" onSubmit={search} role="search">
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search customers, addresses" aria-label="Search" />
+      </form>
+      <div className="side-group">Work</div>
+      <NavLink to="/" end>Dashboard</NavLink>
+      <NavLink to="/jobs">Jobs</NavLink>
+      <NavLink to="/requests">Quote requests</NavLink>
+      <NavLink to="/crew-map">Crew map</NavLink>
+      <div className="side-group">Crew</div>
+      <NavLink to="/people">People</NavLink>
+      <NavLink to="/payouts">Pay crew</NavLink>
+      <div className="side-group">Business</div>
+      <NavLink to="/money">Money</NavLink>
+      <NavLink to="/website">Website</NavLink>
+      <NavLink to="/profile">Profile and settings</NavLink>
+    </nav>
   )
 }

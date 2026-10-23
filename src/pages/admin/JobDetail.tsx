@@ -9,6 +9,7 @@ import { assignmentPay } from '../../lib/pay'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import SendText from '../../components/SendText'
 import ReviewSection from './ReviewSection'
+import { useWide } from '../../lib/useWide'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
@@ -28,6 +29,7 @@ export default function AdminJobDetail() {
   const [rental, setRental] = useState<TruckRental | null>(null)
   const [costs, setCosts] = useState<JobCost[]>([])
   const day = useJobDay(id)
+  const wide = useWide()
   // The open tab lives in the link (?tab=crew), so alerts can open the right one
   const [params, setParams] = useSearchParams()
   const asked = params.get('tab') ?? ''
@@ -68,6 +70,30 @@ export default function AdminJobDetail() {
   const accepted = crew.filter((a) => a.status === 'accepted').length
   const crewLabel = job.crew_size ? `Crew ${accepted}/${job.crew_size}` : 'Crew'
 
+  const jobPart = (
+    <>
+      <section className="card">
+        <div className="facts">
+          <div><span>Truck</span>{job.truck_size ?? '—'}</div>
+          <div><span>Crew</span>{job.crew_size ?? '—'}</div>
+          <div><span>Hours</span>{job.est_hours ?? '—'}</div>
+        </div>
+        {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
+      </section>
+      {job.status === 'completed' && <ReviewSection jobId={id} quoteId={job.quote_id} />}
+      <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
+      <RentalSection jobId={id} rental={rental} onChange={load} />
+      <button className="danger" onClick={remove}>Delete job</button>
+    </>
+  )
+  const crewPart = <CrewSection job={job} crew={crew} onChange={load} />
+  const moneyPart = (
+    <>
+      <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
+      <CostsSection jobId={id} costs={costs} onChange={load} />
+    </>
+  )
+
   return (
     <Layout back="/jobs" title="Job">
       <section className="card">
@@ -93,39 +119,26 @@ export default function AdminJobDetail() {
       {job.status === 'cancelled' && <CancelledSection job={job} />}
       {job.change_status === 'pending' && job.change_date && job.status !== 'cancelled' && <DateChangeSection job={job} onChange={load} />}
 
-      <div className="segmented" role="tablist">
-        {(Object.keys(TABS) as Tab[]).map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''}
-            onClick={() => setParams(t === 'job' ? {} : { tab: t }, { replace: true })}>
-            {t === 'crew' ? crewLabel : TABS[t]}
-            {t === 'crew' && job.crew_size != null && accepted < job.crew_size && <span className="seg-dot" />}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'job' && (
+      {wide ? (
+        // On a computer everything shows at once: the job on the left, crew and money on the right
+        <div className="detail-grid">
+          <div>{jobPart}</div>
+          <div>{crewPart}{moneyPart}</div>
+        </div>
+      ) : (
         <>
-          <section className="card">
-            <div className="facts">
-              <div><span>Truck</span>{job.truck_size ?? '—'}</div>
-              <div><span>Crew</span>{job.crew_size ?? '—'}</div>
-              <div><span>Hours</span>{job.est_hours ?? '—'}</div>
-            </div>
-            {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
-          </section>
-          {job.status === 'completed' && <ReviewSection jobId={id} quoteId={job.quote_id} />}
-          <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
-          <RentalSection jobId={id} rental={rental} onChange={load} />
-          <button className="danger" onClick={remove}>Delete job</button>
-        </>
-      )}
-
-      {tab === 'crew' && <CrewSection job={job} crew={crew} onChange={load} />}
-
-      {tab === 'money' && (
-        <>
-          <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
-          <CostsSection jobId={id} costs={costs} onChange={load} />
+          <div className="segmented" role="tablist">
+            {(Object.keys(TABS) as Tab[]).map((t) => (
+              <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''}
+                onClick={() => setParams(t === 'job' ? {} : { tab: t }, { replace: true })}>
+                {t === 'crew' ? crewLabel : TABS[t]}
+                {t === 'crew' && job.crew_size != null && accepted < job.crew_size && <span className="seg-dot" />}
+              </button>
+            ))}
+          </div>
+          {tab === 'job' && jobPart}
+          {tab === 'crew' && crewPart}
+          {tab === 'money' && moneyPart}
         </>
       )}
     </Layout>

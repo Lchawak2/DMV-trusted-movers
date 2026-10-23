@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dayHeading } from '../../lib/format'
+import { useWide } from '../../lib/useWide'
 import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, type LeadSource, type LostReason, type RequestStatus } from '../../lib/types'
 import { BOOK_TYPES } from '../Book'
 import { REQUEST_SELECT, crossesStateLine, requestState, type RequestRow } from './requestData'
@@ -10,6 +11,8 @@ import { REQUEST_SELECT, crossesStateLine, requestState, type RequestRow } from 
 export default function Requests() {
   const [rows, setRows] = useState<RequestRow[] | null>(null)
   const [showDone, setShowDone] = useState(false)
+  const wide = useWide()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const open = ['new', 'waiting_on_client', 'quoted']
@@ -32,7 +35,35 @@ export default function Requests() {
         <p className="muted center">{showDone ? 'Nothing here yet.' : 'No open requests. Share the booking form link with customers to get some.'}</p>
       )}
       {showDone && <LeadStats />}
-      {!!rows?.length && (
+      {!!rows?.length && wide && (
+        <div className="card table-card">
+          <table className="table">
+            <thead>
+              <tr><th>Customer</th><th>Phone</th><th>Move</th><th>Wants</th><th>Asked</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const state = requestState(r)
+                return (
+                  <tr key={r.id} onClick={() => navigate(`/requests/${r.id}`)}>
+                    <td><Link to={`/requests/${r.id}`}>{r.customers?.full_name ?? 'Customer'}</Link></td>
+                    <td>{r.customers?.phone ?? <span className="muted">—</span>}</td>
+                    <td>
+                      {BOOK_TYPES[r.move_type] ?? JOB_TYPES[r.move_type] ?? r.move_type}{r.home_size ? ` · ${r.home_size}` : ''}
+                      <div className="muted small table-addr">{r.from_address}{r.to_address ? ` → ${r.to_address}` : ''}</div>
+                      {crossesStateLine(r) && <div className="small tone-warn">Crosses a state line</div>}
+                    </td>
+                    <td>{dayHeading(r.preferred_date)}</td>
+                    <td>{new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                    <td><span className={`pill ${state.pill}`}>{state.label}</span></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!!rows?.length && !wide && (
       <ul className="list card">
         {rows?.map((r) => {
           const state = requestState(r)
