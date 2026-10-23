@@ -146,7 +146,7 @@ export default function Book() {
           {photos.length > 0 && (
             <div className="small">{photos.length} {photos.length === 1 ? 'photo' : 'photos'} added · <button type="button" className="link" onClick={() => setPhotos([])}>Remove</button></div>
           )}
-          <div className="small muted">Moving supplies (optional, added to your price)</div>
+          <div className="small muted">Moving supplies (optional, added to your price). Tell us how many below.</div>
           <div className="chips">
             {SUPPLIES.map((x) => (
               <button type="button" key={x.name} className={`chip big${supplies.includes(x.name) ? ' on' : ''}`}

@@ -13,6 +13,10 @@ export const SUPPLIES = [
   { name: 'Moving blankets', price: 5, per: 'each' },
   { name: 'Plastic wrap', price: 35, per: 'a roll' },
   { name: 'Packing tape', price: 5, per: 'a roll' },
+  { name: 'Small boxes', price: 3, per: 'each' },
+  { name: 'Medium boxes', price: 4, per: 'each' },
+  { name: 'Large boxes', price: 5, per: 'each' },
+  { name: 'Wardrobe boxes', price: 25, per: 'each' },
 ]
 export const SMALL_MIN_HOURS = 2
 

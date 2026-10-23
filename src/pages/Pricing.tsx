@@ -60,7 +60,7 @@ export default function Pricing() {
               </div>
             ))}
           </div>
-          <p className="muted small">Pick what you need when you ask for a quote.</p>
+          <p className="muted small">Pick what you need when you ask for a quote. We bring it on moving day.</p>
         </div>
       </section>
 
