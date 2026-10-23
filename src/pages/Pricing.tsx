@@ -9,7 +9,6 @@ import {
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 const INCLUDED = [
-  'The truck and gas',
   'Blankets, tape and plastic wrap to protect your things',
   'No extra charge for stairs or elevators',
   'No extra charge for paying by card',
@@ -36,19 +35,24 @@ export default function Pricing() {
 
       <section className="site-sec">
         <div className="site-wrap">
-          <h2>Movers and a truck, by the hour</h2>
+          <h2>Our price</h2>
           <div className="price-tiles">
             {CREW_RATES.map((r) => (
               <div className="price-tile" key={r.movers}>
-                <span>{r.movers} movers + truck</span>
+                <span>{r.movers} movers</span>
                 <strong>{dollars(r.rate)}</strong>
                 <span>an hour</span>
               </div>
             ))}
+            <div className="price-tile">
+              <span>Truck</span>
+              <strong>{dollars(TRAVEL_FEE)}</strong>
+              <span>one time</span>
+            </div>
           </div>
           <ul className="price-rules">
             <li><strong>{MIN_HOURS} hour minimum.</strong></li>
-            <li><strong>{dollars(TRAVEL_FEE)} for the drive.</strong> Paid once, for bringing the truck to you and back. Trips over {INCLUDED_MILES} miles are {dollars(PER_MILE)} for each extra mile.</li>
+            <li><strong>The truck includes gas and up to {INCLUDED_MILES} miles.</strong> Longer trips are {dollars(PER_MILE)} for each extra mile.</li>
             {CREW_RATES.length > 1 && <li><strong>Need more hands?</strong> Each extra mover is {dollars(EXTRA_MOVER)} more an hour.</li>}
           </ul>
         </div>
@@ -65,7 +69,7 @@ export default function Pricing() {
               </div>
             ))}
           </div>
-          <p className="muted small">These include the travel fee. Your price depends on how much you have and how far you're going. Bigger homes and offices get a free custom quote.</p>
+          <p className="muted small">These include the truck. Your price depends on how much you have and how far you're going. Bigger homes and offices get a free custom quote.</p>
         </div>
       </section>
 

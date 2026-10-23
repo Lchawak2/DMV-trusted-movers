@@ -7,7 +7,7 @@ export const CREW_RATES = [
 ]
 export const EXTRA_MOVER = 50
 export const MIN_HOURS = 3
-// One-time charge for driving the truck to you and back
+// One-time truck charge: the truck, gas and the drive to the customer and back
 export const TRAVEL_FEE = 129
 export const INCLUDED_MILES = 40
 export const PER_MILE = 2
