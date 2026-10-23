@@ -28,7 +28,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
 
       <footer className="site-foot">
         <div className="site-wrap">
-          <Link to="/book" className="site-btn gold">Get a free quote</Link>
+          <Link to="/book" className="site-btn gold">See my price</Link>
           {licenses.length > 0 && <p>{licenses.join(' · ')}</p>}
           <nav>
             <Link to="/pricing">Prices</Link>

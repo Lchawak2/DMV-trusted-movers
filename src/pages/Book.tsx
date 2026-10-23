@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { SUPPLIES } from '../lib/prices'
+import { SUPPLIES, estimate, type Estimate } from '../lib/prices'
+import Stepper from '../components/Stepper'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -21,11 +22,20 @@ export const ARRIVAL_WINDOWS = ['Morning (8 to 10 AM)', 'Midday (11 AM to 1 PM)'
 const PARKING = ['Street', 'Driveway', 'Loading dock', 'Parking garage']
 const MAX_PHOTOS = 8
 
-// The supplies the customer picked go at the top of their notes, where the office sees them when pricing
-function withSupplies(notes: string, supplies: string[]) {
-  const text = [supplies.length ? `Supplies wanted: ${supplies.join(', ')}` : '', notes.trim()].filter(Boolean).join('\n')
+// The boxes and supplies the customer counted go at the top of their notes, where the office sees them when pricing
+// along with the estimate they were shown
+function withSupplies(notes: string, supplies: Record<string, number>, est: Estimate | null) {
+  const wanted = SUPPLIES.filter((x) => supplies[x.name] > 0).map((x) => `${supplies[x.name]} ${x.name.toLowerCase()}`)
+  const text = [
+    wanted.length ? `Supplies wanted: ${wanted.join(', ')}` : 'Supplies wanted: none',
+    est ? `Estimate shown to customer: ${range(est)}` : '',
+    notes.trim(),
+  ].filter(Boolean).join('\n')
   return text || null
 }
+
+const dollars = (n: number) => '$' + n.toLocaleString('en-US')
+const range = ({ low, high }: { low: number; high: number }) => (low === high ? dollars(low) : `${dollars(low)} to ${dollars(high)}`)
 
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
@@ -38,7 +48,7 @@ export default function Book() {
   const [to, setTo] = useState<Place>(emptyPlace)
   const [size, setSize] = useState('')
   const [items, setItems] = useState<string[]>([])
-  const [supplies, setSupplies] = useState<string[]>([])
+  const [supplies, setSupplies] = useState<Record<string, number>>({})
   const [photos, setPhotos] = useState<File[]>([])
   const [date, setDate] = useState('')
   const [arrival, setArrival] = useState('')
@@ -49,7 +59,7 @@ export default function Book() {
   const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sent, setSent] = useState<{ photosFailed: boolean } | null>(null)
+  const [sent, setSent] = useState<{ photosFailed: boolean; est: Estimate | null } | null>(null)
   const { account } = useAuth()
 
   // A signed-in customer booking again: fill in their details
@@ -69,6 +79,7 @@ export default function Book() {
     if (!phone.trim() && !email.trim()) return setError('Please give a phone number or an email so we can send your price.')
     setError(null)
     setBusy(true)
+    const est = estimate(type, size, supplies, items)
     const elevator = (v: string) => (v === '' ? null : v === 'yes')
     const floor = (v: string) => (v === '' ? null : Number(v))
     const { data, error } = await supabase.rpc('submit_move_request', {
@@ -76,7 +87,7 @@ export default function Book() {
       p_move_type: type, p_home_size: size || null, p_special_items: items,
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
-      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies),
+      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies, est),
       p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
@@ -94,7 +105,7 @@ export default function Book() {
       }
     }
     setBusy(false)
-    setSent({ photosFailed })
+    setSent({ photosFailed, est })
     window.scrollTo(0, 0)
   }
 
@@ -104,7 +115,19 @@ export default function Book() {
         <section className="card center">
           <div className="done-mark">✓</div>
           <h2>Thanks, {name.split(' ')[0]}!</h2>
-          <p>We got your request. We'll look it over and send your price {phone ? 'by text' : 'by email'}.</p>
+          {sent.est ? (
+            <>
+              <p>Here is your estimated price.</p>
+              <ul className="est-lines">
+                {sent.est.lines.map((l) => <li key={l.label}><span>{l.label}</span><strong>{range(l)}</strong></li>)}
+                {sent.est.later.length > 0 && <li><span>{sent.est.later.join(', ')}</span><strong>added to your exact price</strong></li>}
+                <li className="sum"><span>Estimated total</span><strong>{range(sent.est)}</strong></li>
+              </ul>
+              <p className="small muted">Smaller loads land at the low end. No extra charge for stairs or paying by card. We'll look over your details and send your exact price {phone ? 'by text' : 'by email'}.</p>
+            </>
+          ) : (
+            <p>We got your request. We'll look it over and send your price {phone ? 'by text' : 'by email'}.</p>
+          )}
           {sent.photosFailed && <p className="note">Some photos didn't upload. That's fine, we'll ask for them if we need them.</p>}
         </section>
       </PublicPage>
@@ -114,6 +137,7 @@ export default function Book() {
   return (
     <PublicPage sub="Get a moving quote">
       <form onSubmit={submit} className="form">
+        <p className="est-intro">Answer a few questions and <strong>see your price right away</strong>, with every part listed.</p>
         <section className="card">
           <h3>What do you need?</h3>
           <div className="chips">
@@ -128,6 +152,7 @@ export default function Book() {
 
         <section className="card form">
           <h3>{office ? 'How big is the office?' : 'How big is the move?'}</h3>
+          <div className="small muted">Pick one so we can show your price.</div>
           <div className="chips">
             {sizes.map((s) => <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}</button>)}
           </div>
@@ -146,15 +171,21 @@ export default function Book() {
           {photos.length > 0 && (
             <div className="small">{photos.length} {photos.length === 1 ? 'photo' : 'photos'} added · <button type="button" className="link" onClick={() => setPhotos([])}>Remove</button></div>
           )}
-          <div className="small muted">Moving supplies (optional, added to your price). Tell us how many below.</div>
-          <div className="chips">
-            {SUPPLIES.map((x) => (
-              <button type="button" key={x.name} className={`chip big${supplies.includes(x.name) ? ' on' : ''}`}
-                onClick={() => setSupplies(supplies.includes(x.name) ? supplies.filter((s) => s !== x.name) : [...supplies, x.name])}>
-                {x.name} · ${x.price} {x.per}
-              </button>
-            ))}
-          </div>
+          <div><strong>How many boxes do you need?</strong></div>
+          <div className="small muted">We bring them and add them to your price. Have your own boxes? Leave these at 0.</div>
+          {SUPPLIES.filter((x) => x.box).map((x) => (
+            <div className="calc-row" key={x.name}>
+              <span>{x.name} <small>${x.price} {x.per}</small></span>
+              <Stepper value={supplies[x.name] ?? 0} onChange={(n) => setSupplies({ ...supplies, [x.name]: n })} label={x.name.toLowerCase()} />
+            </div>
+          ))}
+          <div className="small muted">Other supplies (optional)</div>
+          {SUPPLIES.filter((x) => !x.box).map((x) => (
+            <div className="calc-row" key={x.name}>
+              <span>{x.name} <small>${x.price} {x.per}</small></span>
+              <Stepper value={supplies[x.name] ?? 0} onChange={(n) => setSupplies({ ...supplies, [x.name]: n })} label={x.name.toLowerCase()} />
+            </div>
+          ))}
           <label>
             Anything else we should know?
             <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000}
@@ -194,8 +225,8 @@ export default function Book() {
         </section>
 
         {error && <p className="warn">{error}</p>}
-        <button className="primary" disabled={busy}>{busy ? 'Sending…' : 'Send request'}</button>
-        <p className="note center-text">No account needed. We review every request and send you a price. By sending, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#privacy">privacy policy</Link>.</p>
+        <button className="primary" disabled={busy}>{busy ? 'Working out your price…' : 'See my price'}</button>
+        <p className="note center-text">No account needed. Your price shows up as soon as you send, and we confirm it by text or email. By sending, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#privacy">privacy policy</Link>.</p>
       </form>
     </PublicPage>
   )

@@ -26,7 +26,7 @@ export default function Home() {
           <h1>{site.headline}</h1>
           <p>{site.subheadline}</p>
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">Get a free quote</Link>
+            <Link to="/book" className="site-btn gold">See my price</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">Call {site.phone}</a>}
           </div>
           {ratings > 0 && rating !== null && (

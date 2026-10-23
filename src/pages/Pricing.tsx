@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import PriceCalculator from '../components/PriceCalculator'
-import { SMALL_MIN_HOURS, TILES, TRIP_FEE } from '../lib/prices'
+import { SMALL_MIN_HOURS, SUPPLIES, TILES, TRIP_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -27,7 +26,7 @@ export default function Pricing() {
       <section className="site-hero short">
         <div className="site-wrap">
           <h1>Our prices</h1>
-          <p>Simple and upfront. You see your full price before you book.</p>
+          <p>Simple and upfront. Fill out our quote form and your price shows up right away, with every part listed.</p>
         </div>
       </section>
 
@@ -46,15 +45,20 @@ export default function Pricing() {
           <ul className="price-rules">
             <li><strong>Moves:</strong> one starting price covers the truck, gas and the first 2 hours.</li>
             <li><strong>Loading help and packing:</strong> {SMALL_MIN_HOURS} hour minimum, plus a {dollars(TRIP_FEE)} trip fee.</li>
-            <li><strong>Want the full cost?</strong> <a href="#calculator">Work it out below</a>, truck and supplies included.</li>
+            <li><strong>Your price:</strong> fill out our <Link to="/book">quote form</Link> and see your estimate right away.</li>
           </ul>
         </div>
       </section>
 
-      <section className="site-sec alt" id="calculator">
+      <section className="site-sec alt">
         <div className="site-wrap">
-          <h2>Work out your price</h2>
-          <PriceCalculator />
+          <h2>Boxes and supplies</h2>
+          <p className="site-lead">We bring them on moving day. Tell us how many on your quote form, or skip them if you have your own.</p>
+          <div className="site-prices">
+            {SUPPLIES.map((x) => (
+              <div className="site-price" key={x.name}><span>{x.name}</span><strong>{dollars(x.price)} {x.per}</strong></div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -70,9 +74,9 @@ export default function Pricing() {
       <section className="site-sec alt">
         <div className="site-wrap">
           <h2>How you pay</h2>
-          <p className="site-lead">Your quote shows one total price. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>
+          <p className="site-lead">Your price shows up as soon as you send the quote form. We confirm it by text or email. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">Get my free quote</Link>
+            <Link to="/book" className="site-btn gold">See my price</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">Call {site.phone}</a>}
           </div>
         </div>
