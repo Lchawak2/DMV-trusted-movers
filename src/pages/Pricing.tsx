@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import { MOVE_RATE, MOVE_START_HOURS, SMALL_MIN_HOURS, TILES, TRIP_FEE } from '../lib/prices'
+import { MOVE_RATE, MOVE_START_HOURS, SMALL_MIN_HOURS, TILES, TRIP_FEE, USUAL_MOVES } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -55,6 +55,19 @@ export default function Pricing() {
 
       <section className="site-sec alt">
         <div className="site-wrap">
+          <h2>What home moves usually cost</h2>
+          <p className="site-lead">With 2 movers and our truck. You only pay for the time we use.</p>
+          <div className="site-prices">
+            {USUAL_MOVES.map((m) => (
+              <div className="site-price" key={m.size}><span>{m.size}, about {m.hours} hours</span><strong>about {dollars(m.price)}</strong></div>
+            ))}
+            <div className="site-price"><span>3 bedrooms or more</span><strong>we'll price it</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="site-sec">
+        <div className="site-wrap">
           <h2>Always included</h2>
           <ul className="price-included">
             {INCLUDED.map((t) => <li key={t}>{t}</li>)}
@@ -62,7 +75,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      <section className="site-sec">
+      <section className="site-sec alt">
         <div className="site-wrap">
           <h2>How you pay</h2>
           <p className="site-lead">Your price shows up as soon as you send the quote form, and you can book it right there. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>

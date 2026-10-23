@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
+import { USUAL_MOVES } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -132,7 +133,8 @@ export default function Book() {
   }, [account])
 
   const office = type === 'office_move'
-  const sizes = HOME_SIZES.filter((s) => (office ? s.includes('office') : !s.includes('office')))
+  // No small item jobs for now; those requests used to be "Few items"
+  const sizes = HOME_SIZES.filter((s) => s !== 'Few items' && (office ? s.includes('office') : !s.includes('office')))
   const oneAddress = type === 'labor_only' || type === 'junk_haul' || type === 'packing'
 
   async function submit(e: FormEvent) {
@@ -213,11 +215,11 @@ export default function Book() {
         <section className="card">
           <h3>What do you need?</h3>
           <div className="chips">
-            {Object.entries(BOOK_TYPES).map(([k, label]) => (
+            {Object.entries(BOOK_TYPES).filter(([k]) => k !== 'small_move').map(([k, label]) => (
               <button type="button" key={k} className={`chip big${type === k ? ' on' : ''}`} onClick={() => { setType(k); setSize('') }}>{label}</button>
             ))}
           </div>
-          {(type === 'full_move' || type === 'small_move' || type === 'office_move') && <div className="small muted">You pack, we move. Want us to pack too? Pick Packing.</div>}
+          {(type === 'full_move' || type === 'office_move') && <div className="small muted">You pack, we move. Want us to pack too? Pick Packing.</div>}
         </section>
 
         <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
@@ -229,6 +231,12 @@ export default function Book() {
           <div className="chips">
             {sizes.map((s) => <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{s}</button>)}
           </div>
+          {type === 'full_move' && (
+            <ul className="est-lines usual">
+              {USUAL_MOVES.map((m) => <li key={m.size}><span>{m.size}, about {m.hours} hours</span><strong>about ${m.price.toLocaleString('en-US')}</strong></li>)}
+              <li><span>3 bedrooms or more</span><strong>we'll price it</strong></li>
+            </ul>
+          )}
           <div className="small muted">Big or special items</div>
           <div className="chips">
             {SPECIAL_ITEMS.map((s) => (
