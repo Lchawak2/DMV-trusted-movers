@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS, SUPPLIES } from '../lib/prices'
+import PriceCalculator from '../components/PriceCalculator'
+import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -44,23 +45,15 @@ export default function Pricing() {
           </div>
           <ul className="price-rules">
             <li><strong>{MIN_HOURS} hour minimum for moves.</strong> {SMALL_MIN_HOURS} hours for loading help and packing.</li>
-            <li><strong>Your free quote shows the full price, truck included,</strong> before you book.</li>
+            <li><strong>Want the full cost?</strong> <a href="#calculator">Work it out below</a>, truck and supplies included.</li>
           </ul>
         </div>
       </section>
 
-      <section className="site-sec alt">
+      <section className="site-sec alt" id="calculator">
         <div className="site-wrap">
-          <h2>Moving supplies, if you want them</h2>
-          <div className="site-prices wide">
-            {SUPPLIES.map((x) => (
-              <div className="site-price" key={x.name}>
-                <span>{x.name}</span>
-                <strong>{dollars(x.price)} {x.per}</strong>
-              </div>
-            ))}
-          </div>
-          <p className="muted small">Pick what you need when you ask for a quote. We bring it on moving day.</p>
+          <h2>Work out your price</h2>
+          <PriceCalculator />
         </div>
       </section>
 

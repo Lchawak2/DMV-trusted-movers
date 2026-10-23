@@ -333,6 +333,21 @@ a.topbar-name, a.plain { color: inherit; text-decoration: none; }
 .price-tile span { color: var(--muted); }
 .price-tile span:first-child { color: var(--text); font-weight: 600; }
 .price-rules, .price-included { max-width: 720px; padding-left: 20px; margin: 0; display: grid; gap: 10px; font-size: 17px; line-height: 1.5; }
+.calc { display: grid; gap: 16px; max-width: 720px; }
+.calc-step { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+.calc-step h3 { margin: 0; }
+.calc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.calc-row small { display: block; color: var(--muted); font-size: 13px; }
+.stepper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.stepper button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 20px; line-height: 1; color: var(--text); }
+.stepper button:disabled { opacity: 0.35; }
+.stepper span { min-width: 24px; text-align: center; font-weight: 700; font-size: 17px; }
+.calc-total { background: var(--site-main); color: #fff; border-radius: 12px; padding: 18px; display: grid; gap: 8px; }
+.calc-line { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.calc-line.sum { border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 10px; margin-top: 4px; font-size: 18px; }
+.calc-line.sum strong { font-size: 28px; }
+.calc-total p { opacity: 0.85; margin: 0; }
+.calc-total .site-btn.gold { background: #fff; color: var(--site-main); justify-self: start; }
 .site-foot { background: var(--site-main); color: rgba(255, 255, 255, 0.8); padding: 40px 0; font-size: 14px; text-align: center; }
 .site-foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin: 20px 0 12px; }
 .site-foot a:not(.site-btn) { color: #fff; }
