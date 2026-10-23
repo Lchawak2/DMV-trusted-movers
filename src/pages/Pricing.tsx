@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS } from '../lib/prices'
+import { HOURLY, MIN_HOURS, SMALL_MIN_HOURS, SUPPLIES } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 const INCLUDED = [
-  'Blankets, tape and plastic wrap to protect your things',
   'No extra charge for stairs or elevators',
   'No extra charge for paying by card',
   'Free cancellation up to 72 hours before your move',
@@ -52,6 +51,21 @@ export default function Pricing() {
 
       <section className="site-sec alt">
         <div className="site-wrap">
+          <h2>Moving supplies, if you want them</h2>
+          <div className="site-prices wide">
+            {SUPPLIES.map((x) => (
+              <div className="site-price" key={x.name}>
+                <span>{x.name}</span>
+                <strong>{dollars(x.price)} {x.per}</strong>
+              </div>
+            ))}
+          </div>
+          <p className="muted small">Pick what you need when you ask for a quote.</p>
+        </div>
+      </section>
+
+      <section className="site-sec">
+        <div className="site-wrap">
           <h2>Always included</h2>
           <ul className="price-included">
             {INCLUDED.map((t) => <li key={t}>{t}</li>)}
@@ -59,7 +73,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      <section className="site-sec">
+      <section className="site-sec alt">
         <div className="site-wrap">
           <h2>How you pay</h2>
           <p className="site-lead">Your quote shows one total price. A small deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we'll tell you before doing any extra work.</p>

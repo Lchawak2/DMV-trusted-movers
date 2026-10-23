@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
+import { SUPPLIES } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -20,6 +21,12 @@ export const ARRIVAL_WINDOWS = ['Morning (8 to 10 AM)', 'Midday (11 AM to 1 PM)'
 const PARKING = ['Street', 'Driveway', 'Loading dock', 'Parking garage']
 const MAX_PHOTOS = 8
 
+// The supplies the customer picked go at the top of their notes, where the office sees them when pricing
+function withSupplies(notes: string, supplies: string[]) {
+  const text = [supplies.length ? `Supplies wanted: ${supplies.join(', ')}` : '', notes.trim()].filter(Boolean).join('\n')
+  return text || null
+}
+
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
 type Place = { address: string; floor: string; elevator: string; parking: string }
@@ -31,6 +38,7 @@ export default function Book() {
   const [to, setTo] = useState<Place>(emptyPlace)
   const [size, setSize] = useState('')
   const [items, setItems] = useState<string[]>([])
+  const [supplies, setSupplies] = useState<string[]>([])
   const [photos, setPhotos] = useState<File[]>([])
   const [date, setDate] = useState('')
   const [arrival, setArrival] = useState('')
@@ -68,7 +76,7 @@ export default function Book() {
       p_move_type: type, p_home_size: size || null, p_special_items: items,
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
-      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: notes || null,
+      p_preferred_date: date, p_arrival_window: arrival || null, p_notes: withSupplies(notes, supplies),
       p_lead_source: source || null,
     })
     if (error) { setBusy(false); return setError(error.message) }
@@ -138,6 +146,15 @@ export default function Book() {
           {photos.length > 0 && (
             <div className="small">{photos.length} {photos.length === 1 ? 'photo' : 'photos'} added · <button type="button" className="link" onClick={() => setPhotos([])}>Remove</button></div>
           )}
+          <div className="small muted">Moving supplies (optional, added to your price)</div>
+          <div className="chips">
+            {SUPPLIES.map((x) => (
+              <button type="button" key={x.name} className={`chip big${supplies.includes(x.name) ? ' on' : ''}`}
+                onClick={() => setSupplies(supplies.includes(x.name) ? supplies.filter((s) => s !== x.name) : [...supplies, x.name])}>
+                {x.name} · ${x.price} {x.per}
+              </button>
+            ))}
+          </div>
           <label>
             Anything else we should know?
             <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000}

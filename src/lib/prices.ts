@@ -7,6 +7,13 @@ export const HOURLY = [
   { name: 'Packing', rate: 75, per: 'an hour per packer' },
 ]
 export const MIN_HOURS = 3
+
+// Supplies the customer can add to their move; listed on the page and picked on the booking form
+export const SUPPLIES = [
+  { name: 'Moving blankets', price: 5, per: 'each' },
+  { name: 'Plastic wrap', price: 35, per: 'a roll' },
+  { name: 'Packing tape', price: 5, per: 'a roll' },
+]
 export const SMALL_MIN_HOURS = 2
 
 // Not shown on the page, but added to every quote:
