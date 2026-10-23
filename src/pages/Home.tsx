@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import TruckLogo from '../components/TruckLogo'
 import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
 
 const STEPS = [
@@ -26,7 +27,7 @@ export default function Home() {
     <div className="site" style={{ '--site-main': site.main_color, '--site-accent': site.accent_color } as CSSProperties}>
       <header className="site-bar">
         <div className="site-wrap site-bar-in">
-          <span className="site-name">DMV Trusted Movers</span>
+          <span className="site-name brand"><TruckLogo size={24} />DMV Trusted Movers</span>
           <nav className="site-nav">
             {site.phone && <a href={telLink(site.phone)}>{site.phone}</a>}
             <Link to="/login">Sign in</Link>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import TruckLogo from './TruckLogo'
 
 // Page frame for customers, who aren't signed in
 export default function PublicPage({ sub, children }: { sub: string; children: ReactNode }) {
@@ -9,7 +10,7 @@ export default function PublicPage({ sub, children }: { sub: string; children: R
     <div className="app public">
       <header className="topbar">
         <div>
-          <Link to="/" className="topbar-name">DMV Trusted Movers</Link>
+          <Link to="/" className="topbar-name brand"><TruckLogo />DMV Trusted Movers</Link>
           <div className="topbar-sub">{sub}</div>
         </div>
         <Link to={session ? '/' : '/login'} className="topbar-link">{session ? 'My moves' : 'Sign in'}</Link>

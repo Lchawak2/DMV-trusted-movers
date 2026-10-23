@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { dayHeading, money, parseDay, windowText } from '../../lib/format'
 import { JOB_TYPES } from '../../lib/types'
 import { addDays, dollars, figures, iso, useJobs, weekOf } from './jobData'
+import Insights from './Insights'
 
 // How many jobs can run on one day; the week strip shows how full each day is
 const CREWS_PER_DAY = 3
@@ -69,6 +70,8 @@ export default function Dashboard() {
     <Layout>
       <div className="dash-grid">
       <h2 className="dash-date">{parseDay(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
+
+      <Insights />
 
       <section className="card">
         <div className="card-head"><h3>Needs you</h3><span className="muted small">{todos.length ? 'most urgent first' : ''}</span></div>

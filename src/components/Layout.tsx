@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import Bell from './Bell'
+import TruckLogo from './TruckLogo'
 import { t } from '../lib/lang'
 import { discard, useOutbox } from '../lib/outbox'
 
@@ -20,7 +21,7 @@ export default function Layout({ title, back, children }: { title?: string; back
         ) : (
           <div>
             <div className="topbar-name">{name}</div>
-            <div className="topbar-sub">DMV Trusted Movers · {portal}</div>
+            <div className="topbar-sub brand"><TruckLogo size={14} />DMV Trusted Movers · {portal}</div>
           </div>
         )}
         {title && back && <div className="topbar-title">{title}</div>}
@@ -46,7 +47,7 @@ export default function Layout({ title, back, children }: { title?: string; back
         {children}
       </main>
       <nav className="tabbar">
-        <div className="side-brand side-only">DMV Trusted Movers</div>
+        <div className="side-brand side-only"><span className="brand"><TruckLogo size={20} />DMV Trusted Movers</span></div>
         {account?.role === 'crew' && <NavLink to="/find">{t('Find Job', 'Buscar trabajo')}</NavLink>}
         {account?.role === 'admin' ? (
           <>

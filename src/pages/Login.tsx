@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import TruckLogo from '../components/TruckLogo'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -31,7 +32,7 @@ export default function Login() {
 
   return (
     <div className="login">
-      <h1><Link to="/" className="plain">DMV Trusted Movers</Link></h1>
+      <h1><Link to="/" className="plain brand"><TruckLogo size={30} />DMV Trusted Movers</Link></h1>
       <p className="muted">{mode === 'signin' ? 'Sign in to your account' : 'Create an account'}</p>
       <form onSubmit={submit} className="card form">
         {mode === 'signup' && (
