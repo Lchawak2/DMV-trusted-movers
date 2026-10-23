@@ -9,7 +9,7 @@
 // The quote token in the customer's link is the only key a guest has, so every lookup goes through it.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 
-const LIVE_SITE = 'https://dmv-trusted-movers-8tyn.vercel.app'
+const LIVE_SITE = 'https://dmvtrustedmovers.org'
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -41,7 +41,7 @@ async function stripe(path: string, form?: Record<string, string>, idempotencyKe
 
 // Send customers back to the site they paid from, but only to our own sites
 function siteFor(origin: string | null): string {
-  if (origin && (/^https:\/\/dmv-trusted-movers[a-z0-9-]*\.vercel\.app$/.test(origin) || /^http:\/\/localhost:\d+$/.test(origin))) return origin
+  if (origin && (/^https:\/\/dmv-trusted-movers[a-z0-9-]*\.vercel\.app$/.test(origin) || /^https:\/\/(www\.)?dmvtrustedmovers\.org$/.test(origin) || /^http:\/\/localhost:\d+$/.test(origin))) return origin
   return LIVE_SITE
 }
 

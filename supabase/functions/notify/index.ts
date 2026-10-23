@@ -5,7 +5,7 @@
 // choose who gets emailed or what it says.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 
-const LIVE_SITE = 'https://dmv-trusted-movers-8tyn.vercel.app'
+const LIVE_SITE = 'https://dmvtrustedmovers.org'
 // Until a domain is verified in Resend, it only delivers to the Resend account's own email,
 // so emails to anyone but the admins wait for NOTIFY_FROM (an address on that verified domain).
 const FROM = Deno.env.get('NOTIFY_FROM')
