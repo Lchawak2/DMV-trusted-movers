@@ -67,7 +67,7 @@ language plpgsql security definer set search_path = '' as $$
 declare
   r public.move_requests;
   est jsonb;
-  deposit constant numeric := 100;
+  deposit constant numeric := 50;
   q public.quotes;
 begin
   select * into r from public.move_requests where id = p_request for update;
