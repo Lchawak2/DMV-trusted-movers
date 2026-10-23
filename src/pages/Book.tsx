@@ -165,6 +165,10 @@ export default function Book() {
   async function submit(e: FormEvent) {
     e.preventDefault()
     if (!phone.trim() && !email.trim()) return setError('Please give a phone number or an email so we can send your price.')
+    if (!oneAddress && !distance) {
+      document.getElementById('distance')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return setError('Please pick how far apart the two places are.')
+    }
     setError(null)
     setBusy(true)
     const elevator = (v: string) => (v === '' ? null : v === 'yes')
@@ -250,7 +254,7 @@ export default function Book() {
         <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
         {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} />}
         {!oneAddress && (
-          <section className="card form">
+          <section className="card form" id="distance">
             <h3>How far apart are the two places?</h3>
             <div className="chips">
               {Object.entries(DISTANCES).map(([k, label]) => (
