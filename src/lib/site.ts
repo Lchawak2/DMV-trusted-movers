@@ -46,7 +46,7 @@ export const DEFAULT_SITE: SiteContent = {
   hero_photo: null,
   gallery: [],
   main_color: '#0f172a',
-  accent_color: '#e11d48',
+  accent_color: '#0f172a',
 }
 
 export type SiteData = { site: SiteContent; review_url: string | null; rating: number | null; ratings: number }

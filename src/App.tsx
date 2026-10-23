@@ -19,6 +19,7 @@ import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
 import CrewMap from './pages/admin/CrewMap'
 import Website from './pages/admin/Website'
+import NeedsYou from './pages/admin/NeedsYou'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
 import FindJob from './pages/crew/FindJob'
@@ -53,6 +54,7 @@ export default function App() {
     return (
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/needs" element={<NeedsYou />} />
         <Route path="/jobs" element={<AdminJobs />} />
         <Route path="/jobs/new" element={<JobForm />} />
         <Route path="/jobs/:id" element={<AdminJobDetail />} />

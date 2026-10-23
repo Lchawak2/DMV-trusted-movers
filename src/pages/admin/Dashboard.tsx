@@ -1,60 +1,26 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../../components/Layout'
-import { supabase } from '../../lib/supabase'
-import { dayHeading, money, parseDay, windowText } from '../../lib/format'
+import { parseDay, windowText } from '../../lib/format'
 import { JOB_TYPES } from '../../lib/types'
 import { addDays, dollars, figures, iso, useJobs, weekOf } from './jobData'
+import Insights from './Insights'
+import { useTodos } from './needs'
 
 // How many jobs can run on one day; the week strip shows how full each day is
 const CREWS_PER_DAY = 3
-
-type Level = 'crit' | 'warn' | 'info'
-type Todo = { level: Level; title: string; detail: string; to: string; action: string }
 
 export default function Dashboard() {
   const today = iso(new Date())
   const week = weekOf(today)
   const jobs = useJobs(addDays(today, -30), week.end > addDays(today, 7) ? week.end : addDays(today, 7))
-  const [signups, setSignups] = useState(0)
-  const [requests, setRequests] = useState(0)
-  const [showAll, setShowAll] = useState(false)
-
-  useEffect(() => {
-    supabase.from('accounts').select('id', { count: 'exact', head: true }).eq('role', 'client')
-      .then(({ count }) => setSignups(count ?? 0))
-    supabase.from('move_requests').select('id', { count: 'exact', head: true }).eq('status', 'new')
-      .then(({ count }) => setRequests(count ?? 0))
-  }, [])
+  const todos = useTodos()
+  const urgent = todos?.filter((t) => t.level !== 'info').length ?? 0
 
   if (!jobs) return <Layout><p className="muted center">Loading…</p></Layout>
 
   const todays = jobs.filter((j) => j.job_date === today)
   const thisWeek = jobs.filter((j) => j.job_date >= week.start && j.job_date <= week.end)
 
-  // Needs you: what would go wrong if nobody acted
-  const todos: Todo[] = []
-  for (const j of jobs) {
-    const f = figures(j)
-    const name = `${JOB_TYPES[j.job_type] ?? j.job_type}, ${dayHeading(j.job_date)}`
-    const to = `/jobs/${j.id}`
-    if (j.job_date >= today) {
-      const soon = j.job_date <= addDays(today, 2)
-      if (f.short) todos.push({ level: soon ? 'crit' : 'warn', title: `Needs ${f.short} more ${f.short === 1 ? 'mover' : 'movers'}`, detail: name, to, action: 'Add crew' })
-      if (!f.truckOk) todos.push({ level: soon ? 'crit' : 'warn', title: `No truck booked (${j.truck_size})`, detail: name, to, action: 'Book truck' })
-      if (f.waiting) todos.push({ level: 'info', title: `${f.waiting} ${f.waiting === 1 ? 'offer' : 'offers'} waiting for an answer`, detail: name, to, action: 'Open' })
-      if (!f.hasPrice) todos.push({ level: 'info', title: 'No customer price set', detail: name, to, action: 'Set price' })
-    } else {
-      if (j.status !== 'completed' && !f.signed) todos.push({ level: 'warn', title: 'Not signed off or completed', detail: name, to, action: 'Open' })
-      else if (j.status !== 'completed') todos.push({ level: 'info', title: 'Signed, mark it completed', detail: name, to, action: 'Complete' })
-      if (f.hasPrice && f.due > 0) todos.push({ level: 'warn', title: `Balance due ${money(f.due)}`, detail: name, to, action: 'Record pay' })
-    }
-  }
-  if (requests) todos.push({ level: 'warn', title: `${requests} new quote ${requests === 1 ? 'request' : 'requests'}`, detail: 'Customers waiting for a price', to: '/requests', action: 'Quote' })
-  if (signups) todos.push({ level: 'info', title: `${signups} ${signups === 1 ? 'sign-up' : 'sign-ups'} waiting`, detail: 'Approve crew in People', to: '/people', action: 'Review' })
-  const rank: Record<Level, number> = { crit: 0, warn: 1, info: 2 }
-  todos.sort((a, b) => rank[a.level] - rank[b.level])
-  const shown = showAll ? todos : todos.slice(0, 3)
 
   // Week strip, Monday to Sunday
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -67,27 +33,15 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="dash-grid">
       <h2 className="dash-date">{parseDay(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
-
-      <section className="card">
-        <div className="card-head"><h3>Needs you</h3><span className="muted small">{todos.length ? 'most urgent first' : ''}</span></div>
-        {todos.length === 0 && <p className="muted">Nothing needs you right now.</p>}
-        <ul className="list">
-          {shown.map((t, i) => (
-            <li key={i}>
-              <span className={`level ${t.level}`} aria-hidden="true" />
-              <div className="list-main"><strong>{t.title}</strong><div className="muted small">{t.detail}</div></div>
-              <Link to={t.to} className="dark-btn small-btn">{t.action}</Link>
-            </li>
-          ))}
-        </ul>
-        {todos.length > 3 && (
-          <button type="button" className="see-more" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'Show less' : `See ${todos.length - 3} more ›`}
-          </button>
-        )}
-      </section>
+      {urgent > 0 && (
+        <Link to="/needs" className="needs-banner">
+          <span><span className="level warn" aria-hidden="true" />{urgent} {urgent === 1 ? 'urgent thing needs' : 'urgent things need'} you</span>
+          <span>Open ›</span>
+        </Link>
+      )}
+      <Insights />
+      <div className="dash-grid">
 
       <section className="card">
         <div className="card-head"><h3>This week</h3><span className="muted small">Jobs booked of {CREWS_PER_DAY}</span></div>
