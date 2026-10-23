@@ -11,6 +11,8 @@ export const HOME_MOVES = [
 ]
 export const MOVE_FROM = HOME_MOVES[0].price
 export const MOVE_RATE = 149
+// Saturday and Sunday home and office moves cost this much more
+export const WEEKEND_FEE = 100
 
 // Help without our truck: per hour plus a one-time trip fee
 export const LABOR_RATE = 120 // 2 movers

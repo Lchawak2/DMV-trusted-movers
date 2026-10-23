@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { HOME_MOVES } from '../lib/prices'
+import { HOME_MOVES, WEEKEND_FEE } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -68,6 +68,7 @@ function saveDraft(d: Draft) {
   try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)) } catch { /* private mode: change from the price screen still works */ }
 }
 
+const isWeekend = (d: string) => d !== '' && [0, 6].includes(new Date(`${d}T12:00:00`).getDay())
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
 type Place = { address: string; floor: string; elevator: string; parking: string }
@@ -267,6 +268,9 @@ export default function Book() {
               </select>
             </label>
           </div>
+          {isWeekend(date) && (type === 'full_move' || type === 'office_move') && (
+            <p className="note">Saturday and Sunday moves are {dollars(WEEKEND_FEE)} more. Pick a weekday to save.</p>
+          )}
           <p className="note">Moves need at least 48 hours notice. Need it sooner? Please contact us directly.</p>
         </section>
 
