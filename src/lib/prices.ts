@@ -18,11 +18,3 @@ export const TILES = [
   { name: 'Loading help', price: LABOR_RATE, per: 'an hour, your truck' },
   { name: 'Packing', price: PACK_RATE, per: 'an hour per packer' },
 ]
-
-// What a home move usually comes to, from the usual hours in private.instant_price
-const usual = (hours: number) => MOVE_START + Math.max(hours - MOVE_START_HOURS, 0) * MOVE_RATE
-export const USUAL_MOVES = [
-  { size: 'Studio', hours: 3, price: usual(3) },
-  { size: '1 bedroom', hours: 4, price: usual(4) },
-  { size: '2 bedrooms', hours: 6, price: usual(6) },
-]

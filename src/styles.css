@@ -214,8 +214,6 @@ input.pay { width: 84px; padding: 6px 8px; }
 .est-lines li { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .est-lines strong { white-space: nowrap; }
 .est-lines li.sum { border: 0; font-size: 18px; color: var(--navy); }
-.est-lines.usual { font-size: 14px; margin-top: 4px; }
-.est-lines.usual li { padding-bottom: 6px; }
 .done-mark { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%; background: #e3f2e9; color: #1a6b3c; display: grid; place-items: center; font-size: 30px; font-weight: 700; }
 .center-text { text-align: center; }
 .public-foot { display: flex; justify-content: center; gap: 16px; font-size: 13px; color: var(--muted); padding: 8px 16px 0; }
