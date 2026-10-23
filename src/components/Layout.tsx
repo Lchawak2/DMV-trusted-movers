@@ -46,6 +46,7 @@ export default function Layout({ title, back, children }: { title?: string; back
         {children}
       </main>
       <nav className="tabbar">
+        <div className="side-brand side-only">DMV Trusted Movers</div>
         {account?.role === 'crew' && <NavLink to="/find">{t('Find Job', 'Buscar trabajo')}</NavLink>}
         {account?.role === 'admin' ? (
           <>
@@ -57,6 +58,15 @@ export default function Layout({ title, back, children }: { title?: string; back
           <NavLink to="/" end>{t('My Jobs', 'Mis trabajos')}</NavLink>
         )}
         {account?.role === 'admin' && <NavLink to="/people">People</NavLink>}
+        {/* On a computer the menu runs down the side, with room for the pages phones reach from the dashboard */}
+        {account?.role === 'admin' && (
+          <>
+            <NavLink to="/requests" className="side-only">Quote requests</NavLink>
+            <NavLink to="/crew-map" className="side-only">Crew map</NavLink>
+            <NavLink to="/website" className="side-only">Website</NavLink>
+            <NavLink to="/profile" className="side-only">Profile</NavLink>
+          </>
+        )}
         {/* Admin reaches Profile from the avatar, so the tab bar fits four tabs */}
         {account?.role !== 'admin' && <NavLink to="/profile">{t('Profile', 'Perfil')}</NavLink>}
       </nav>

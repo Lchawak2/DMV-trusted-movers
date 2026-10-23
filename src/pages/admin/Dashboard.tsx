@@ -67,6 +67,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <div className="dash-grid">
       <h2 className="dash-date">{parseDay(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
 
       <section className="card">
@@ -138,6 +139,7 @@ export default function Dashboard() {
         <span><span className="money-bar-sub">Website</span>Edit your words, prices and photos</span>
         <span className="money-bar-go">Edit ›</span>
       </Link>
+      </div>
     </Layout>
   )
 }
