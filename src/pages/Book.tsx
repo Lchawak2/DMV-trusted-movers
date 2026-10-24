@@ -135,8 +135,8 @@ export default function Book() {
 
   const office = type === 'office_move'
   // No small item jobs for now; those requests used to be "Few items"
-  // Home moves start at 1 bedroom (studios book as 1 bedroom)
-  const sizes = HOME_SIZES.filter((s) => s !== 'Few items' && (office ? s.includes('office') : !s.includes('office'))
+  // Home moves run from studio or 1 bedroom (booked as 1 bedroom) to 3 bedrooms
+  const sizes = HOME_SIZES.filter((s) => s !== 'Few items' && s !== '4+ bedrooms' && (office ? s.includes('office') : !s.includes('office'))
     && !(type === 'full_move' && s === 'Studio'))
   const oneAddress = type === 'labor_only' || type === 'junk_haul' || type === 'packing'
 
