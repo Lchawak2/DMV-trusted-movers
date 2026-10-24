@@ -31,11 +31,9 @@ export const DEFAULT_SITE: SiteContent = {
   hours: 'Every day, 7am to 8pm',
   about: 'DMV Trusted Movers is a local moving company. We treat your things like our own, we tell you the price before we start, and we keep you posted on the day of your move.',
   services: [
-    { title: 'Home moves', text: 'Apartments, condos and houses, from studios to 5 bedrooms.' },
+    { title: 'Home moves', text: 'Apartments, condos and houses, from studios to 3 bedrooms.' },
     { title: 'Office moves', text: 'Desks, files and equipment, planned around your work hours.' },
     { title: 'Small moves', text: 'A few rooms or a single big item like a couch or a piano.' },
-    { title: 'Loading help', text: 'You have the truck, we bring the muscle to load or unload it.' },
-    { title: 'Packing', text: 'We bring the boxes and materials and pack everything safely.' },
     { title: 'Junk removal', text: 'We haul away what you don\'t want to take with you.' },
   ],
   prices: [],
