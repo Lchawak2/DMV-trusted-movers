@@ -41,7 +41,7 @@ export default function Policies() {
         <h3>Your part</h3>
         <ul>
           <li>Be there at the start and end of the move, or have someone there for you.</li>
-          <li>Have things packed and ready unless you booked packing with us.</li>
+          <li>Have things packed and ready before we arrive.</li>
           <li>Book the elevator and save parking close to the door if your building needs it.</li>
           <li>Tell us before the move about anything very heavy, fragile or valuable.</li>
           <li>Move cash, jewelry, medicine and important papers yourself.</li>

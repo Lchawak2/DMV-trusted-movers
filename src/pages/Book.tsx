@@ -12,8 +12,6 @@ export const BOOK_TYPES: Record<string, string> = {
   full_move: 'Home move',
   office_move: 'Office move',
   small_move: 'Small move or a few items',
-  labor_only: 'Loading or unloading only',
-  packing: 'Packing',
   junk_haul: 'Junk haul',
 }
 export const SPECIAL_ITEMS = ['Piano', 'Safe', 'Gym equipment', 'Pool table', 'Large TV', 'Artwork or mirrors', 'Appliances']
@@ -96,9 +94,17 @@ export default function Book() {
   const [params] = useSearchParams()
 
   function restore(a: Answers) {
-    setType(a.type); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items)
+    setType(a.type in BOOK_TYPES ? a.type : 'full_move'); setFrom(a.from); setTo(a.to); setSize(a.size); setItems(a.items)
     setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
   }
+
+  // Started from the quick quote box on the home page: /book?type=full_move&size=1+bedroom&date=2026-11-02
+  useEffect(() => {
+    const t = params.get('type'), sz = params.get('size'), d = params.get('date')
+    if (t && t in BOOK_TYPES) setType(t)
+    if (sz && HOME_SIZES.includes(sz)) setSize(sz)
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= addDays(2)) setDate(d)
+  }, [params])
 
   // Coming back from the booking page with "Change my answers": use this tab's copy, or ask the database
   useEffect(() => {
@@ -221,7 +227,7 @@ export default function Book() {
               <button type="button" key={k} className={`chip big${type === k ? ' on' : ''}`} onClick={() => { setType(k); setSize('') }}>{label}</button>
             ))}
           </div>
-          {(type === 'full_move' || type === 'office_move') && <div className="small muted">You pack, we move. Want us to pack too? Pick Packing.</div>}
+          {(type === 'full_move' || type === 'office_move') && <div className="small muted">You pack, we move. Please have your boxes packed before we arrive.</div>}
         </section>
 
         <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
