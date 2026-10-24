@@ -25,7 +25,7 @@ export type SiteContent = {
 export const DEFAULT_SITE: SiteContent = {
   headline: 'Moving in DC, Maryland and Virginia, done right',
   subheadline: 'Homes, apartments and offices. Careful movers, clear prices, and a crew that shows up on time.',
-  phone: '',
+  phone: '(240) 438-0930',
   email: 'dmvtrustedmoversservices@gmail.com',
   area: 'Washington DC, Maryland and Northern Virginia',
   hours: 'Every day, 7am to 8pm',
@@ -33,7 +33,7 @@ export const DEFAULT_SITE: SiteContent = {
   services: [
     { title: 'Home moves', text: 'Apartments, condos and houses, from studios to 3 bedrooms.' },
     { title: 'Office moves', text: 'Desks, files and equipment, planned around your work hours.' },
-    { title: 'Small moves', text: 'A few rooms or a single big item like a couch or a piano.' },
+    { title: 'Small moves', text: 'A few rooms or a single big item like a couch or a dresser.' },
     { title: 'Junk removal', text: 'We haul away what you don\'t want to take with you.' },
   ],
   prices: [],
