@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { loadSite, telLink, type SiteData } from '../lib/site'
-import { MOVE_RATE, TILES, WEEKEND_FEE } from '../lib/prices'
+import { FREE_MINUTES, MOVE_RATE, TILES, WEEKEND_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
@@ -45,7 +45,8 @@ export default function Pricing() {
             ))}
           </div>
           <ul className="price-rules">
-            <li><strong>Home moves:</strong> one flat price for 2 movers, the truck and gas, for up to the hours shown. Each hour past that adds {dollars(MOVE_RATE)}.</li>
+            <li><strong>Home moves:</strong> one flat price for 2 movers, the truck and gas, for up to the hours shown.</li>
+            <li><strong>Going over your hours?</strong> The first {FREE_MINUTES} minutes are free, then it's {dollars(MOVE_RATE)} an hour for the extra time, by the minute.</li>
             <li><strong>Saturday and Sunday:</strong> home and office moves are {dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.</li>
             <li><strong>You pack, we move.</strong> Please have your boxes packed before we arrive.</li>
             <li><strong>Moving more than 50 miles?</strong> Call us first and we'll price it for you.</li>

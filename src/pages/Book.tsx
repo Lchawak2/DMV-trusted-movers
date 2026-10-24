@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
-import { HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
+import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -201,7 +201,7 @@ export default function Book() {
                 <li className="sum"><span>Your price</span><strong>{dollars(sent.instant.price)}</strong></li>
               </ul>
               <p className="est-extra">
-                Includes up to <strong>{sent.instant.included_hours} hours</strong>. Each extra hour adds <strong>{dollars(sent.instant.extra_rate)}</strong>.
+                Includes up to <strong>{sent.instant.included_hours} hours</strong>. Going over? The first {FREE_MINUTES} minutes are free, then it's <strong>{dollars(sent.instant.extra_rate)} an hour</strong>, by the minute.
               </p>
               <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
               <button type="button" className="secondary est-book" onClick={changeAnswers}>Change my answers</button>
@@ -242,7 +242,7 @@ export default function Book() {
               return <button type="button" key={s} className={`chip big${size === s ? ' on' : ''}`} onClick={() => setSize(size === s ? '' : s)}>{flat?.label ?? s}{flat && ` · ${dollars(flat.price)} · up to ${flat.hours} hrs`}</button>
             })}
           </div>
-          {type === 'full_move' && <p className="note">Each hour past the hours included adds {dollars(MOVE_RATE)}.</p>}
+          {type === 'full_move' && <p className="note">Past the hours included, the first {FREE_MINUTES} minutes are free, then it's {dollars(MOVE_RATE)} an hour, by the minute.</p>}
           <div className="small muted">Big or special items</div>
           <div className="chips">
             {SPECIAL_ITEMS.map((s) => (

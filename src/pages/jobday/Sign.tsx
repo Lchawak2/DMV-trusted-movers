@@ -4,6 +4,7 @@ import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading } from '../../lib/format'
 import { EXTRA_KINDS } from '../../lib/types'
+import { FREE_MINUTES, MOVE_RATE } from '../../lib/prices'
 import { useJobDay } from './useJobDay'
 import { t } from '../../lib/lang'
 
@@ -17,11 +18,21 @@ export default function Sign() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const pad = useRef<HTMLCanvasElement>(null)
+  const [time, setTime] = useState<MoveTime | null>(null)
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    supabase.rpc('job_move_time', { p_job: id }).then(({ data }) => setTime(data as MoveTime | null))
+    const tick = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(tick)
+  }, [id])
 
   if (job === undefined) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Loading…', 'Cargando…')}</p></Layout>
   if (!job || !allowed) return <Layout back={`/jobs/${id}`}><p className="muted center">{t('Only the lead on this job can collect the signature.', 'Solo el líder de este trabajo puede tomar la firma.')}</p></Layout>
 
   const damage = photos.filter((p) => p.kind === 'damage')
+  const moving = time?.started ? Math.max(Math.floor((now - new Date(time.started).getTime()) / 60_000), 0) : null
+  const over = moving !== null && time?.included_hours ? moving - Math.round(time.included_hours * 60) : 0
 
   const summary = (
     <section className="card">
@@ -39,6 +50,14 @@ export default function Sign() {
         ))}
         {extras.length === 0 && damage.length === 0 && <li><span className="muted">No extras or damage noted</span></li>}
       </ul>
+      {!signoff && time?.billed && moving !== null && (
+        <p className="small">
+          Moving time so far <strong>{hoursMinutes(moving)}</strong>, with {hoursMinutes(Math.round(time.included_hours! * 60))} included.{' '}
+          {over > FREE_MINUTES
+            ? <>About <strong>{hoursMinutes(over)}</strong> of extra time will be added to your bill at ${MOVE_RATE} an hour.</>
+            : <>Past the included time, the first {FREE_MINUTES} minutes are free, then it's ${MOVE_RATE} an hour.</>}
+        </p>
+      )}
     </section>
   )
 
@@ -86,6 +105,14 @@ export default function Sign() {
       </form>
     </Layout>
   )
+}
+
+type MoveTime = { started: string | null; included_hours: number | null; billed: boolean }
+
+// 80 -> "1 hr 20 min", the same wording as the extra the database adds
+function hoursMinutes(minutes: number) {
+  const h = Math.floor(minutes / 60), m = minutes % 60
+  return [h ? `${h} hr` : '', m || !h ? `${m} min` : ''].filter(Boolean).join(' ')
 }
 
 function SignaturePad({ canvas, onInk }: { canvas: RefObject<HTMLCanvasElement>; onInk: (v: boolean) => void }) {

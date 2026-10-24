@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import PublicPage from '../components/PublicPage'
+import { FREE_MINUTES, MOVE_RATE } from '../lib/prices'
 
 const EMAIL = 'dmvtrustedmoversservices@gmail.com'
-const UPDATED = 'October 22, 2026'
+const UPDATED = 'October 24, 2026'
 
 // Terms, privacy and cancellation policy in one page, with a section for each.
 // The booking form and quote page link to a section by its #id.
@@ -30,6 +31,7 @@ export default function Policies() {
 
         <h3>Quotes</h3>
         <p>Your price is based on what you tell us and the photos you send. A quote is good for 3 days. If the move turns out bigger than described (more items, more stairs, a long walk to the truck, or more time than planned), we'll tell you before doing the extra work. Extras are listed on the job and you see them when you sign off at the end.</p>
+        <p>Flat prices include a set number of hours, counted from when the crew starts to when you sign off. The first {FREE_MINUTES} minutes past that are free; after that, the extra time is ${MOVE_RATE} an hour, billed by the minute, and added to your balance.</p>
 
         <h3>Booking</h3>
         <p>Paying the deposit on your quote books your date. We need at least 48 hours' notice for a new booking.</p>
