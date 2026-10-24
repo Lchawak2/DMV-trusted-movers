@@ -100,7 +100,10 @@ export default function JobForm() {
           <label>
             Job type
             <select value={form.job_type} onChange={set('job_type')}>
-              {Object.entries(JOB_TYPES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              {Object.entries(JOB_TYPES)
+                // Loading help and packing are no longer offered; older jobs keep their type
+                .filter(([value]) => (value !== 'labor_only' && value !== 'packing') || value === form.job_type)
+                .map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </label>
           <label>
