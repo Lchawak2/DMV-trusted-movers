@@ -98,6 +98,14 @@ export default function Book() {
     setDate(a.date); setArrival(a.arrival); setNotes(a.notes); setName(a.name); setPhone(a.phone); setEmail(a.email); setSource(a.source)
   }
 
+  // Started from the quick quote box on the home page: /book?type=full_move&size=1+bedroom&date=2026-11-02
+  useEffect(() => {
+    const t = params.get('type'), sz = params.get('size'), d = params.get('date')
+    if (t && t in BOOK_TYPES) setType(t)
+    if (sz && HOME_SIZES.includes(sz)) setSize(sz)
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= addDays(2)) setDate(d)
+  }, [params])
+
   // Coming back from the booking page with "Change my answers": use this tab's copy, or ask the database
   useEffect(() => {
     const token = params.get('change')
