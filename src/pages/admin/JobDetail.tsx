@@ -6,6 +6,7 @@ import TruckSteps from '../jobday/TruckSteps'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
+import { costGuesses, moverPay, useCosts } from '../../lib/costs'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import SendText from '../../components/SendText'
 import ReviewSection from './ReviewSection'
@@ -124,7 +125,8 @@ export default function AdminJobDetail() {
 
       {tab === 'money' && (
         <>
-          <MoneySection jobId={id} quoteId={job.quote_id} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts} />
+          <MoneySection job={job} extrasTotal={Object.values(day.prices).reduce((s, n) => s + n, 0)} crewPay={totalPay} costs={totalCosts}
+            hasCrew={crew.some((a) => a.status !== 'declined' && a.status !== 'removed')} costKinds={costs.map((c) => c.kind)} />
           <CostsSection jobId={id} costs={costs} onChange={load} />
         </>
       )}
@@ -490,7 +492,11 @@ function CostsSection({ jobId, costs, onChange }: { jobId: string; costs: JobCos
   )
 }
 
-function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: string; quoteId: string | null; extrasTotal: number; crewPay: number; costs: number }) {
+function MoneySection({ job, extrasTotal, crewPay, costs, hasCrew, costKinds }: {
+  job: Job; extrasTotal: number; crewPay: number; costs: number; hasCrew: boolean; costKinds: string[]
+}) {
+  const jobId = job.id, quoteId = job.quote_id
+  const plan = useCosts()
   const [row, setRow] = useState<{ price: number; paid: number } | null>(null)
   const [tips, setTips] = useState<JobTips | null>(null)
 
@@ -511,9 +517,11 @@ function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: 
     load()
   }
 
-  if (!row) return null
+  if (!row || !plan) return null
   const charged = row.price + extrasTotal
-  const kept = charged - crewPay - costs
+  const guess = costGuesses(plan, job, { charged, hasCrew, costKinds })
+  const kept = charged - crewPay - costs - guess.total
+  const movers = job.crew_size ?? plan.movers
 
   return (
     <section className="card">
@@ -524,8 +532,13 @@ function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: 
       </div>
       <ul className="list">
         <li><span>Price{extrasTotal ? ` + extras ${money(extrasTotal)}` : ''}</span><strong>{money(charged)}</strong></li>
-        <li><span>Crew pay</span><span>−{money(crewPay)}</span></li>
-        <li><span>Truck and other costs</span><span>−{money(costs)}</span></li>
+        {guess.crew > 0
+          ? <li><span>Crew pay, no crew yet ({movers} × {money(moverPay(plan, Number(job.est_hours ?? 0)))})</span><span>−{money(guess.crew)}</span></li>
+          : <li><span>Crew pay</span><span>−{money(crewPay)}</span></li>}
+        {costs > 0 && <li><span>Costs you added</span><span>−{money(costs)}</span></li>}
+        {guess.truck > 0 && <li><span>{job.truck_size} truck, until you add the rental</span><span>−{money(guess.truck)}</span></li>}
+        {guess.other > 0 && <li><span>Other costs per move</span><span>−{money(guess.other)}</span></li>}
+        {guess.card > 0 && <li><span>Card fees</span><span>−{money(guess.card)}</span></li>}
         <li><span>Kept</span><strong className={kept < 0 ? 'warn' : ''}>{money(kept)}</strong></li>
         <li><span>Balance due from customer</span><strong>{money(Math.max(charged - row.paid, 0))}</strong></li>
         {tips && (
@@ -535,6 +548,7 @@ function MoneySection({ jobId, quoteId, extrasTotal, crewPay, costs }: { jobId: 
           </li>
         )}
       </ul>
+      {charged > 0 && <p className="note">Truck, other costs and card fees come from your <Link to="/price-plan">price plan</Link>. Add the real truck rental below and it replaces the guess.</p>}
       {tips && <p className="note">Tips go to the movers on top of their pay, and show in Pay crew. They aren't part of what you keep.</p>}
       {quoteId && charged - row.paid > 0 && <PayLink quoteId={quoteId} due={charged - row.paid} />}
     </section>

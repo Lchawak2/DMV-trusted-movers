@@ -1,6 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import TruckLogo from '../components/TruckLogo'
+import SiteFrame from '../components/SiteFrame'
+import { MOVE_FROM } from '../lib/prices'
 import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
 
 const STEPS = [
@@ -17,30 +18,15 @@ export default function Home() {
 
   if (!data) return <div className="center muted">Loading…</div>
   const { site, rating, ratings, review_url } = data
-  const licenses = [
-    site.usdot && `USDOT ${site.usdot}`,
-    site.md_license && `MD license ${site.md_license}`,
-    site.insurance && site.insurance,
-  ].filter(Boolean)
 
   return (
-    <div className="site" style={{ '--site-main': site.main_color, '--site-accent': site.accent_color } as CSSProperties}>
-      <header className="site-bar">
-        <div className="site-wrap site-bar-in">
-          <span className="site-name brand"><TruckLogo size={24} />DMV Trusted Movers</span>
-          <nav className="site-nav">
-            {site.phone && <a href={telLink(site.phone)}>{site.phone}</a>}
-            <Link to="/login">Sign in</Link>
-          </nav>
-        </div>
-      </header>
-
+    <SiteFrame site={site}>
       <section className="site-hero" style={site.hero_photo ? { backgroundImage: `linear-gradient(rgba(${rgb(site.main_color)},.72), rgba(${rgb(site.main_color)},.72)), url(${photoUrl(site.hero_photo)})` } : undefined}>
         <div className="site-wrap">
           <h1>{site.headline}</h1>
           <p>{site.subheadline}</p>
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">Get a free quote</Link>
+            <Link to="/book" className="site-btn gold">See my price</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">Call {site.phone}</a>}
           </div>
           {ratings > 0 && rating !== null && (
@@ -63,21 +49,23 @@ export default function Home() {
         </div>
       </section>
 
-      {site.prices.length > 0 && (
-        <section className="site-sec alt">
-          <div className="site-wrap">
-            <h2>Prices</h2>
+      <section className="site-sec alt">
+        <div className="site-wrap">
+          <h2>Prices</h2>
+          {site.prices.length > 0 ? (
             <div className="site-prices">
               {site.prices.map((p, i) => (
                 <div className="site-price" key={i}><span>{p.label}</span><strong>{p.price}</strong></div>
               ))}
             </div>
-            <p className="muted small">Your exact price depends on your move. Get a free quote to see it.</p>
-          </div>
-        </section>
-      )}
+          ) : (
+            <p className="site-lead">Home moves from <strong>${MOVE_FROM}</strong>, truck included.</p>
+          )}
+          <Link to="/pricing" className="site-more">See all our prices</Link>
+        </div>
+      </section>
 
-      <section className={site.prices.length > 0 ? 'site-sec' : 'site-sec alt'}>
+      <section className="site-sec">
         <div className="site-wrap">
           <h2>How it works</h2>
           <ol className="site-steps">
@@ -135,19 +123,6 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="site-foot">
-        <div className="site-wrap">
-          <Link to="/book" className="site-btn gold">Get a free quote</Link>
-          {licenses.length > 0 && <p>{licenses.join(' · ')}</p>}
-          <nav>
-            <Link to="/policies#terms">Terms</Link>
-            <Link to="/policies#cancellation">Cancellation</Link>
-            <Link to="/policies#privacy">Privacy</Link>
-            <Link to="/login">Crew and customer sign in</Link>
-          </nav>
-          <p>© {new Date().getFullYear()} DMV Trusted Movers</p>
-        </div>
-      </footer>
-    </div>
+    </SiteFrame>
   )
 }

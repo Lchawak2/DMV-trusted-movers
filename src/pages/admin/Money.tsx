@@ -55,7 +55,7 @@ export default function Money() {
               <li key={j.id}>
                 <div className="list-main">
                   <Link to={`/jobs/${j.id}`}><strong>{JOB_TYPES[j.job_type] ?? j.job_type} · {dayHeading(j.job_date)}</strong></Link>
-                  <div className="muted small">{dollars(f.charged)} price · {f.accepted} {f.accepted === 1 ? 'mover' : 'movers'}{f.costs ? ` · costs ${dollars(f.costs)}` : ''}</div>
+                  <div className="muted small">{dollars(f.charged)} price · {f.accepted} {f.accepted === 1 ? 'mover' : 'movers'}{f.costs + f.guess.total ? ` · costs ${dollars(f.costs + f.guess.total)}` : ''}</div>
                 </div>
                 <div className="today-side">
                   <strong>{dollars(f.kept)}</strong>
@@ -65,6 +65,8 @@ export default function Money() {
             )
           })}
         </ul>
+        {priced.length > 0 && <p className="note">Kept counts crew pay, the costs you added, and your price plan numbers for anything not added yet (truck, other costs, card fees).</p>}
+        <Link to="/price-plan" className="secondary block">Price plan and my costs</Link>
       </section>
 
       <section className="card">

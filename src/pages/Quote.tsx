@@ -54,6 +54,8 @@ export default function Quote({ token }: { token: string }) {
   const [newDate, setNewDate] = useState('')
   const [moveNote, setMoveNote] = useState('')
   const [tip, setTip] = useState(0)
+  const [closing, setClosing] = useState(false)
+  const [closed, setClosed] = useState(false)
   const returning = new URLSearchParams(location.search).has('paid')
 
   async function load() {
@@ -106,6 +108,17 @@ export default function Quote({ token }: { token: string }) {
     load()
   }
 
+  // Before paying: "No thanks" closes the quote
+  async function closeQuote() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.rpc('cancel_open_quote', { p_token: token })
+    setBusy(false)
+    if (error || !data) return setError("We couldn't cancel this online. Please call or text us.")
+    setClosed(true)
+    window.scrollTo(0, 0)
+  }
+
   async function askNewDate() {
     setBusy(true)
     setError(null)
@@ -123,6 +136,18 @@ export default function Quote({ token }: { token: string }) {
   }
   if (q === null) {
     return <PublicPage sub="Your quote"><p className="muted center">This quote link isn't valid. Please reply to our text and we'll send it again.</p></PublicPage>
+  }
+
+  if (closed) {
+    return (
+      <PublicPage sub="Quote cancelled">
+        <section className="card center">
+          <h2>No problem, it's cancelled</h2>
+          <p>Nothing was charged.</p>
+          <Link to="/book" className="primary">Get a new price</Link>
+        </section>
+      </PublicPage>
+    )
   }
 
   const date = parseDay(q.preferred_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -164,7 +189,7 @@ export default function Quote({ token }: { token: string }) {
           {q.arrival_window && <li><span>Crew arrives</span><span>{q.arrival_window}</span></li>}
           {q.crew_size && <li><span>Movers</span><span>{q.crew_size}, with a lead mover</span></li>}
           {q.truck_size && <li><span>Truck</span><span>{q.truck_size}, fuel included</span></li>}
-          {q.est_hours && <li><span>Time</span><span>About {q.est_hours} hours</span></li>}
+          {q.est_hours && <li><span>Time included</span><span>Up to {q.est_hours} hours</span></li>}
           <li className="stack"><strong>{q.to_address ? 'From' : 'Address'}</strong><span>{q.from_address}</span></li>
           {q.to_address && <li className="stack"><strong>To</strong><span>{q.to_address}</span></li>}
         </ul>
@@ -264,6 +289,15 @@ export default function Quote({ token }: { token: string }) {
               </ul>
               {error && <p className="warn">{error}</p>}
               <button className="primary" disabled={busy} onClick={pay}>{busy ? 'Opening payment…' : `Pay ${money(q.deposit)} and book`}</button>
+              <Link to={`/book?change=${token}`} className="secondary">Change my answers</Link>
+              {closing ? (
+                <div className="row">
+                  <button className="secondary" disabled={busy} onClick={closeQuote}>{busy ? 'Cancelling…' : 'Yes, cancel it'}</button>
+                  <button className="link" onClick={() => setClosing(false)}>Keep it</button>
+                </div>
+              ) : (
+                <button className="link" onClick={() => setClosing(true)}>No thanks, cancel this quote</button>
+              )}
               <p className="note">You'll pay securely with Stripe. Free cancellation up to 72 hours before your move. After that the deposit is kept. By paying, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#cancellation">cancellation policy</Link>.</p>
             </>
           ) : (
@@ -271,7 +305,7 @@ export default function Quote({ token }: { token: string }) {
           )}
         </section>
       )}
-      {q.status === 'expired' && <p className="note center-text">This quote has expired. Reply to our text and we'll send a fresh one.</p>}
+      {q.status === 'expired' && <p className="note center-text">This quote is closed. <Link to="/book">Get a new price</Link>.</p>}
       {q.status === 'superseded' && <p className="note center-text">We sent you a newer quote. Please use the latest link.</p>}
     </PublicPage>
   )

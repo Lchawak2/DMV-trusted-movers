@@ -17,6 +17,7 @@ export default function PublicPage({ sub, children }: { sub: string; children: R
       </header>
       <main className="content">{children}</main>
       <footer className="public-foot">
+        <Link to="/pricing">Prices</Link>
         <Link to="/policies#terms">Terms</Link>
         <Link to="/policies#cancellation">Cancellation</Link>
         <Link to="/policies#privacy">Privacy</Link>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { parseDay } from '../../lib/format'
 import { assignmentPay, hoursWorked } from '../../lib/pay'
+import { costGuesses, currentCosts, loadCosts } from '../../lib/costs'
 import type { Account, Assignment, Job, TimeEntry } from '../../lib/types'
 
 export type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone' | 'zelle'> | null; time_entries: TimeEntry[] }
@@ -9,7 +10,7 @@ type One<T> = T | T[] | null
 export type JobRow = Job & {
   assignments: CrewRow[]
   truck_rentals: One<{ id: string }>
-  job_costs: { amount: number }[]
+  job_costs: { amount: number; kind: string }[]
   job_extras: { id: string; job_extra_prices: One<{ amount: number }> }[]
   job_signoffs: One<{ job_id: string }>
   job_prices: One<{ price: number; paid: number }>
@@ -35,12 +36,15 @@ export function monthOf(day: string) {
 export function useJobs(from: string, to: string) {
   const [jobs, setJobs] = useState<JobRow[] | null>(null)
   useEffect(() => {
-    supabase.from('jobs')
-      .select('*, assignments(*, accounts(full_name, email, phone), time_entries(*)), truck_rentals(id), job_costs(amount), job_extras(id, job_extra_prices(amount)), job_signoffs(job_id), job_prices(price, paid)')
-      .gte('job_date', from).lte('job_date', to)
-      .neq('status', 'cancelled')
-      .order('job_date').order('window_start')
-      .then(({ data }) => setJobs((data ?? []) as JobRow[]))
+    // Costs load first so figures() counts profit with the admin's own numbers
+    Promise.all([
+      supabase.from('jobs')
+        .select('*, assignments(*, accounts(full_name, email, phone), time_entries(*)), truck_rentals(id), job_costs(amount, kind), job_extras(id, job_extra_prices(amount)), job_signoffs(job_id), job_prices(price, paid)')
+        .gte('job_date', from).lte('job_date', to)
+        .neq('status', 'cancelled')
+        .order('job_date').order('window_start'),
+      loadCosts(),
+    ]).then(([{ data }]) => setJobs((data ?? []) as JobRow[]))
   }, [from, to])
   return jobs
 }
@@ -53,9 +57,11 @@ export function figures(j: JobRow) {
   const crewPay = j.assignments.reduce((s, a) => s + assignmentPay(a, j, a.time_entries), 0)
   const costs = j.job_costs.reduce((s, c) => s + Number(c.amount), 0)
   const accepted = j.assignments.filter((a) => a.status === 'accepted')
+  const hasCrew = j.assignments.some((a) => a.status !== 'declined' && a.status !== 'removed')
+  const guess = costGuesses(currentCosts(), j, { charged, hasCrew, costKinds: j.job_costs.map((c) => c.kind) })
   return {
     hasPrice: Number(price?.price ?? 0) > 0,
-    charged, crewPay, costs, kept: charged - crewPay - costs,
+    charged, crewPay, costs, guess, kept: charged - crewPay - costs - guess.total,
     due: Math.max(charged - Number(price?.paid ?? 0), 0),
     accepted: accepted.length,
     lead: accepted.find((a) => a.role === 'lead') ?? null,
