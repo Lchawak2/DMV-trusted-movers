@@ -98,7 +98,9 @@ export default function Sign() {
         <SignaturePad canvas={pad} onInk={setHasInk} />
         <label className="check">
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
-          I confirm everything was moved and the extras above were done.
+          {time?.billed && over > FREE_MINUTES
+            ? `I confirm everything was moved, the extras above were done, and the moving time of ${hoursMinutes(moving!)} is right.`
+            : 'I confirm everything was moved and the extras above were done.'}
         </label>
         {error && <p className="warn">{error}</p>}
         <button className="primary" disabled={busy}>{busy ? 'Saving…' : 'Sign and finish'}</button>

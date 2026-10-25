@@ -3,18 +3,41 @@
 -- 15 minutes past that are free; past those, every minute over is billed at $125 an hour
 -- (MOVE_RATE in src/lib/prices.ts; change both together). It lands as a priced "time" extra, so
 -- it is part of the balance, the admin can change or remove it on Extras, and the bell says so.
+--
+-- Safeguards, so the time can't be padded:
+-- * the clock counts from the start of the arrival window at the earliest, so clocking in
+--   early (or sending an old clock-in time from a phone) adds nothing
+-- * the signature time is the server's time, not one sent by the phone
+-- * more than 2 hours of extra time isn't billed until the admin sets its price
+-- * one automatic extra per job, and none if the lead already added time by hand
 
 alter table public.notifications drop constraint notifications_kind_check;
 alter table public.notifications add constraint notifications_kind_check
   check (kind in ('new_request', 'deposit_paid', 'move_reminder', 'job_cancelled', 'balance_paid', 'open_spots', 'date_change', 'tip_paid', 'review', 'crew_accepted', 'extra_time'));
 
--- When the crew started: the first clock-in of anyone accepted on the job
+-- When the crew started: the first clock-in of anyone accepted on the job, but never before
+-- the arrival window opens
 create function private.job_clock_start(p_job uuid) returns timestamptz
 language sql stable security definer set search_path = '' as $$
-  select min(te.clock_in) from public.time_entries te
-  join public.assignments a on a.id = te.assignment_id
-  where a.job_id = p_job and a.status = 'accepted';
+  select case when j.window_start is null then c.first else greatest(c.first, private.job_start(j.job_date, j.window_start)) end
+  from public.jobs j,
+    lateral (select min(te.clock_in) as first from public.time_entries te
+      join public.assignments a on a.id = te.assignment_id
+      where a.job_id = j.id and a.status = 'accepted') c
+  where j.id = p_job;
 $$;
+
+-- The signature time comes from the server, so a phone can't stretch the move
+create function private.stamp_signoff() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not coalesce((select private.is_admin()), false) then new.signed_at := now(); end if;
+  return new;
+end;
+$$;
+
+create trigger stamp_signoff before insert on public.job_signoffs
+  for each row execute function private.stamp_signoff();
 
 -- Only moves whose quote told the customer "Includes up to N hours" get extra time added on
 -- their own; a job without that (priced by hand) gets its extra time added by hand
@@ -50,6 +73,7 @@ language plpgsql security definer set search_path = '' as $$
 declare
   rate constant numeric := 125;   -- an hour, billed by the minute
   free_minutes constant int := 15;
+  review_minutes constant int := 120;  -- past this, the admin sets the price before it's billed
   j public.jobs;
   started timestamptz;
   moving int;
@@ -70,7 +94,9 @@ begin
     format('From the clock: %s of moving, %s included', private.hours_minutes(moving), private.hours_minutes((j.est_hours * 60)::int)),
     null)
   returning id into extra;
-  insert into public.job_extra_prices (extra_id, amount) values (extra, round(over * rate / 60));
+  if over <= review_minutes then
+    insert into public.job_extra_prices (extra_id, amount) values (extra, round(over * rate / 60));
+  end if;
 
   insert into public.notifications (kind, ref_id) values ('extra_time', j.id);
   return new;
@@ -161,7 +187,7 @@ as $function$
       when 'crew_accepted' then case when a.status = 'accepted' then '' else 'Dropped out since · ' end
         || coalesce(jc.full_name, j.from_address, 'Job') || ' · ' || to_char(j.job_date, 'Dy Mon FMDD')
         || coalesce(' · ' || (select count(*) from public.assignments x where x.job_id = j.id and x.status = 'accepted') || ' of ' || j.crew_size || ' filled', '')
-      when 'extra_time' then coalesce((select x.title || coalesce(' · $' || to_char(xp.amount, 'FM999999990.00'), ' · no price')
+      when 'extra_time' then coalesce((select x.title || coalesce(' · $' || to_char(xp.amount, 'FM999999990.00'), ' · over 2 hours, set the price to bill it')
         from public.job_extras x left join public.job_extra_prices xp on xp.extra_id = x.id
         where x.job_id = j.id and x.kind = 'time' and x.added_by is null order by x.created_at desc limit 1), 'Removed since')
       else coalesce(to_char(j.window_start, 'FMHH12:MI AM'), 'time to be set')
