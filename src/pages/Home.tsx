@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
-import { HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
+import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
 import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
 
 const dollars = (n: number) => `$${n.toLocaleString('en-US')}`
@@ -32,7 +32,7 @@ const STEPS = [
 
 const FAQ = [
   { q: 'How much does my move cost?', a: `Home moves are a flat price by size: ${HOME_MOVES.map((m) => `${m.label ?? m.size} ${dollars(m.price)}`).join(', ')}. A small office is ${dollars(SMALL_OFFICE.price)}. Every price includes 2 movers, the truck, gas, blankets and wrap.` },
-  { q: 'What if my move takes longer?', a: `Each price covers a set number of hours. Each hour past that is ${dollars(MOVE_RATE)}, only for the time used.` },
+  { q: 'What if my move takes longer?', a: `Each price covers a set number of hours. The first ${FREE_MINUTES} minutes past that are free, then it's ${dollars(MOVE_RATE)} an hour for the extra time, by the minute.` },
   { q: 'Do weekend moves cost more?', a: `Saturday and Sunday home and office moves are ${dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.` },
   { q: 'Do you pack for me?', a: 'You pack your boxes and we do the heavy lifting. We bring blankets and plastic wrap for your furniture at no charge.' },
   { q: 'Can I cancel?', a: 'Yes. Cancel up to 72 hours before your move and your deposit comes back to you.' },
@@ -179,7 +179,7 @@ export default function Home() {
         <div className="site-wrap">
           <h2>Our promise</h2>
           <p className="site-promise-big">The price you book is the price you pay.</p>
-          <p>Your flat price is set before moving day. The only extra is time past your included hours, at {dollars(MOVE_RATE)} an hour. No hidden fees.</p>
+          <p>Your flat price is set before moving day. The only extra is time past your included hours: the first {FREE_MINUTES} minutes are free, then {dollars(MOVE_RATE)} an hour. No hidden fees.</p>
         </div>
       </section>
 

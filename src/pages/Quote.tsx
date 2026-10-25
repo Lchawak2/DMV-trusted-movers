@@ -29,6 +29,8 @@ type QuoteView = {
   free_cancel_until: string | null
   started: boolean | null
   total: number | null
+  move_price: number | null
+  extras: { title: string; amount: number }[] | null
   balance_due: number | null
   balance_payable: boolean | null
   change_date: string | null
@@ -218,6 +220,10 @@ export default function Quote({ token }: { token: string }) {
             <>
               <h3>Pay your balance</h3>
               <ul className="list">
+                {(q.extras ?? []).length > 0 && q.move_price != null && <>
+                  <li><span>Your move</span><span>{money(q.move_price)}</span></li>
+                  {q.extras!.map((x, i) => <li key={i}><span>{x.title}</span><span>{money(x.amount)}</span></li>)}
+                </>}
                 <li><span>Move total</span><span>{money(q.total)}</span></li>
                 <li><span>Already paid</span><span>{money(Number(q.total) - q.balance_due)}</span></li>
                 <li><strong>Left to pay</strong><strong>{money(q.balance_due)}</strong></li>
@@ -225,7 +231,7 @@ export default function Quote({ token }: { token: string }) {
               <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
               {error && <p className="warn">{error}</p>}
               <button className="primary" disabled={busy} onClick={payBalance}>{busy ? 'Opening payment…' : `Pay ${money(q.balance_due + tip)}`}</button>
-              <p className="note">You'll pay securely with Stripe. The total includes anything added on the day, like extra items.</p>
+              <p className="note">You'll pay securely with Stripe. The total includes anything added on the day, like extra items or extra time.</p>
             </>
           ) : q.tipped > 0 ? (
             <p className="center-text"><strong>Paid in full.</strong> Thank you for the {money(q.tipped)} tip! It goes to your movers.</p>
