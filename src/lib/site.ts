@@ -26,7 +26,7 @@ export type SiteContent = {
 export const DEFAULT_SITE: SiteContent = {
   headline: 'Moving in DC, Maryland and Virginia, done right',
   subheadline: 'Homes, apartments and offices. Careful movers, clear prices, and a crew that shows up on time.',
-  phone: '(240) 438-0930',
+  phone: '(202) 656-0756',
   email: 'dmvtrustedmoversservices@gmail.com',
   area: 'Washington DC, Maryland and Northern Virginia',
   hours: 'Every day, 7am to 8pm',
