@@ -488,3 +488,27 @@ html { scroll-behavior: smooth; }
 .site-band .site-cta { justify-content: center; }
 .site-band .site-btn.gold { background: var(--site-main); color: #fff; }
 .site-band .site-btn.ghost { border-color: var(--site-main); color: var(--site-main); }
+
+/* Call / Get my price bar pinned to the bottom of phone screens on the website */
+.site-sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--site-main); box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.18); }
+.site-sticky .site-btn { flex: 1; padding: 12px 10px; }
+.site-sticky .site-btn.ghost { flex: 0 0 34%; }
+.site-foot { padding-bottom: calc(24px + 72px + env(safe-area-inset-bottom)); }
+@media (min-width: 860px) { .site-sticky { display: none; } .site-foot { padding-bottom: 24px; } }
+
+/* Optional parts of the quote form, folded until opened */
+details.more { border-top: 1px solid var(--line); padding-top: 10px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--navy); list-style: none; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: '+ '; }
+details.more[open] > summary::before { content: '− '; }
+details.more[open] > summary { margin-bottom: 10px; }
+details.more > label, details.more > .row { margin-top: 10px; }
+
+.est-trust { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.est-trust li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+.nowrap { white-space: nowrap; }
+.site-name { white-space: nowrap; }
+@media (max-width: 859px) { .site-nav .site-nav-book { display: none; } }
+.site-about > * { min-width: 0; }
+.site-about a, .site-foot a { overflow-wrap: anywhere; }

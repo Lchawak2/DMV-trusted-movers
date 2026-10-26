@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 
 // The public website's words and photos. The admin edits them on the Website page;
@@ -68,6 +69,32 @@ export async function loadSite(): Promise<SiteData> {
     rating: data?.rating ?? null,
     ratings: data?.ratings ?? 0,
   }
+}
+
+const SITE_CACHE = 'site-content'
+const EMPTY: SiteData = { site: DEFAULT_SITE, review_url: null, rating: null, ratings: 0 }
+
+// The website's content for the public pages. It shows straight away (from this browser's last
+// visit, or the defaults) so visitors never wait on a blank page, then updates once loaded.
+export function useSite(): SiteData {
+  const [data, setData] = useState<SiteData>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SITE_CACHE) ?? 'null') as SiteData | null
+      return saved ? { ...saved, site: withDefaults(saved.site) } : EMPTY
+    } catch { return EMPTY }
+  })
+  useEffect(() => {
+    loadSite().then((d) => {
+      setData(d)
+      try { localStorage.setItem(SITE_CACHE, JSON.stringify(d)) } catch { /* storage full or blocked */ }
+    }).catch(() => { /* keep what's showing */ })
+  }, [])
+  return data
+}
+
+// Sets the browser tab title (and what search results show) for a page
+export function usePageTitle(title: string) {
+  useEffect(() => { document.title = title }, [title])
 }
 
 export function photoUrl(path: string) {

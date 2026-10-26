@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
+import { usePageTitle } from '../lib/site'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -73,6 +74,7 @@ type Place = { address: string; floor: string; elevator: string; parking: string
 const emptyPlace: Place = { address: '', floor: '', elevator: '', parking: '' }
 
 export default function Book() {
+  usePageTitle('Get your moving price | DMV Trusted Movers')
   const [type, setType] = useState('full_move')
   const [from, setFrom] = useState<Place>(emptyPlace)
   const [to, setTo] = useState<Place>(emptyPlace)
@@ -230,9 +232,6 @@ export default function Book() {
           {(type === 'full_move' || type === 'office_move') && <div className="small muted">You pack, we move. Please have your boxes packed before we arrive.</div>}
         </section>
 
-        <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
-        {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} note="Moving more than 50 miles? Call us first." />}
-
         <section className="card form">
           <h3>{office ? 'How big is the office?' : 'How big is the move?'}</h3>
           <div className="small muted">Pick one so we can show your price.</div>
@@ -250,6 +249,8 @@ export default function Book() {
                 onClick={() => setItems(items.includes(s) ? items.filter((x) => x !== s) : [...items, s])}>{s}</button>
             ))}
           </div>
+          <details className="more" open={photos.length > 0 || !!notes}>
+            <summary>Add photos or notes (optional)</summary>
           <label>
             Photos (optional, they help us price it)
             <input type="file" accept="image/*" multiple
@@ -263,6 +264,7 @@ export default function Book() {
             <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000}
               placeholder="Long walk to the truck, items to take apart, storage unit…" />
           </label>
+          </details>
         </section>
 
         <section className="card form">
@@ -283,6 +285,9 @@ export default function Book() {
           <p className="note">Moves need at least 48 hours notice. Need it sooner? Please contact us directly.</p>
         </section>
 
+        <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
+        {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} note="Moving more than 50 miles? Call us first." />}
+
         <section className="card form">
           <h3>How do we reach you?</h3>
           <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} autoComplete="name" /></label>
@@ -301,6 +306,11 @@ export default function Book() {
 
         {error && <p className="warn">{error}</p>}
         <button className="primary" disabled={busy}>{busy ? 'Working out your price…' : 'See my price'}</button>
+        <ul className="est-trust">
+          <li>Flat price, truck and gas included</li>
+          <li>No extra charge for stairs</li>
+          <li>Free cancellation up to 72 hours before</li>
+        </ul>
         <p className="note center-text">No account needed. Your price shows up as soon as you send, and we confirm it by text or email. By sending, you agree to our <Link to="/policies#terms">terms</Link> and <Link to="/policies#privacy">privacy policy</Link>.</p>
       </form>
     </PublicPage>
@@ -313,6 +323,8 @@ function PlaceCard({ title, place, onChange, required, note }: { title: string; 
     <section className="card form">
       <h3>{title}</h3>
       <label>Street address, city<input value={place.address} onChange={(e) => set('address', e.target.value)} required={required} minLength={required ? 5 : undefined} maxLength={300} autoComplete="street-address" /></label>
+      <details className="more" open={!!(place.floor || place.elevator || place.parking)}>
+        <summary>Floor, elevator and parking (optional)</summary>
       <div className="row">
         <label>Floor<input type="number" min={-2} max={99} inputMode="numeric" value={place.floor} onChange={(e) => set('floor', e.target.value)} /></label>
         <label>
@@ -331,6 +343,7 @@ function PlaceCard({ title, place, onChange, required, note }: { title: string; 
           {PARKING.map((p) => <option key={p}>{p}</option>)}
         </select>
       </label>
+      </details>
       {note && <div className="small muted">{note}</div>}
     </section>
   )

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
-import { loadSite, telLink, type SiteData } from '../lib/site'
+import { telLink, usePageTitle, useSite } from '../lib/site'
 import { FREE_MINUTES, MOVE_RATE, TILES, WEEKEND_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
@@ -15,12 +15,9 @@ const INCLUDED = [
 
 // The public price list, open to anyone at /pricing
 export default function Pricing() {
-  const [data, setData] = useState<SiteData | null>(null)
-  useEffect(() => { loadSite().then(setData) }, [])
+  const { site } = useSite()
+  usePageTitle('Moving prices | DMV Trusted Movers')
   useEffect(() => { window.scrollTo(0, 0) }, [])
-
-  if (!data) return <div className="center muted">Loading…</div>
-  const { site } = data
 
   return (
     <SiteFrame site={site}>

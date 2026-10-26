@@ -21,7 +21,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             <Link to="/pricing">Prices</Link>
             <Link to="/#faq" className="site-nav-wide">FAQ</Link>
             <Link to="/#contact" className="site-nav-wide">Contact</Link>
-            <Link to="/login">Sign in</Link>
+            <Link to="/login" className="site-nav-wide">Sign in</Link>
             <Link to="/book" className="site-nav-book">Get my price</Link>
           </nav>
         </div>
@@ -67,6 +67,12 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
           </div>
         </div>
       </footer>
+
+      {/* Always in reach on phones, where most ad clicks land */}
+      <div className="site-sticky">
+        {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">Call</a>}
+        <Link to="/book" className="site-btn gold">Get my price</Link>
+      </div>
     </div>
   )
 }
