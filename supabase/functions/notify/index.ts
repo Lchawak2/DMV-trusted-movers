@@ -360,11 +360,18 @@ async function crewAccepted(assignmentId: string): Promise<Email[]> {
   }]
 }
 
+// The sending address has no inbox, so a customer who hits Reply reaches the admins' own email
+let replyTo: Promise<string[]> | undefined
+
 async function send(key: string, e: Email) {
+  const reply = await (replyTo ??= admins())
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM ?? 'DMV Trusted Movers <onboarding@resend.dev>', to: e.to, subject: e.subject, text: e.text }),
+    body: JSON.stringify({
+      from: FROM ?? 'DMV Trusted Movers <onboarding@resend.dev>', to: e.to, subject: e.subject, text: e.text,
+      ...(reply.length ? { reply_to: reply } : {}),
+    }),
   })
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`)
 }
@@ -391,6 +398,7 @@ Deno.serve(async () => {
   const key = Deno.env.get('RESEND_API_KEY')
   // Without a key, leave everything queued so it all goes out once the key is saved
   if (!key) return Response.json({ sent: 0, waiting: 'RESEND_API_KEY is not set' })
+  replyTo = undefined
   const { data: batch, error } = await db.rpc('claim_notifications')
   if (error) return Response.json({ error: error.message }, { status: 500 })
   let sent = 0
