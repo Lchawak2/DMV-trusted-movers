@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
-import { loadSite, photoUrl, rgb, telLink, type SiteData } from '../lib/site'
+import { photoUrl, rgb, telLink, usePageTitle, useSite } from '../lib/site'
 
 const dollars = (n: number) => `$${n.toLocaleString('en-US')}`
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
@@ -49,16 +49,13 @@ const AREAS = [
 
 // The public website, shown at the home address to anyone who isn't signed in
 export default function Home() {
-  const [data, setData] = useState<SiteData | null>(null)
+  const { site, rating, ratings, review_url } = useSite()
   const { hash } = useLocation()
-  useEffect(() => { loadSite().then(setData) }, [])
-  // Menu links like /#faq: scroll there once the page has loaded
+  usePageTitle('DMV Trusted Movers | Flat-price movers in DC, Maryland and Virginia')
+  // Menu links like /#faq: scroll there once the page is up
   useEffect(() => {
-    if (data && hash) document.getElementById(hash.slice(1))?.scrollIntoView()
-  }, [data, hash])
-
-  if (!data) return <div className="center muted">Loading…</div>
-  const { site, rating, ratings, review_url } = data
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView()
+  }, [hash])
 
   return (
     <SiteFrame site={site}>

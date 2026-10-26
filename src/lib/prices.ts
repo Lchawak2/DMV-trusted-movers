@@ -5,6 +5,7 @@
 // Home moves: one flat price per size for 2 movers, truck and gas, up to a set number of hours.
 // Past those hours, extra time is MOVE_RATE an hour. Studios book as 1 bedroom.
 export const HOME_MOVES: { size: string; label?: string; price: number; hours: number }[] = [
+  // The starting price is also in index.html (search and link-preview text)
   { size: '1 bedroom', label: 'Studio or 1 bedroom', price: 545, hours: 3 },
   { size: '2 bedrooms', price: 660, hours: 4 },
   { size: '3 bedrooms', price: 775, hours: 5 },
