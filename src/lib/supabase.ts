@@ -8,3 +8,5 @@ if (!url || !key) {
 }
 
 export const supabase = createClient(url, key)
+export const supabaseUrl = url
+export const supabaseKey = key

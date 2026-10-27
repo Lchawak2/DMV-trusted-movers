@@ -7,6 +7,7 @@ import { shrink } from '../lib/photos'
 import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
 import { usePageTitle } from '../lib/site'
+import { track, trackOnce, usePageView } from '../lib/track'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -70,11 +71,29 @@ function saveDraft(d: Draft) {
 const isWeekend = (d: string) => d !== '' && [0, 6].includes(new Date(`${d}T12:00:00`).getDay())
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
 
+// The form's parts, as the Visitors tab names them when it shows where people stop
+const STEP_NAMES: Record<string, string> = { type: 'what they need', size: 'size', date: 'date', from: 'moving from', to: 'moving to', contact: 'how to reach them' }
+
+// The first touch of each part of the form, so the Visitors tab can show how far people get
+function touched(e: { target: EventTarget }) {
+  const step = (e.target as Element).closest?.('[data-step]')?.getAttribute('data-step')
+  if (!step) return
+  trackOnce('book_start')
+  trackOnce('book_step', step, { step })
+}
+
+// A required box the browser stopped the send for
+function missing(e: { target: EventTarget }) {
+  const step = (e.target as Element).closest?.('[data-step]')?.getAttribute('data-step')
+  if (step) trackOnce('book_error', `missing-${step}`, { message: `Left blank: ${STEP_NAMES[step] ?? step}` })
+}
+
 type Place = { address: string; floor: string; elevator: string; parking: string }
 const emptyPlace: Place = { address: '', floor: '', elevator: '', parking: '' }
 
 export default function Book() {
   usePageTitle('Get your moving price | DMV Trusted Movers')
+  usePageView()
   const [type, setType] = useState('full_move')
   const [from, setFrom] = useState<Place>(emptyPlace)
   const [to, setTo] = useState<Place>(emptyPlace)
@@ -128,6 +147,7 @@ export default function Book() {
 
   function changeAnswers() {
     if (!sent) return
+    track('change_answers')
     setReplaces(sent.request)
     setSent(null)
     window.scrollTo(0, 0)
@@ -150,7 +170,10 @@ export default function Book() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!phone.trim() && !email.trim()) return setError('Please give a phone number or an email so we can send your price.')
+    if (!phone.trim() && !email.trim()) {
+      track('book_error', { message: 'No phone or email' })
+      return setError('Please give a phone number or an email so we can send your price.')
+    }
     setError(null)
     setBusy(true)
     const elevator = (v: string) => (v === '' ? null : v === 'yes')
@@ -163,7 +186,12 @@ export default function Book() {
       p_preferred_date: date, p_arrival_window: arrival || null, p_notes: notes.trim() || null,
       p_lead_source: source || null,
     })
-    if (error) { setBusy(false); return setError(error.message) }
+    if (error) {
+      track('book_error', { message: error.message.slice(0, 80) })
+      setBusy(false)
+      return setError(error.message)
+    }
+    track('book_submit', { type, size })
     const id = data as string
     let photosFailed = false
     for (const file of photos) {
@@ -180,6 +208,8 @@ export default function Book() {
     // Simple moves get their price and booking link now; the rest wait for the office
     const quick = await supabase.rpc('instant_quote', { p_request: id, p_supplies: {}, p_replaces: replaces })
     const instant = quick.error ? null : (quick.data as Instant | null)
+    if (instant) track('price_shown', { type, size: size || BOOK_TYPES[type], price: instant.price })
+    else track('no_price', { type })
     if (instant) {
       saveDraft({ request: id, token: instant.token, answers: { type, from, to, size, items, date, arrival, notes, name, phone, email, source } })
     }
@@ -205,7 +235,7 @@ export default function Book() {
               <p className="est-extra">
                 Includes up to <strong>{sent.instant.included_hours} hours</strong>. Going over? The first {FREE_MINUTES} minutes are free, then it's <strong>{dollars(sent.instant.extra_rate)} an hour</strong>, by the minute.
               </p>
-              <Link to={`/quote/${sent.instant.token}`} className="primary est-book">Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
+              <Link to={`/quote/${sent.instant.token}`} className="primary est-book" onClick={() => track('book_click')}>Book my date with a {dollars(sent.instant.deposit)} deposit</Link>
               <button type="button" className="secondary est-book" onClick={changeAnswers}>Change my answers</button>
               <p className="small muted">No extra charge for stairs or paying by card. Free cancellation up to 72 hours before your move. This price is good for 3 days.</p>
             </>
@@ -220,9 +250,9 @@ export default function Book() {
 
   return (
     <PublicPage sub="Get a moving quote">
-      <form onSubmit={submit} className="form">
+      <form onSubmit={submit} className="form" onFocusCapture={touched} onClickCapture={touched} onInvalidCapture={missing}>
         <p className="est-intro">{replaces ? 'Change anything below and send again for your new price.' : <>Answer a few questions and <strong>see your price right away</strong>, with every part listed.</>}</p>
-        <section className="card">
+        <section className="card" data-step="type">
           <h3>What do you need?</h3>
           <div className="chips">
             {Object.entries(BOOK_TYPES).filter(([k]) => k !== 'small_move').map(([k, label]) => (
@@ -232,7 +262,7 @@ export default function Book() {
           {(type === 'full_move' || type === 'office_move') && <div className="small muted">You pack, we move. Please have your boxes packed before we arrive.</div>}
         </section>
 
-        <section className="card form">
+        <section className="card form" data-step="size">
           <h3>{office ? 'How big is the office?' : 'How big is the move?'}</h3>
           <div className="small muted">Pick one so we can show your price.</div>
           <div className="chips">
@@ -267,7 +297,7 @@ export default function Book() {
           </details>
         </section>
 
-        <section className="card form">
+        <section className="card form" data-step="date">
           <h3>When?</h3>
           <div className="row">
             <label>Date<input type="date" value={date} min={addDays(2)} onChange={(e) => setDate(e.target.value)} required /></label>
@@ -285,10 +315,10 @@ export default function Book() {
           <p className="note">Moves need at least 48 hours notice. Need it sooner? Please contact us directly.</p>
         </section>
 
-        <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required />
-        {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} note="Moving more than 50 miles? Call us first." />}
+        <PlaceCard title={oneAddress ? 'Address' : 'Moving from'} place={from} onChange={setFrom} required step="from" />
+        {!oneAddress && <PlaceCard title="Moving to" place={to} onChange={setTo} step="to" note="Moving more than 50 miles? Call us first." />}
 
-        <section className="card form">
+        <section className="card form" data-step="contact">
           <h3>How do we reach you?</h3>
           <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} autoComplete="name" /></label>
           <div className="row">
@@ -317,10 +347,10 @@ export default function Book() {
   )
 }
 
-function PlaceCard({ title, place, onChange, required, note }: { title: string; place: Place; onChange: (p: Place) => void; required?: boolean; note?: string }) {
+function PlaceCard({ title, place, onChange, required, note, step }: { title: string; place: Place; onChange: (p: Place) => void; required?: boolean; note?: string; step: string }) {
   const set = (k: keyof Place, v: string) => onChange({ ...place, [k]: v })
   return (
-    <section className="card form">
+    <section className="card form" data-step={step}>
       <h3>{title}</h3>
       <label>Street address, city<input value={place.address} onChange={(e) => set('address', e.target.value)} required={required} minLength={required ? 5 : undefined} maxLength={300} autoComplete="street-address" /></label>
       <details className="more" open={!!(place.floor || place.elevator || place.parking)}>

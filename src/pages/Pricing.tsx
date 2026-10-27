@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { telLink, usePageTitle, useSite } from '../lib/site'
+import { usePageView } from '../lib/track'
 import { FREE_MINUTES, MOVE_RATE, TILES, WEEKEND_FEE } from '../lib/prices'
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
@@ -17,6 +18,7 @@ const INCLUDED = [
 export default function Pricing() {
   const { site } = useSite()
   usePageTitle('Moving prices | DMV Trusted Movers')
+  usePageView()
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
   return (

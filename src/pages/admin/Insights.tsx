@@ -130,12 +130,12 @@ export default function Insights() {
 }
 
 // Percent change, or nothing when there's no earlier number to compare with
-function pct(now: number, before: number) {
+export function pct(now: number, before: number) {
   if (!before) return null
   return ((now - before) / Math.abs(before)) * 100
 }
 
-function Tile({ label, value, change, vs, points, sub }: { label: string; value: string; change?: number | null; vs?: string; points?: boolean; sub?: string }) {
+export function Tile({ label, value, change, vs, points, sub }: { label: string; value: string; change?: number | null; vs?: string; points?: boolean; sub?: string }) {
   const shown = change != null && Number.isFinite(change)
   return (
     <div className="tile">
@@ -158,7 +158,7 @@ function useRequests(since: string) {
 }
 
 // Round the top of the scale up to a tidy number so the grid lines read well
-function niceMax(n: number) {
+export function niceMax(n: number) {
   if (n <= 0) return 1
   const step = 10 ** Math.floor(Math.log10(n))
   return Math.ceil(n / step) * step
@@ -167,7 +167,7 @@ function niceMax(n: number) {
 const H = 170, PAD = { top: 8, right: 8, bottom: 20, left: 44 }
 
 // Draw at the box's real width so text stays the same size however wide the panel is
-function useWidth() {
+export function useWidth() {
   const ref = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(320)
   useEffect(() => {
@@ -268,7 +268,7 @@ function WeekLine({ data }: { data: { label: string; n: number }[] }) {
 }
 
 // Horizontal bars, longest first, each with its number at the end
-function HBars({ rows, empty }: { rows: { label: string; n: number; sub?: string }[]; empty: string }) {
+export function HBars({ rows, empty }: { rows: { label: string; n: number; sub?: string }[]; empty: string }) {
   if (!rows.length) return <p className="muted small">{empty}</p>
   const top = Math.max(1, ...rows.map((r) => r.n))
   return (

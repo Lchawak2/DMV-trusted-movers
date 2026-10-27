@@ -89,6 +89,11 @@ export default function Dashboard() {
         <span className="money-bar-go">Money ›</span>
       </Link>
 
+      <Link to="/visitors" className="money-bar">
+        <span><span className="money-bar-sub">Website visitors</span>Where they come from and where they stop</span>
+        <span className="money-bar-go">See ›</span>
+      </Link>
+
       <Link to="/website" className="money-bar">
         <span><span className="money-bar-sub">Website</span>Edit your words, prices and photos</span>
         <span className="money-bar-go">Edit ›</span>

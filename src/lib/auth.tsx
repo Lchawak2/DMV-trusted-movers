@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { setLang } from './lang'
 import type { Account } from './types'
+import { markStaff } from './track'
 
 interface AuthState {
   session: Session | null
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const acct = data as Account | null
     // Admin screens are English only
     setLang(acct?.role === 'admin' ? 'en' : acct?.language)
+    if (acct?.role === 'admin' || acct?.role === 'crew') markStaff()
     setAccount(acct)
   }
 
