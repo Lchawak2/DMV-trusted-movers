@@ -1,14 +1,16 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import PublicPage from '../components/PublicPage'
+import { usePageView } from '../lib/track'
 import { FREE_MINUTES, MOVE_RATE } from '../lib/prices'
 
 const EMAIL = 'dmvtrustedmoversservices@gmail.com'
-const UPDATED = 'October 24, 2026'
+const UPDATED = 'October 27, 2026'
 
 // Terms, privacy and cancellation policy in one page, with a section for each.
 // The booking form and quote page link to a section by its #id.
 export default function Policies() {
+  usePageView()
   // Links like /policies#cancellation open at that section
   const { hash } = useLocation()
   useEffect(() => {
@@ -77,6 +79,7 @@ export default function Policies() {
         <h3>What we collect</h3>
         <p>Your name, phone, email, addresses, move details and the photos you send us. We also keep photos and the sign-off from the day of your move.</p>
         <p>Card payments go through Stripe. We never see or store your full card number.</p>
+        <p>When you use this website we count which pages you open and how far you get on the quote form, so we can make the site easier to use. That count uses a random number saved in your browser, not your name or contact details, and is kept for a year.</p>
 
         <h3>Why</h3>
         <p>To price your move, plan it, keep in touch with you about it, take payment, and keep business records.</p>

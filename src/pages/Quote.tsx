@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { track, usePageView } from '../lib/track'
 import { money, parseDay } from '../lib/format'
 import { JOB_TYPES } from '../lib/types'
 import { BOOK_TYPES } from './Book'
@@ -47,6 +48,7 @@ const longDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { we
 
 // The customer's quote, opened from the link in our text or email
 export default function Quote({ token }: { token: string }) {
+  usePageView()
   const [q, setQ] = useState<QuoteView | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +64,9 @@ export default function Quote({ token }: { token: string }) {
 
   async function load() {
     const { data } = await supabase.rpc('get_quote', { p_token: token })
-    setQ((data as QuoteView | null) ?? null)
+    const view = (data as QuoteView | null) ?? null
+    setQ(view)
+    if (view) trackQuote(view)
   }
 
   useEffect(() => {
@@ -77,6 +81,7 @@ export default function Quote({ token }: { token: string }) {
   }, [token])
 
   async function pay() {
+    track('deposit_click')
     setBusy(true)
     setError(null)
     const { data, error } = await supabase.functions.invoke('deposit', { body: { action: 'start', token } })
@@ -436,4 +441,13 @@ async function errorText(error: unknown, fallback = 'Payment could not be starte
     if (body?.error) return body.error
   } catch { /* not JSON */ }
   return fallback
+}
+
+// What a visitor opening a booking link saw: an open quote to book, a booked move, or a closed quote
+let quoteSeen = ''
+function trackQuote(q: QuoteView) {
+  const status = q.deposit_paid || q.job_status ? 'booked' : q.status
+  if (quoteSeen === status) return
+  quoteSeen = status
+  track('quote_view', { status })
 }

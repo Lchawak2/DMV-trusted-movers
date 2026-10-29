@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
 import { photoUrl, rgb, telLink, usePageTitle, useSite } from '../lib/site'
+import { track, usePageView, useScrollDepth } from '../lib/track'
 
 const dollars = (n: number) => `$${n.toLocaleString('en-US')}`
 const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA') }
@@ -52,6 +53,8 @@ export default function Home() {
   const { site, rating, ratings, review_url } = useSite()
   const { hash } = useLocation()
   usePageTitle('DMV Trusted Movers | Flat-price movers in DC, Maryland and Virginia')
+  usePageView()
+  useScrollDepth()
   // Menu links like /#faq: scroll there once the page is up
   useEffect(() => {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView()
@@ -184,7 +187,7 @@ export default function Home() {
         <div className="site-wrap site-faq">
           <h2>Questions people ask</h2>
           {FAQ.map((f) => (
-            <details key={f.q}>
+            <details key={f.q} onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) track('faq_open', { q: f.q }) }}>
               <summary>{f.q}</summary>
               <p>{f.a}</p>
             </details>
@@ -240,6 +243,7 @@ function QuickQuote({ phone }: { phone: string }) {
     const q = new URLSearchParams({ type })
     if (size) q.set('size', size)
     if (date) q.set('date', date)
+    track('quick_quote', { type, size: size || null, has_date: !!date })
     navigate(`/book?${q}`)
   }
 

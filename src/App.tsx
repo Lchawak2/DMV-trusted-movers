@@ -21,6 +21,7 @@ import AdminJobDetail from './pages/admin/JobDetail'
 import People from './pages/admin/People'
 import CrewMap from './pages/admin/CrewMap'
 import Website from './pages/admin/Website'
+import Visitors from './pages/admin/Visitors'
 import NeedsYou from './pages/admin/NeedsYou'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/people" element={<People />} />
         <Route path="/crew-map" element={<CrewMap />} />
         <Route path="/website" element={<Website />} />
+        <Route path="/visitors" element={<Visitors />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
