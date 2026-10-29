@@ -8,7 +8,6 @@ import { FREE_MINUTES, MOVE_RATE, TILES, WEEKEND_FEE } from '../lib/prices'
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
 
 const INCLUDED = [
-  'Moving blankets and plastic wrap to protect your furniture',
   'No extra charge for stairs or elevators',
   'No extra charge for paying by card',
   'Free cancellation up to 72 hours before your move',

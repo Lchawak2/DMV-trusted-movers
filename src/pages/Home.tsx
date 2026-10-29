@@ -15,11 +15,11 @@ const SIZES = [
   { type: 'office_move', size: 'Small office (1 to 10 people)', name: 'Small office', price: SMALL_OFFICE.price, hours: SMALL_OFFICE.hours },
 ]
 
-const TRUST = ['Flat price before we start', '2 careful movers and a truck', 'Blankets and wrap included', 'Free cancellation up to 72 hours']
+const TRUST = ['Flat price before we start', '2 careful movers and a truck', 'See your price right away', 'Free cancellation up to 72 hours']
 
 const WHY = [
   { title: 'Clear, flat prices', text: 'One price for your size of move, with the truck and gas included. You see it before you book.' },
-  { title: 'Careful with your things', text: 'We wrap your furniture in blankets and plastic before it goes on the truck.' },
+  { title: 'Careful with your things', text: 'We handle every item with care, from the first box to the last piece of furniture.' },
   { title: 'On time, kept posted', text: 'You pick an arrival window, and we keep you posted on moving day.' },
   { title: 'Book in minutes', text: 'Answer a few questions, see your price right away, and hold your date with a small deposit.' },
 ]
@@ -32,10 +32,10 @@ const STEPS = [
 ]
 
 const FAQ = [
-  { q: 'How much does my move cost?', a: `Home moves are a flat price by size: ${HOME_MOVES.map((m) => `${m.label ?? m.size} ${dollars(m.price)}`).join(', ')}. A small office is ${dollars(SMALL_OFFICE.price)}. Every price includes 2 movers, the truck, gas, blankets and wrap.` },
+  { q: 'How much does my move cost?', a: `Home moves are a flat price by size: ${HOME_MOVES.map((m) => `${m.label ?? m.size} ${dollars(m.price)}`).join(', ')}. A small office is ${dollars(SMALL_OFFICE.price)}. Every price includes 2 movers, the truck and gas.` },
   { q: 'What if my move takes longer?', a: `Each price covers a set number of hours. The first ${FREE_MINUTES} minutes past that are free, then it's ${dollars(MOVE_RATE)} an hour for the extra time, by the minute.` },
   { q: 'Do weekend moves cost more?', a: `Saturday and Sunday home and office moves are ${dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.` },
-  { q: 'Do you pack for me?', a: 'You pack your boxes and we do the heavy lifting. We bring blankets and plastic wrap for your furniture at no charge.' },
+  { q: 'Do you pack for me?', a: 'You pack your boxes and we do the heavy lifting.' },
   { q: 'Can I cancel?', a: 'Yes. Cancel up to 72 hours before your move and your deposit comes back to you.' },
   { q: 'Do you move pianos, safes or pool tables?', a: 'Yes. Pick them on the quote form and we\'ll look over your move and send you a price ourselves.' },
   { q: 'How far ahead do I need to book?', a: 'At least 48 hours before your move. Need it sooner? Call us and we\'ll try to fit you in.' },
@@ -100,7 +100,7 @@ export default function Home() {
       <section className="site-sec alt" id="prices">
         <div className="site-wrap">
           <h2>Pick your move</h2>
-          <p className="site-lead">Every move comes with 2 movers, the truck, gas, blankets and wrap. Each extra hour is {dollars(MOVE_RATE)}.</p>
+          <p className="site-lead">Every move comes with 2 movers, the truck and gas. Each extra hour is {dollars(MOVE_RATE)}.</p>
           <div className="site-sizes">
             {SIZES.map((s) => (
               <div className="site-size" key={s.size}>
