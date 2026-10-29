@@ -14,7 +14,6 @@ const STEPS: { place: [string, string]; items: [string, string, string][] }[] = 
       ['walk', 'Walk through the home with the customer', 'Recorre la casa con el cliente'],
       ['floors', 'Protect floors and door frames', 'Protege pisos y marcos de puertas'],
       ['apart', 'Take apart beds and tables, bag and label the screws', 'Desarma camas y mesas, guarda y marca los tornillos'],
-      ['wrap', 'Wrap furniture in blankets and plastic wrap', 'Envuelve los muebles con cobijas y plástico'],
       ['load', 'Load heavy items first and strap the load', 'Carga lo pesado primero y asegura la carga con correas'],
       ['empty', 'Check every room, closet and cabinet is empty', 'Revisa que cada cuarto, clóset y gabinete esté vacío'],
     ],
@@ -25,11 +24,12 @@ const STEPS: { place: [string, string]; items: [string, string, string][] }[] = 
       ['rooms', 'Put each item in the room the customer wants', 'Pon cada cosa en el cuarto que el cliente quiere'],
       ['assemble', 'Put beds and tables back together', 'Vuelve a armar camas y mesas'],
       ['final_walk', 'Final walk-through with the customer', 'Recorrido final con el cliente'],
-      ['truck', 'Truck empty: blankets, straps and tools collected', 'Camión vacío: cobijas, correas y herramientas recogidas'],
+      ['truck', 'Truck empty: straps and tools collected', 'Camión vacío: correas y herramientas recogidas'],
     ],
   },
 ]
 const TOTAL = STEPS.reduce((n, s) => n + s.items.length, 0)
+const KEYS = new Set(STEPS.flatMap((s) => s.items.map(([key]) => key)))
 
 // Everyone on the job can tick steps; the admin sees who did what
 export default function WorkChecklist({ jobId }: { jobId: string }) {
@@ -70,13 +70,15 @@ export default function WorkChecklist({ jobId }: { jobId: string }) {
     load()
   }
 
+  // Ticks saved for a step that was later removed don't count
+  const done = checks.filter((c) => KEYS.has(c.step)).length
   const who = (c: Check) => c.checked_by === account.id ? t('You', 'Tú') : names[c.checked_by ?? ''] ?? t('Crew', 'Equipo')
 
   return (
     <section className="card">
       <h3 className="day">
         <span>{t('Work checklist', 'Lista de trabajo')}</span>
-        <span className={checks.length === TOTAL ? 'tone-good' : ''}>{checks.length} / {TOTAL}</span>
+        <span className={done === TOTAL ? 'tone-good' : ''}>{done} / {TOTAL}</span>
       </h3>
       {STEPS.map((group) => (
         <div key={group.place[0]}>
