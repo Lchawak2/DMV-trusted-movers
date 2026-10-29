@@ -26,6 +26,9 @@ import NeedsYou from './pages/admin/NeedsYou'
 import MyJobs from './pages/crew/MyJobs'
 import CrewJob from './pages/crew/CrewJob'
 import FindJob from './pages/crew/FindJob'
+import Earnings from './pages/crew/Earnings'
+import Availability from './pages/crew/Availability'
+import Papers from './pages/crew/Papers'
 import Profile from './pages/Profile'
 import Photos from './pages/jobday/Photos'
 import Extras from './pages/jobday/Extras'
@@ -89,6 +92,9 @@ export default function App() {
       <Route path="/jobs/:id/extras" element={<Extras />} />
       <Route path="/jobs/:id/sign" element={<Sign />} />
       <Route path="/find" element={<FindJob />} />
+      <Route path="/earnings" element={<Earnings />} />
+      <Route path="/availability" element={<Availability />} />
+      <Route path="/papers" element={<Papers />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -2,17 +2,19 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import JobDayChecklist from '../jobday/JobDayChecklist'
+import WorkChecklist from '../crew/WorkChecklist'
 import TruckSteps from '../jobday/TruckSteps'
 import { useJobDay } from '../jobday/useJobDay'
 import { supabase } from '../../lib/supabase'
 import { assignmentPay } from '../../lib/pay'
+import { papersDone } from '../../lib/papers'
 import { costGuesses, moverPay, useCosts } from '../../lib/costs'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import SendText from '../../components/SendText'
 import ReviewSection from './ReviewSection'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
-  type Account, type Assignment, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
+  type Account, type Assignment, type CrewPapers, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
 } from '../../lib/types'
 
 type CrewRow = Assignment & { accounts: Pick<Account, 'full_name' | 'email' | 'phone'>; time_entries: TimeEntry[] }
@@ -116,6 +118,7 @@ export default function AdminJobDetail() {
           </section>
           {job.status === 'completed' && <ReviewSection jobId={id} quoteId={job.quote_id} />}
           <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
+          <WorkChecklist jobId={id} />
           <RentalSection jobId={id} rental={rental} onChange={load} />
           <button className="danger" onClick={remove}>Delete job</button>
         </>
@@ -215,11 +218,18 @@ function CrewSection({ job, crew, onChange }: { job: Job; crew: CrewRow[]; onCha
   const [pay, setPay] = useState('')
   const [payType, setPayType] = useState<'flat' | 'hourly'>('flat')
   const [error, setError] = useState<string | null>(null)
+  const [free, setFree] = useState<Set<string>>(new Set())
+  const [hasPapers, setHasPapers] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     supabase.from('accounts').select('*').eq('role', 'crew').eq('active', true).order('full_name')
       .then(({ data }) => setPeople((data ?? []) as Account[]))
-  }, [])
+    // Who marked the move's day as a day they can work
+    supabase.from('crew_availability').select('crew_id').eq('day', job.job_date)
+      .then(({ data }) => setFree(new Set((data ?? []).map((r) => r.crew_id as string))))
+    supabase.from('crew_papers').select('*')
+      .then(({ data }) => setHasPapers(new Set(((data ?? []) as CrewPapers[]).filter((p) => papersDone(p)).map((p) => p.crew_id))))
+  }, [job.job_date])
 
   async function add(e: FormEvent) {
     e.preventDefault()
@@ -304,8 +314,19 @@ function CrewSection({ job, crew, onChange }: { job: Job; crew: CrewRow[]; onCha
       <form className="form inline-form" onSubmit={add}>
         <select value={crewId} onChange={(e) => setCrewId(e.target.value)} required>
           <option value="">Add crew member</option>
-          {people.map((p) => <option key={p.id} value={p.id}>{p.full_name ?? p.email}{p.can_lead ? ' (can lead)' : ''}</option>)}
+          {/* Movers free that day first */}
+          {[...people].sort((a, b) => Number(free.has(b.id)) - Number(free.has(a.id))).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.full_name ?? p.email}{p.can_lead ? ' (can lead)' : ''}{free.has(p.id) ? ' · free that day' : ''}{hasPapers.has(p.id) ? '' : ' · papers missing'}
+            </option>
+          ))}
         </select>
+        {crewId && (
+          <p className="muted small">
+            {free.has(crewId) ? 'Marked this day as free.' : "Hasn't marked this day as free. Check with them first."}
+            {!hasPapers.has(crewId) && ' Their sign-up papers aren\'t done yet (People shows what\'s missing).'}
+          </p>
+        )}
         <div className="row">
           <select value={role} onChange={(e) => setRole(e.target.value as 'lead' | 'helper')}>
             <option value="helper">Helper</option>
