@@ -400,7 +400,10 @@ Deno.serve(async () => {
   if (!key) return Response.json({ sent: 0, waiting: 'RESEND_API_KEY is not set' })
   replyTo = undefined
   const { data: batch, error } = await db.rpc('claim_notifications')
-  if (error) return Response.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('notify: could not claim the outbox:', error.message)
+    return Response.json({ error: 'Could not read the outbox' }, { status: 500 })
+  }
   let sent = 0
   for (const n of (batch ?? []) as Note[]) {
     try {

@@ -20,12 +20,16 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
   auth: { persistSession: false },
 })
 
+// A problem written for the customer to read. Any other error (Stripe, the database) is logged
+// for us and the customer sees a plain message, so no internal detail leaves the server.
+class Shown extends Error {}
+
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
 async function stripe(path: string, form?: Record<string, string>, idempotencyKey?: string) {
   const key = Deno.env.get('STRIPE_SECRET_KEY')
-  if (!key) throw new Error("Card payments aren't set up yet. Please reply to our text to book.")
+  if (!key) throw new Shown("Card payments aren't set up yet. Please reply to our text to book.")
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: form ? 'POST' : 'GET',
     headers: {
@@ -102,7 +106,7 @@ async function refundDeposits(quoteId: string): Promise<number> {
   let total = 0
   for (const p of payments ?? []) {
     const session = await stripe(`checkout/sessions/${p.provider_ref}`)
-    if (!session.payment_intent) throw new Error('Stripe has no payment to refund for this deposit.')
+    if (!session.payment_intent) throw new Shown('Stripe has no payment to refund for this deposit.')
     await stripe('refunds', { payment_intent: session.payment_intent }, `refund-${p.id}`)
     await db.from('payments').update({ status: 'refunded' }).eq('id', p.id)
     total += Number(p.amount)
@@ -230,6 +234,8 @@ Deno.serve(async (req) => {
     }
     return reply({ error: 'Unknown action' }, 400)
   } catch (e) {
-    return reply({ error: e instanceof Error ? e.message : 'Something went wrong' }, 500)
+    if (e instanceof Shown) return reply({ error: e.message }, 500)
+    console.error('deposit failed:', e)
+    return reply({ error: 'Something went wrong with the payment. Please try again, or call us.' }, 500)
   }
 })
