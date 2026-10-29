@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import { t } from '../lib/lang'
 import { sendText } from '../lib/texting'
+import { papersCount, papersDone, useMyPapers } from '../lib/papers'
 
 export default function Profile() {
   const { account, refresh } = useAuth()
@@ -43,11 +45,46 @@ export default function Profile() {
         <button className="primary">{t('Save', 'Guardar')}</button>
         {saved && <p className="note">{t('Saved.', 'Guardado.')}</p>}
       </form>
+      {account?.role === 'crew' && <CrewLinks />}
       {account?.role === 'admin' && <ReviewLink />}
       {account?.role === 'admin' && <TestText phone={account.phone} />}
       <p className="muted">{t('Signed in as', 'Conectado como')} {account?.email} · {account?.role}</p>
       <button className="secondary" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
     </Layout>
+  )
+}
+
+// The mover's own pages that aren't in the tab bar
+function CrewLinks() {
+  const { papers } = useMyPapers()
+  return (
+    <section className="card">
+      <ul className="list">
+        <li>
+          <Link to="/papers" className="list-main plain">
+            <strong>{t('Sign-up papers', 'Papeles de registro')}</strong>
+            <div className={`small ${papersDone(papers) ? 'tone-good' : 'tone-warn'}`}>
+              {papers === undefined ? '' : papersDone(papers) ? t('Done', 'Listos') : t(`${papersCount(papers)} of 2 done`, `${papersCount(papers)} de 2 listos`)}
+            </div>
+          </Link>
+          <span className="muted">›</span>
+        </li>
+        <li>
+          <Link to="/availability" className="list-main plain">
+            <strong>{t('My availability', 'Mi disponibilidad')}</strong>
+            <div className="muted small">{t('The days you can work', 'Los días que puedes trabajar')}</div>
+          </Link>
+          <span className="muted">›</span>
+        </li>
+        <li>
+          <Link to="/earnings" className="list-main plain">
+            <strong>{t('My earnings', 'Mis ganancias')}</strong>
+            <div className="muted small">{t('Pay and tips by week and month', 'Pago y propinas por semana y mes')}</div>
+          </Link>
+          <span className="muted">›</span>
+        </li>
+      </ul>
+    </section>
   )
 }
 

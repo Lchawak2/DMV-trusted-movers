@@ -360,6 +360,31 @@ async function crewAccepted(assignmentId: string): Promise<Email[]> {
   }]
 }
 
+async function damageReport(jobId: string): Promise<Email[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, from_address, move_requests(customers(full_name))').eq('id', jobId).maybeSingle()
+  const { data: photos } = await db.from('job_photos')
+    .select('note, created_at, accounts(full_name)').eq('job_id', jobId).eq('kind', 'damage').order('created_at')
+  // Skip one whose photos were all removed before the email went out
+  if (!j || !photos?.length) return []
+  const c = (j.move_requests as unknown as { customers: { full_name: string } | null } | null)?.customers
+  const who = [...new Set(photos.map((p) => (p.accounts as unknown as { full_name: string | null } | null)?.full_name ?? 'A mover'))]
+  const notes = photos.map((p) => p.note?.trim()).filter(Boolean)
+  return [{
+    to: await admins(),
+    subject: `Damage reported: ${c?.full_name ?? j.from_address}, ${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`,
+    text: lines(
+      `${who.join(' and ')} reported damage on the move on ${day(j.job_date)}.`,
+      `${c?.full_name ? `${c.full_name}, ` : ''}${j.from_address}`,
+      '',
+      notes.length ? 'What they wrote:' : 'No notes written yet.',
+      ...notes.map((n) => `- ${n}`),
+      '',
+      `See the photos: ${LIVE_SITE}/jobs/${jobId}/photos?tab=damage`,
+    ),
+  }]
+}
+
 // The sending address has no inbox, so a customer who hits Reply reaches the admins' own email
 let replyTo: Promise<string[]> | undefined
 
@@ -391,7 +416,7 @@ async function sendText(to: string, body: string) {
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
   balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
-  crew_accepted: crewAccepted,
+  crew_accepted: crewAccepted, damage_report: damageReport,
 }
 
 Deno.serve(async () => {

@@ -58,7 +58,10 @@ export default function Layout({ title, back, children }: { title?: string; back
             <NavLink to="/money">Money</NavLink>
           </>
         ) : (
-          <NavLink to="/" end>{t('My Jobs', 'Mis trabajos')}</NavLink>
+          <>
+            <NavLink to="/" end>{t('My Jobs', 'Mis trabajos')}</NavLink>
+            <NavLink to="/earnings">{t('Earnings', 'Ganancias')}</NavLink>
+          </>
         )}
         {account?.role === 'admin' && <NavLink to="/people">People</NavLink>}
         {/* On a computer the menu runs down the side, with room for the pages phones reach from the dashboard */}

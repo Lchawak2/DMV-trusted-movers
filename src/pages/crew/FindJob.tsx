@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import JobCard from '../../components/JobCard'
 import DayGroups from '../../components/DayGroups'
+import PapersBanner from '../../components/PapersBanner'
+import { papersDone, useMyPapers } from '../../lib/papers'
 import { supabase } from '../../lib/supabase'
 import { money } from '../../lib/format'
 import { t } from '../../lib/lang'
@@ -15,6 +17,9 @@ export default function FindJob() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<{ jobId: string; text: string } | null>(null)
+  const { papers } = useMyPapers()
+  // Still loading counts as done; the database checks again on claim
+  const blocked = papers !== undefined && !papersDone(papers)
 
   const load = useCallback(async () => {
     // Spots come from the database, since crew can't read other people's assignments
@@ -46,6 +51,7 @@ export default function FindJob() {
 
   return (
     <Layout>
+      <PapersBanner papers={papers} />
       {rows === null ? (
         <p className="muted center">{t('Loading…', 'Cargando…')}</p>
       ) : (
@@ -65,8 +71,8 @@ export default function FindJob() {
                 </>
               }
               action={
-                <button className="primary block" disabled={busy === job.id} onClick={() => claim(job)}>
-                  {busy === job.id ? t('Claiming…', 'Tomando…') : t('Claim this job', 'Tomar este trabajo')}
+                <button className="primary block" disabled={busy === job.id || blocked} onClick={() => claim(job)}>
+                  {blocked ? t('Finish your papers to claim', 'Termina tus papeles para tomarlo') : busy === job.id ? t('Claiming…', 'Tomando…') : t('Claim this job', 'Tomar este trabajo')}
                 </button>
               }
             />

@@ -6,16 +6,17 @@ import { isOffline } from '../../lib/outbox'
 
 export type PhotoWithUrl = JobPhoto & { url: string | null }
 
-type Cached = { job: Job; allowed: boolean; photos: JobPhoto[]; extras: JobExtra[]; signoff: JobSignoff | null }
+type Cached = { job: Job; allowed: boolean; onJob?: boolean; photos: JobPhoto[]; extras: JobExtra[]; signoff: JobSignoff | null }
 const cacheKey = (id: string) => `job-day:${id}`
 
-// Everything the job-day screens need. The accepted lead or an admin can use them;
-// the database enforces that, this only decides what to show.
+// Everything the job-day screens need. The accepted lead or an admin can use them, and anyone
+// on the job can report damage; the database enforces that, this only decides what to show.
 export function useJobDay(jobId: string) {
   const { account } = useAuth()
   const isAdmin = account?.role === 'admin'
   const [job, setJob] = useState<Job | null | undefined>(undefined)
   const [allowed, setAllowed] = useState(false)
+  const [onJob, setOnJob] = useState(false)
   const [photos, setPhotos] = useState<PhotoWithUrl[]>([])
   const [extras, setExtras] = useState<JobExtra[]>([])
   const [prices, setPrices] = useState<Record<string, number>>({})
@@ -39,6 +40,7 @@ export function useJobDay(jobId: string) {
         if (c) {
           setJob(c.job)
           setAllowed(c.allowed)
+          setOnJob(c.onJob ?? c.allowed)
           setPhotos(c.photos.map((r) => ({ ...r, url: null })))
           setExtras(c.extras)
           setSignoff(c.signoff)
@@ -49,6 +51,7 @@ export function useJobDay(jobId: string) {
     const mine = a.data as Assignment | null
     setJob(j.data as Job | null)
     setAllowed(isAdmin || (mine?.role === 'lead' && mine.status === 'accepted'))
+    setOnJob(isAdmin || mine?.status === 'accepted')
 
     const rows = (p.data ?? []) as JobPhoto[]
     const signed = rows.length
@@ -64,12 +67,12 @@ export function useJobDay(jobId: string) {
     }
     setSignoff(s.data as JobSignoff | null)
     if (j.data && !isAdmin) {
-      const c: Cached = { job: j.data as Job, allowed: mine?.role === 'lead' && mine.status === 'accepted', photos: rows, extras: extraRows, signoff: s.data as JobSignoff | null }
+      const c: Cached = { job: j.data as Job, allowed: mine?.role === 'lead' && mine.status === 'accepted', onJob: mine?.status === 'accepted', photos: rows, extras: extraRows, signoff: s.data as JobSignoff | null }
       try { localStorage.setItem(cacheKey(jobId), JSON.stringify(c)) } catch { /* storage full or blocked */ }
     }
   }, [account, isAdmin, jobId])
 
   useEffect(() => { load() }, [load])
 
-  return { job, allowed, isAdmin, photos, extras, prices, signoff, reload: load }
+  return { job, allowed, onJob, isAdmin, photos, extras, prices, signoff, reload: load }
 }

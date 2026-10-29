@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, windowText } from '../../lib/format'
 import JobDayChecklist from '../jobday/JobDayChecklist'
+import WorkChecklist from './WorkChecklist'
 import TruckSteps from '../jobday/TruckSteps'
 import { jobType, t } from '../../lib/lang'
 import { useJobDay } from '../jobday/useJobDay'
@@ -162,6 +163,7 @@ export default function CrewJob() {
             <li><a href={mapsLink(job.from_address)} target="_blank" rel="noreferrer">{job.from_address}</a></li>
             {job.to_address && <li><a href={mapsLink(job.to_address)} target="_blank" rel="noreferrer">{job.to_address}</a></li>}
           </ol>
+          <Directions from={job.from_address} to={job.to_address} />
           {job.access_notes && <div className="notes"><span>{t('Access', 'Acceso')}</span>{job.access_notes}</div>}
 
           {assignment.status === 'offered' && (
@@ -177,7 +179,8 @@ export default function CrewJob() {
                 <div className="notes">
                   <span>{t('Truck pickup', 'Recoger el camión')}</span>
                   {rental.company} {rental.truck_size} · {t('Confirmation', 'Confirmación')} {rental.confirmation ?? '—'}<br />
-                  {t('Pick up', 'Recoger')} {dateTime(rental.pickup_at)} {t('at', 'en')} {rental.pickup_location}<br />
+                  {t('Pick up', 'Recoger')} {dateTime(rental.pickup_at)} {t('at', 'en')} {rental.pickup_location}
+                  {rental.pickup_location && <> · <a href={directionsUrl(rental.pickup_location)} target="_blank" rel="noreferrer">{t('Directions', 'Cómo llegar')}</a></>}<br />
                   {t('Return', 'Devolver')} {dateTime(rental.return_at)} {t('at', 'en')} {rental.return_location}
                   <TruckSteps jobId={job.id} rental={rental} onChange={load} />
                 </div>
@@ -200,6 +203,20 @@ export default function CrewJob() {
           {offline && <p className="note">{t('No signal. Showing the job as it was last loaded on this phone.', 'Sin señal. Se muestra el trabajo como se cargó la última vez en este teléfono.')}</p>}
         </div>
       </section>
+      {assignment.status === 'accepted' && (
+        <>
+          <WorkChecklist jobId={id} />
+          {!isLead && (
+            <Link to={`/jobs/${id}/photos?tab=damage`} className="card papers-banner">
+              <span className="list-main">
+                <strong>{t('Report damage', 'Reportar un daño')}</strong>
+                <span className="muted small step-detail">{t('Something broke or was already damaged? Take a photo and say what happened. The office gets an alert.', '¿Algo se rompió o ya estaba dañado? Toma una foto y explica qué pasó. La oficina recibe un aviso.')}</span>
+              </span>
+              <span className="muted">›</span>
+            </Link>
+          )}
+        </>
+      )}
       {isLead && <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />}
     </Layout>
   )
@@ -209,4 +226,27 @@ function LocationNote({ state }: { state: ReturnType<typeof useShareLocation> })
   if (state === 'denied') return <p className="warn small">{t('Location is off for this app. Turn it on in your phone settings so the office can see where the crew is.', 'La ubicación está apagada para esta app. Actívala en los ajustes del teléfono para que la oficina vea dónde está el equipo.')}</p>
   if (state === 'unsupported') return null
   return <p className="muted small">📍 {t('Your location is shared with the office while you are on the clock. Keep this page open; the screen stays on until you clock out.', 'Tu ubicación se comparte con la oficina mientras trabajas. Mantén esta página abierta; la pantalla se queda encendida hasta que marques la salida.')}</p>
+}
+
+// Opens turn-by-turn directions from wherever the phone is, in Google Maps (the app if it's installed)
+const directionsUrl = (address: string) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`
+const isIPhone = () => /iPhone|iPad|iPod/.test(navigator.userAgent)
+const appleUrl = (address: string) => `https://maps.apple.com/?daddr=${encodeURIComponent(address)}&dirflg=d`
+
+function Directions({ from, to }: { from: string; to: string | null }) {
+  return (
+    <div className="directions">
+      <div className="row">
+        <a className="secondary" href={directionsUrl(from)} target="_blank" rel="noreferrer">{t('Go to pickup', 'Ir a recoger')}</a>
+        {to && <a className="secondary" href={directionsUrl(to)} target="_blank" rel="noreferrer">{t('Go to drop-off', 'Ir a entregar')}</a>}
+      </div>
+      {isIPhone() && (
+        <p className="muted small">
+          {t('Apple Maps', 'Apple Maps')}: <a href={appleUrl(from)}>{t('pickup', 'recoger')}</a>
+          {to && <> · <a href={appleUrl(to)}>{t('drop-off', 'entregar')}</a></>}
+        </p>
+      )}
+    </div>
+  )
 }

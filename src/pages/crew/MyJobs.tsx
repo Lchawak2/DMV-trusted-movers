@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import JobCard from '../../components/JobCard'
 import DayGroups from '../../components/DayGroups'
+import PapersBanner from '../../components/PapersBanner'
+import { useMyPapers } from '../../lib/papers'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { money } from '../../lib/format'
@@ -13,6 +16,7 @@ type Row = { job: Job; assignment: Assignment }
 export default function MyJobs() {
   const { account } = useAuth()
   const [rows, setRows] = useState<Row[] | null>(null)
+  const { papers } = useMyPapers()
 
   useEffect(() => {
     if (!account) return
@@ -29,6 +33,14 @@ export default function MyJobs() {
 
   return (
     <Layout>
+      <PapersBanner papers={papers} />
+      <Link to="/availability" className="card papers-banner">
+        <span className="list-main">
+          <strong>{t('My availability', 'Mi disponibilidad')}</strong>
+          <span className="muted small step-detail">{t('Mark the days you can work, so the office knows who to offer jobs to.', 'Marca los días que puedes trabajar, para que la oficina sepa a quién ofrecer trabajos.')}</span>
+        </span>
+        <span className="muted">›</span>
+      </Link>
       {rows === null ? (
         <p className="muted center">{t('Loading…', 'Cargando…')}</p>
       ) : (
