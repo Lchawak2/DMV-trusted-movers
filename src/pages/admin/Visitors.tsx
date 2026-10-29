@@ -87,15 +87,6 @@ function Body({ r, b, days, vs }: { r: Report; b: Report | null; days: Days; vs:
   const rateBefore = b?.visits ? (b.booked / b.visits) * 100 : 0
   const median = r.median_secs_to_price
 
-  if (!r.visits) {
-    return (
-      <section className="card">
-        <p>No visitors counted for {days === 1 ? 'today' : `the last ${days} days`} yet.</p>
-        <p className="muted small">Visits start counting from the day this was turned on. People signed in as admin or crew on a browser aren't counted, so your own visits won't show up here.</p>
-      </section>
-    )
-  }
-
   const stops = STEPS.map(([k, label]) => ({ label, n: r.stopped_at.find((s) => s.step === k)?.n ?? 0 })).filter((s) => s.n > 0)
 
   return (
@@ -183,7 +174,9 @@ function Body({ r, b, days, vs }: { r: Report; b: Report | null; days: Days; vs:
 // Plain advice from the numbers; each rule waits for enough visits so a couple of people don't decide it
 function tips(r: Report): string[] {
   const out: string[] = []
-  if (r.visits < 20) {
+  if (r.visits === 0) {
+    out.push('No visitors counted yet. Your own visits never count, so the numbers fill in as customers visit your site.')
+  } else if (r.visits < 20) {
     out.push(`Only ${plural(r.visits, 'visit')} so far. Advice shows up here once about 20 people have visited.`)
   } else if (share(r.started, r.visits) < 15) {
     out.push(`Only ${share(r.started, r.visits)}% of visits start a quote. Put the Get my price button and the price of a 1 bedroom move right at the top of the home page.`)
