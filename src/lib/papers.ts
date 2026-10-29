@@ -3,15 +3,13 @@ import { supabase } from './supabase'
 import { useAuth } from './auth'
 import type { CrewPapers } from './types'
 
-export const W9_URL = 'https://www.irs.gov/pub/irs-pdf/fw9.pdf'
-
 // Matches private.papers_done in the database, which is what Find Job checks
 export function papersDone(p: CrewPapers | null | undefined): boolean {
-  return !!p && (!!p.admin_ok_at || (!!p.id_path && !!p.w9_path && !!p.rules_accepted_at))
+  return !!p && (!!p.admin_ok_at || (!!p.id_path && !!p.rules_accepted_at))
 }
 
 export function papersCount(p: CrewPapers | null | undefined): number {
-  return [p?.id_path, p?.w9_path, p?.rules_accepted_at].filter(Boolean).length
+  return [p?.id_path, p?.rules_accepted_at].filter(Boolean).length
 }
 
 // The signed-in mover's own papers. undefined while loading.

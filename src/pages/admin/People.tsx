@@ -64,13 +64,16 @@ export default function People() {
 
       <section className="card">
         <h3>Waiting for approval</h3>
-        <p className="muted small">New sign-ups land here. Only approve people you've hired.</p>
+        <p className="muted small">New sign-ups land here and send their photo ID and the crew rules while they wait. Only approve people you've hired.</p>
         {waiting.length === 0 && <p className="muted">No one waiting.</p>}
         <ul className="list">
           {waiting.map((p) => (
-            <li key={p.id}>
-              <div className="list-main"><strong>{p.full_name ?? '(no name)'}</strong><div className="muted small">{p.email}</div></div>
-              <div className="list-side"><button className="secondary" onClick={() => update(p, { role: 'crew' })}>Add to crew</button></div>
+            <li key={p.id} className="stack">
+              <div className="row spread">
+                <div className="list-main"><strong>{p.full_name ?? '(no name)'}</strong><div className="muted small">{[p.phone, p.email].filter(Boolean).join(' · ')}</div></div>
+                <button className="secondary" onClick={() => update(p, { role: 'crew' })}>Add to crew</button>
+              </div>
+              <PapersRow papers={papers[p.id]} crewId={p.id} onChange={load} />
             </li>
           ))}
         </ul>
@@ -139,7 +142,7 @@ export default function People() {
   )
 }
 
-// Photo ID, W-9 and crew rules. Files open from the private bucket with a link that lasts 10 minutes.
+// Photo ID and crew rules. Files open from the private bucket with a link that lasts 10 minutes.
 function PapersRow({ papers, crewId, onChange }: { papers: CrewPapers | undefined; crewId: string; onChange: () => void }) {
   async function open(path: string) {
     // Open the tab first so phones don't block it as a pop-up
@@ -159,7 +162,6 @@ function PapersRow({ papers, crewId, onChange }: { papers: CrewPapers | undefine
     <div className="small papers-row">
       <span className={papersDone(papers) ? 'tone-good' : 'tone-warn'}><strong>Papers:</strong></span>
       {doc('Photo ID', papers?.id_path)}
-      {doc('W-9', papers?.w9_path)}
       {papers?.rules_accepted_at
         ? <span title={dateTime(papers.rules_accepted_at)}>Rules ✓ (signed as {papers.rules_name})</span>
         : <span className="tone-warn">Rules not agreed</span>}

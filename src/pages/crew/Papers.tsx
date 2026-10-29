@@ -5,9 +5,10 @@ import { supabase } from '../../lib/supabase'
 import { shrink } from '../../lib/photos'
 import { dateTime } from '../../lib/format'
 import { t } from '../../lib/lang'
-import { W9_URL, papersCount, papersDone, useMyPapers } from '../../lib/papers'
+import { papersCount, papersDone, useMyPapers } from '../../lib/papers'
+import type { CrewPapers } from '../../lib/types'
 
-type Doc = 'id' | 'w9'
+type Doc = 'id'
 
 // The rules every mover agrees to before claiming jobs
 export const CREW_RULES: [string, string][] = [
@@ -34,17 +35,32 @@ export const CREW_RULES: [string, string][] = [
 ]
 
 export default function Papers() {
-  const { account } = useAuth()
   const { papers, reload } = useMyPapers()
+  if (papers === undefined) return <Layout back="/profile" title={t('Sign-up papers', 'Papeles')}><p className="muted center">{t('Loading…', 'Cargando…')}</p></Layout>
+  const done = papersDone(papers)
+  return (
+    <Layout back="/profile" title={t('Sign-up papers', 'Papeles')}>
+      <p className={done ? 'note tone-good' : 'note'}>
+        {done
+          ? t('All done. You can claim jobs on Find Job.', 'Todo listo. Puedes tomar trabajos en Buscar trabajo.')
+          : t(`${papersCount(papers)} of 2 done. Once both are in, you can claim jobs on Find Job.`,
+            `${papersCount(papers)} de 2 listos. Cuando los dos estén completos, podrás tomar trabajos en Buscar trabajo.`)}
+      </p>
+      {papers?.admin_ok_at && <p className="note">{t('The office has checked your papers.', 'La oficina revisó tus papeles.')}</p>}
+      <PapersSteps papers={papers} reload={reload} />
+    </Layout>
+  )
+}
+
+// The three steps, on the papers page and on the screen new sign-ups see while they wait
+export function PapersSteps({ papers, reload }: { papers: CrewPapers | null; reload: () => void }) {
+  const { account } = useAuth()
   const [busy, setBusy] = useState<Doc | 'rules' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [name, setName] = useState(account?.full_name ?? '')
   const [agree, setAgree] = useState(false)
 
   if (!account) return null
-  if (papers === undefined) return <Layout back="/profile" title={t('Sign-up papers', 'Papeles')}><p className="muted center">{t('Loading…', 'Cargando…')}</p></Layout>
-
-  const done = papersDone(papers)
 
   async function upload(kind: Doc, e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -59,7 +75,7 @@ export default function Papers() {
       const path = `${account!.id}/${kind}-${crypto.randomUUID()}.${pdf ? 'pdf' : 'jpg'}`
       const up = await supabase.storage.from('crew-docs').upload(path, blob, { contentType: pdf ? 'application/pdf' : 'image/jpeg' })
       if (up.error) throw up.error
-      const field = kind === 'id' ? 'id_path' : 'w9_path'
+      const field = 'id_path'
       const old = papers?.[field]
       const row = await supabase.from('crew_papers').upsert({ crew_id: account!.id, [field]: path }, { onConflict: 'crew_id' })
       if (row.error) {
@@ -87,7 +103,7 @@ export default function Papers() {
   }
 
   const fileStep = (kind: Doc, n: number, title: string, help: ReactNode, accept: string) => {
-    const path = kind === 'id' ? papers?.id_path : papers?.w9_path
+    const path = papers?.id_path
     return (
       <section className="card">
         <div className="paper-head">
@@ -105,29 +121,13 @@ export default function Papers() {
   }
 
   return (
-    <Layout back="/profile" title={t('Sign-up papers', 'Papeles')}>
-      <p className={done ? 'note tone-good' : 'note'}>
-        {done
-          ? t('All done. You can claim jobs on Find Job.', 'Todo listo. Puedes tomar trabajos en Buscar trabajo.')
-          : t(`${papersCount(papers)} of 3 done. Once all three are in, you can claim jobs on Find Job.`,
-            `${papersCount(papers)} de 3 listos. Cuando los tres estén completos, podrás tomar trabajos en Buscar trabajo.`)}
-      </p>
-      {papers?.admin_ok_at && <p className="note">{t('The office has checked your papers.', 'La oficina revisó tus papeles.')}</p>}
-
+    <>
       {fileStep('id', 1, t('Photo ID', 'Identificación con foto'),
         <p className="muted small">{t('Driver\'s license, state ID or passport. Make sure your name and photo are clear.', 'Licencia de conducir, identificación estatal o pasaporte. Que tu nombre y foto se vean claros.')}</p>,
         'image/*,application/pdf')}
-
-      {fileStep('w9', 2, t('W-9 tax form', 'Formulario de impuestos W-9'),
-        <>
-          <p className="muted small">{t('We need it to report what we pay you. Download it, fill it in and sign it, then upload a photo or the PDF.', 'Lo necesitamos para reportar lo que te pagamos. Descárgalo, llénalo y fírmalo, luego sube una foto o el PDF.')}</p>
-          <p><a href={W9_URL} target="_blank" rel="noreferrer">{t('Download the W-9 from the IRS', 'Descarga el W-9 del IRS')} ↗</a></p>
-        </>,
-        'image/*,application/pdf')}
-
       <section className="card">
         <div className="paper-head">
-          <span className={`step-dot${papers?.rules_accepted_at ? ' done' : ''}`}>{papers?.rules_accepted_at ? '✓' : 3}</span>
+          <span className={`step-dot${papers?.rules_accepted_at ? ' done' : ''}`}>{papers?.rules_accepted_at ? '✓' : 2}</span>
           <h3>{t('Crew rules', 'Reglas del equipo')}</h3>
         </div>
         <ol className="rules">
@@ -146,6 +146,6 @@ export default function Papers() {
         )}
       </section>
       {error && <p className="warn">{error}</p>}
-    </Layout>
+    </>
   )
 }

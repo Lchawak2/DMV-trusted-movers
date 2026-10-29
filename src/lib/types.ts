@@ -200,7 +200,6 @@ export type JobTips = { job_id: string; total: number; movers: number; share: nu
 export interface CrewPapers {
   crew_id: string
   id_path: string | null
-  w9_path: string | null
   rules_name: string | null
   rules_accepted_at: string | null
   admin_ok_at: string | null

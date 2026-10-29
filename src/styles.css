@@ -555,3 +555,14 @@ details.more > label, details.more > .row { margin-top: 10px; }
 .papers-row .link { padding: 0; }
 .bell-dot.damage_report { background: var(--amber); }
 .card > h3.day:first-child { margin-top: 0; }
+.signup-papers { max-width: 520px; padding-top: 32px; }
+.signup-steps { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; counter-reset: step; }
+.signup-steps li { counter-increment: step; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; }
+.signup-steps li::before {
+  content: counter(step); width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; background: var(--line); color: var(--text);
+}
+.signup-steps li.now { color: var(--text); font-weight: 600; }
+.signup-steps li.now::before { background: var(--navy); color: #fff; }
+.signup-steps li.done::before { content: '✓'; background: var(--green); color: var(--navy); }
+.row.spread { justify-content: space-between; align-items: center; }
