@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase'
 import { t } from '../lib/lang'
 import { sendText } from '../lib/texting'
 import { papersCount, papersDone, useMyPapers } from '../lib/papers'
+import DeleteAccount from '../components/DeleteAccount'
+import InstallApp from '../components/InstallApp'
 
 export default function Profile() {
   const { account, refresh } = useAuth()
@@ -46,10 +48,12 @@ export default function Profile() {
         {saved && <p className="note">{t('Saved.', 'Guardado.')}</p>}
       </form>
       {account?.role === 'crew' && <CrewLinks />}
+      <InstallApp />
       {account?.role === 'admin' && <ReviewLink />}
       {account?.role === 'admin' && <TestText phone={account.phone} />}
       <p className="muted">{t('Signed in as', 'Conectado como')} {account?.email} · {account?.role}</p>
       <button className="secondary" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
+      {account?.role !== 'admin' && <DeleteAccount />}
     </Layout>
   )
 }

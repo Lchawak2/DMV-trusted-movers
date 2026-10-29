@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PublicPage from '../../components/PublicPage'
 import Pending from '../Pending'
+import DeleteAccount from '../../components/DeleteAccount'
 import { supabase } from '../../lib/supabase'
 import { dayHeading, money } from '../../lib/format'
 import { JOB_TYPES } from '../../lib/types'
@@ -88,6 +89,7 @@ export default function MyMoves() {
         </section>
       ))}
       <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
+      <DeleteAccount />
     </PublicPage>
   )
 }

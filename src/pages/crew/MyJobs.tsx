@@ -4,6 +4,7 @@ import Layout from '../../components/Layout'
 import JobCard from '../../components/JobCard'
 import DayGroups from '../../components/DayGroups'
 import PapersBanner from '../../components/PapersBanner'
+import InstallApp from '../../components/InstallApp'
 import { useMyPapers } from '../../lib/papers'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
@@ -59,6 +60,7 @@ export default function MyJobs() {
           )}
         />
       )}
+      <InstallApp />
     </Layout>
   )
 }

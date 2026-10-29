@@ -3,6 +3,7 @@ import { useAuth } from '../lib/auth'
 import { t } from '../lib/lang'
 import { papersCount, papersDone, useMyPapers } from '../lib/papers'
 import { PapersSteps } from './crew/Papers'
+import DeleteAccount from '../components/DeleteAccount'
 
 // New sign-ups wait here for the admin to add them to the crew, and send their papers meanwhile
 export default function Pending() {
@@ -18,6 +19,7 @@ export default function Pending() {
           <p className="muted">Signed in as {account?.email}</p>
           <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
+        <DeleteAccount />
       </div>
     )
   }
@@ -43,6 +45,7 @@ export default function Pending() {
       <p className="muted small center">
         {t('Signed in as', 'Conectado como')} {account?.email} · <button className="link" onClick={() => supabase.auth.signOut()}>{t('Sign out', 'Cerrar sesión')}</button>
       </p>
+      <DeleteAccount />
     </div>
   )
 }
