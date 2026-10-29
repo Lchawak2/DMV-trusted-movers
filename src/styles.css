@@ -566,3 +566,15 @@ details.more > label, details.more > .row { margin-top: 10px; }
 .signup-steps li.now::before { background: var(--navy); color: #fff; }
 .signup-steps li.done::before { content: '✓'; background: var(--green); color: var(--navy); }
 .row.spread { justify-content: space-between; align-items: center; }
+
+/* Delete my account */
+.link.delete-account { display: block; margin: 16px auto 0; font-size: 0.85rem; }
+.delete-confirm { margin-top: 16px; }
+.delete-confirm .row > button { margin-top: 0; }
+
+/* Put the app on your phone */
+.install-app { display: flex; gap: 12px; align-items: flex-start; }
+.install-app img { border-radius: 10px; flex: none; }
+.install-app > div { flex: 1; }
+.install-app p { margin: 4px 0 8px; }
+.share-icon { display: inline-block; border: 1px solid var(--muted); border-radius: 4px; padding: 0 4px; font-size: 0.8em; }
