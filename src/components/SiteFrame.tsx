@@ -21,6 +21,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             <Link to="/pricing">Prices</Link>
             <Link to="/#faq" className="site-nav-wide">FAQ</Link>
             <Link to="/#contact" className="site-nav-wide">Contact</Link>
+            <Link to="/join">Jobs</Link>
             <Link to="/login" className="site-nav-wide">Sign in</Link>
             <Link to="/book" className="site-nav-book">Get my price</Link>
           </nav>
