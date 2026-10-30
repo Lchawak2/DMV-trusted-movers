@@ -45,6 +45,14 @@ function clock(t: string | null) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
 }
 const slot = (a: string | null, b: string | null) => (a ? (b ? `${clock(a)} to ${clock(b)}` : clock(a)) : 'time to be set')
+// Customers who booked in Spanish get their own emails and texts in Spanish (customers.language)
+const dayEs = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('es-US', { weekday: 'long', month: 'long', day: 'numeric' })
+const slotEs = (a: string | null, b: string | null) => (a ? (b ? `${clock(a)} a ${clock(b)}` : clock(a)) : 'hora por confirmar')
+const WINDOWS_ES: Record<string, string> = {
+  'Morning (8 to 10 AM)': 'Mañana (8 a 10 AM)', 'Midday (11 AM to 1 PM)': 'Mediodía (11 AM a 1 PM)',
+  'Afternoon (2 to 4 PM)': 'Tarde (2 a 4 PM)', 'Flexible': 'Flexible',
+}
+const windowEs = (w: string) => WINDOWS_ES[w] ?? w
 const lines = (...l: (string | null | false | undefined)[]) => l.filter((x) => x !== null && x !== false && x !== undefined).join('\n')
 
 async function admins(): Promise<string[]> {
@@ -80,11 +88,11 @@ async function newRequest(id: string): Promise<Email[]> {
 
 async function depositPaid(paymentId: string): Promise<Out[]> {
   const { data: p } = await db.from('payments')
-    .select('amount, quotes(id, token, price, request_id, move_requests(preferred_date, arrival_window, customers(full_name, email, phone)))')
+    .select('amount, quotes(id, token, price, request_id, move_requests(preferred_date, arrival_window, customers(full_name, email, phone, language)))')
     .eq('id', paymentId).maybeSingle()
   const q = p?.quotes as unknown as {
     id: string; token: string; price: number; request_id: string
-    move_requests: { preferred_date: string; arrival_window: string | null; customers: { full_name: string; email: string | null; phone: string | null } | null }
+    move_requests: { preferred_date: string; arrival_window: string | null; customers: { full_name: string; email: string | null; phone: string | null; language: string } | null }
   } | null
   if (!p || !q) return []
   const r = q.move_requests
@@ -98,7 +106,27 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
       `See the booking: ${LIVE_SITE}/requests/${q.request_id}`,
     ),
   }]
-  if (CAN_EMAIL_OTHERS && c?.email) {
+  const es = c?.language === 'es'
+  if (CAN_EMAIL_OTHERS && c?.email && es) {
+    emails.push({
+      to: [c.email],
+      subject: `Su mudanza está reservada para el ${dayEs(r.preferred_date)}`,
+      text: lines(
+        `Hola ${c.full_name.split(' ')[0]}:`,
+        '',
+        `Gracias por reservar con DMV Trusted Movers. Recibimos su depósito de ${money(p.amount)}.`,
+        '',
+        `Fecha de la mudanza: ${dayEs(r.preferred_date)}${r.arrival_window ? `, ${windowEs(r.arrival_window).toLowerCase()}` : ''}`,
+        `Precio total: ${money(q.price)}`,
+        `Saldo después de la mudanza: ${money(Number(q.price) - Number(p.amount))}`,
+        '',
+        'Puede cancelar gratis hasta 72 horas antes de su mudanza. Después de eso, el depósito no se devuelve.',
+        `Su reserva: ${LIVE_SITE}/quote/${q.token}`,
+        '',
+        'DMV Trusted Movers',
+      ),
+    })
+  } else if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
       subject: `You're booked for ${day(r.preferred_date)}`,
@@ -121,7 +149,9 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
   if (c?.phone) {
     emails.push({
       sms: [c.phone],
-      text: `DMV Trusted Movers: you're booked for ${day(r.preferred_date)}${r.arrival_window ? `, ${r.arrival_window.toLowerCase()}` : ''}. We got your ${money(p.amount)} deposit. Your booking: ${LIVE_SITE}/quote/${q.token}`,
+      text: es
+        ? `DMV Trusted Movers: su mudanza está reservada para el ${dayEs(r.preferred_date)}${r.arrival_window ? `, ${windowEs(r.arrival_window).toLowerCase()}` : ''}. Recibimos su depósito de ${money(p.amount)}. Su reserva: ${LIVE_SITE}/quote/${q.token}`
+        : `DMV Trusted Movers: you're booked for ${day(r.preferred_date)}${r.arrival_window ? `, ${r.arrival_window.toLowerCase()}` : ''}. We got your ${money(p.amount)} deposit. Your booking: ${LIVE_SITE}/quote/${q.token}`,
     })
   }
   return emails
@@ -129,7 +159,7 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
 
 async function moveReminder(jobId: string): Promise<Out[]> {
   const { data: j } = await db.from('jobs')
-    .select('job_date, window_start, window_end, job_type, from_address, to_address, status, move_requests(customers(full_name, email, phone)), assignments(status, accounts(email, phone, language))')
+    .select('job_date, window_start, window_end, job_type, from_address, to_address, status, move_requests(customers(full_name, email, phone, language)), assignments(status, accounts(email, phone, language))')
     .eq('id', jobId).maybeSingle()
   // Skip a move that was cancelled or moved after the reminder was queued
   if (!j || j.status !== 'scheduled') return []
@@ -162,14 +192,37 @@ async function moveReminder(jobId: string): Promise<Out[]> {
       ),
     })
   }
-  const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null; phone: string | null } | null } | null)?.customers
+  const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null; phone: string | null; language: string } | null } | null)?.customers
+  const es = c?.language === 'es'
+  const whenEs = `${dayEs(j.job_date)}, ${slotEs(j.window_start, j.window_end)}`
   if (c?.phone) {
     emails.push({
       sms: [c.phone],
-      text: `DMV Trusted Movers: your crew arrives tomorrow, ${when}. Please book the elevator and save a parking spot for the truck if you can. Reply here if anything changed.`,
+      text: es
+        ? `DMV Trusted Movers: su equipo llega mañana, ${whenEs}. Si puede, reserve el elevador y guarde un lugar para estacionar el camión. Responda aquí si algo cambió.`
+        : `DMV Trusted Movers: your crew arrives tomorrow, ${when}. Please book the elevator and save a parking spot for the truck if you can. Reply here if anything changed.`,
     })
   }
-  if (CAN_EMAIL_OTHERS && c?.email) {
+  if (CAN_EMAIL_OTHERS && c?.email && es) {
+    emails.push({
+      to: [c.email],
+      subject: 'Su mudanza es mañana',
+      text: lines(
+        `Hola ${c.full_name.split(' ')[0]}:`,
+        '',
+        `Le recordamos que su equipo de DMV Trusted Movers llega mañana, ${whenEs}.`,
+        '',
+        'Para que todo salga bien:',
+        '- Reserve el elevador si su edificio tiene uno.',
+        '- Guarde un lugar para estacionar el camión cerca de la puerta.',
+        '- Aparte lo que va a llevar usted mismo, como objetos de valor y medicinas.',
+        '',
+        'Responda a este correo o a nuestro mensaje si algo cambió.',
+        '',
+        'DMV Trusted Movers',
+      ),
+    })
+  } else if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
       subject: 'Your move is tomorrow',
@@ -194,11 +247,11 @@ async function moveReminder(jobId: string): Promise<Out[]> {
 
 async function balancePaid(paymentId: string): Promise<Email[]> {
   const { data: p } = await db.from('payments')
-    .select('amount, provider_ref, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email)))')
+    .select('amount, provider_ref, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email, language)))')
     .eq('id', paymentId).maybeSingle()
   const q = p?.quotes as unknown as {
     token: string; jobs: { id: string; job_date: string }[] | { id: string; job_date: string } | null
-    move_requests: { customers: { full_name: string; email: string | null } | null }
+    move_requests: { customers: { full_name: string; email: string | null; language: string } | null }
   } | null
   const job = Array.isArray(q?.jobs) ? q!.jobs[0] : q?.jobs
   if (!p || !q || !job) return []
@@ -216,7 +269,22 @@ async function balancePaid(paymentId: string): Promise<Email[]> {
       `See the job: ${LIVE_SITE}/jobs/${job.id}`,
     ),
   }]
-  if (CAN_EMAIL_OTHERS && c?.email) {
+  if (CAN_EMAIL_OTHERS && c?.email && c.language === 'es') {
+    emails.push({
+      to: [c.email],
+      subject: 'Recibo de su mudanza',
+      text: lines(
+        `Hola ${c.full_name.split(' ')[0]}:`,
+        '',
+        `Recibimos su pago con tarjeta de ${money(Number(p.amount) + Number(tip?.amount ?? 0))} por su mudanza del ${dayEs(job.job_date)}.`,
+        tip && `Eso incluye una propina de ${money(tip.amount)} para su equipo. ¡Gracias!`,
+        '',
+        `¿Cómo lo hicimos? Califique su mudanza: ${LIVE_SITE}/quote/${q.token}`,
+        '',
+        'Gracias por elegir DMV Trusted Movers.',
+      ),
+    })
+  } else if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
       subject: 'Receipt for your move',
