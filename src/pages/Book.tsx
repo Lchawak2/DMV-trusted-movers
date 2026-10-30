@@ -8,7 +8,7 @@ import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
 import { usePageTitle } from '../lib/site'
 import { track, trackOnce, usePageView } from '../lib/track'
-import { priceLine, sizeName, t, useLang } from '../lib/lang'
+import { lang, priceLine, sizeName, t, useLang } from '../lib/lang'
 
 // What customers can ask for; keys match JOB_TYPES
 export const BOOK_TYPES: Record<string, string> = {
@@ -31,7 +31,7 @@ const ES: Record<string, string> = {
   'Google search': 'Búsqueda en Google', 'Facebook or Instagram': 'Facebook o Instagram', 'Friend or family': 'Un amigo o familiar',
   'Yelp, Thumbtack or Angi': 'Yelp, Thumbtack o Angi', 'Moved with us before': 'Ya me mudé con ustedes', 'Other': 'Otro',
 }
-const es = (s: string) => t(s, ES[s] ?? s)
+export const es = (s: string) => t(s, ES[s] ?? s)
 const MAX_PHOTOS = 8
 
 const dollars = (n: number) => '$' + n.toLocaleString('en-US')
@@ -198,7 +198,7 @@ export default function Book() {
       p_from_address: from.address, p_from_floor: floor(from.floor), p_from_elevator: elevator(from.elevator), p_from_parking: from.parking || null,
       p_to_address: to.address || null, p_to_floor: floor(to.floor), p_to_elevator: elevator(to.elevator), p_to_parking: to.parking || null,
       p_preferred_date: date, p_arrival_window: arrival || null, p_notes: notes.trim() || null,
-      p_lead_source: source || null,
+      p_lead_source: source || null, p_language: lang(),
     })
     if (error) {
       track('book_error', { message: error.message.slice(0, 80) })
