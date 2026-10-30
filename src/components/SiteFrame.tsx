@@ -53,6 +53,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
               <p><Link to="/book">Get my price</Link></p>
               <p><Link to="/pricing">Prices</Link></p>
               <p><Link to="/#faq">Questions</Link></p>
+              <p><Link to="/join">Work with us</Link></p>
               <p><Link to="/login">Crew and customer sign in</Link></p>
             </div>
           </div>

@@ -49,6 +49,7 @@ export default function App() {
   if (loading) return <div className="center muted">Loading…</div>
   if (!session) {
     if (pathname === '/') return <Home />
+    if (pathname === '/join') return <Login join />
     return pathname === '/account' ? <CustomerAccount /> : <Login />
   }
   if (!account) return <div className="center muted">Setting up your account…</div>
