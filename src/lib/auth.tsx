@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
-import { setLang } from './lang'
+import { setLang, siteLang } from './lang'
 import type { Account } from './types'
 import { markStaff } from './track'
 
@@ -21,12 +21,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadAccount(s: Session | null) {
     if (!s) {
-      setLang('en')
+      // Signed out: the website visitor's own pick
+      setLang(siteLang())
       setAccount(null)
       return
     }
     const { data } = await supabase.from('accounts').select('*').eq('id', s.user.id).maybeSingle()
-    const acct = data as Account | null
+    let acct = data as Account | null
+    // Signed up with the website in Spanish: the app starts in Spanish too (once; they can change it in Profile)
+    if (acct && s.user.user_metadata?.language === 'es') {
+      if (acct.language !== 'es') {
+        const { error } = await supabase.from('accounts').update({ language: 'es' }).eq('id', acct.id)
+        if (!error) acct = { ...acct, language: 'es' }
+      }
+      await supabase.auth.updateUser({ data: { language: null } })
+    }
     // Admin screens are English only
     setLang(acct?.role === 'admin' ? 'en' : acct?.language)
     if (acct?.role === 'admin' || acct?.role === 'crew') markStaff()

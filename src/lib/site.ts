@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { lang } from './lang'
 
 // The public website's words and photos. The admin edits them on the Website page;
 // anything left blank falls back to the defaults below.
@@ -91,6 +92,26 @@ export function useSite(): SiteData {
   }, [])
   return data
 }
+
+// The default website words in Spanish. Text the admin wrote on the Website page shows as written.
+const SITE_ES: Record<string, string> = {
+  'Moving in DC, Maryland and Virginia, done right': 'Mudanzas en DC, Maryland y Virginia, bien hechas',
+  'Homes, apartments and offices. Careful movers, clear prices, and a crew that shows up on time.': 'Casas, apartamentos y oficinas. Mudanceros cuidadosos, precios claros y un equipo que llega a tiempo.',
+  'Washington DC, Maryland and Northern Virginia': 'Washington DC, Maryland y el norte de Virginia',
+  'Every day, 7am to 8pm': 'Todos los días, de 7 am a 8 pm',
+  'DMV Trusted Movers is a local moving company. We treat your things like our own, we tell you the price before we start, and we keep you posted on the day of your move.':
+    'DMV Trusted Movers es una compañía de mudanzas local. Cuidamos sus cosas como si fueran nuestras, le damos el precio antes de empezar y lo mantenemos informado el día de su mudanza.',
+  'Home moves': 'Mudanzas de casa',
+  'Apartments, condos and houses, from studios to 3 bedrooms.': 'Apartamentos, condominios y casas, desde estudios hasta 3 habitaciones.',
+  'Office moves': 'Mudanzas de oficina',
+  'Desks, files and equipment, planned around your work hours.': 'Escritorios, archivos y equipos, planeado según su horario de trabajo.',
+  'Small moves': 'Mudanzas pequeñas',
+  'A few rooms or a single big item like a couch or a dresser.': 'Unos cuantos cuartos o un solo mueble grande, como un sofá o una cómoda.',
+  'A few rooms or a single big item like a couch or a piano.': 'Unos cuantos cuartos o un solo mueble grande, como un sofá o un piano.',
+  'Junk removal': 'Retiro de basura',
+  'We haul away what you don\'t want to take with you.': 'Nos llevamos lo que usted no quiere llevar.',
+}
+export const siteText = (s: string) => (lang() === 'es' ? SITE_ES[s.trim()] : undefined) ?? s
 
 // Sets the browser tab title (and what search results show) for a page
 export function usePageTitle(title: string) {

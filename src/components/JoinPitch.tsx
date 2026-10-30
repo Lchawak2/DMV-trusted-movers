@@ -1,6 +1,4 @@
-import { useState } from 'react'
-
-type Lang = 'en' | 'es'
+import { chooseLang, useLang, type Lang } from '../lib/lang'
 
 const TEXT: Record<Lang, { title: string; intro: string; perks: string[]; howTitle: string; steps: [string, string][]; needTitle: string; needs: string[]; start: string }> = {
   en: {
@@ -37,19 +35,19 @@ const TEXT: Record<Lang, { title: string; intro: string; perks: string[]; howTit
     ],
     needTitle: 'Qué necesitas',
     needs: ['Tener 18 años o más y una identificación con foto', 'Poder cargar muebles y cajas pesadas', 'Ser puntual, amable y cuidadoso en casa de los clientes', 'Un teléfono inteligente'],
-    start: '¿Listo? Crea tu cuenta abajo. (Después, en Perfil puedes poner la app en español.)',
+    start: '¿Listo? Crea tu cuenta abajo.',
   },
 }
 
 // What crew work is like and how the app works, above the sign-up form at /join
 export default function JoinPitch() {
-  const [lang, setLang] = useState<Lang>(() => (navigator.language?.startsWith('es') ? 'es' : 'en'))
+  const lang = useLang()
   const c = TEXT[lang]
   return (
     <div className="join-pitch">
       <div className="segmented">
-        <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button>
-        <button className={lang === 'es' ? 'on' : ''} onClick={() => setLang('es')}>Español</button>
+        <button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => chooseLang('en')}>English</button>
+        <button type="button" className={lang === 'es' ? 'on' : ''} onClick={() => chooseLang('es')}>Español</button>
       </div>
       <section className="card">
         <h2>{c.title}</h2>
