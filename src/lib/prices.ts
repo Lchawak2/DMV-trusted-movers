@@ -19,6 +19,3 @@ export const FREE_MINUTES = 15
 // Saturday and Sunday home and office moves cost this much more
 export const WEEKEND_FEE = 100
 
-export const TILES = [
-  ...HOME_MOVES.map((m) => ({ name: m.label ?? m.size, price: m.price, per: `up to ${m.hours} hours`, extra: `+$${MOVE_RATE} each extra hour` })),
-]

@@ -596,3 +596,21 @@ details.more > label, details.more > .row { margin-top: 10px; }
 .site-join p { color: var(--muted); line-height: 1.5; margin: 0 0 8px; }
 .site-join ul { margin: 0; padding-left: 20px; line-height: 1.7; }
 @media (max-width: 700px) { .site-join { flex-direction: column; align-items: stretch; } }
+
+/* English / Español switch */
+.lang-switch { background: none; border: 1px solid rgba(255, 255, 255, 0.5); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
+.login .lang-switch { border-color: var(--line); color: inherit; }
+.login .lang-switch { float: right; }
+.lang-short { display: none; }
+@media (max-width: 480px) {
+  .site-bar .lang-long { display: none; }
+  .site-bar .lang-short { display: inline; }
+  .site-bar .site-name { font-size: 15px; }
+  .site-nav { gap: 10px; }
+}
+@media (max-width: 400px) {
+  .site-bar-in { gap: 8px; }
+  .site-bar .site-name { font-size: 14px; gap: 6px; }
+  .site-nav { gap: 8px; font-size: 13px; }
+  .site-bar .lang-switch { padding: 3px 6px; font-size: 12px; }
+}
