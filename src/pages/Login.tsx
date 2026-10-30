@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import TruckLogo from '../components/TruckLogo'
+import JoinPitch from '../components/JoinPitch'
 import { supabase } from '../lib/supabase'
 
-export default function Login() {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+// /join opens straight on the crew sign-up, with a few lines on what the work is like
+export default function Login({ join = false }: { join?: boolean }) {
+  const [mode, setMode] = useState<'signin' | 'signup'>(join ? 'signup' : 'signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -18,7 +20,7 @@ export default function Login() {
     const { error } =
       mode === 'signin'
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
+        : await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin } })
     setBusy(false)
     if (error) setMessage(error.message)
     else if (mode === 'signup') setMessage('Check your email to confirm your account, then sign in.')
@@ -33,7 +35,9 @@ export default function Login() {
   return (
     <div className="login">
       <h1><Link to="/" className="plain brand"><TruckLogo size={30} />DMV Trusted Movers</Link></h1>
-      <p className="muted">{mode === 'signin' ? 'Sign in to your account' : 'Create an account'}</p>
+      {join && mode === 'signup'
+        ? <JoinPitch />
+        : <p className="muted">{mode === 'signin' ? 'Sign in to your account' : 'Create an account'}</p>}
       <form onSubmit={submit} className="card form">
         {mode === 'signup' && (
           <label>

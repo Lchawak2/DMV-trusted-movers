@@ -578,3 +578,14 @@ details.more > label, details.more > .row { margin-top: 10px; }
 .install-app > div { flex: 1; }
 .install-app p { margin: 4px 0 8px; }
 .share-icon { display: inline-block; border: 1px solid var(--muted); border-radius: 4px; padding: 0 4px; font-size: 0.8em; }
+
+/* /join: what the crew work is like and how the app works */
+.join-pitch { text-align: left; }
+.join-pitch h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.join-pitch h3 { margin: 0 0 8px; }
+.join-perks { margin: 8px 0 0; padding-left: 20px; }
+.join-perks li { margin: 4px 0; }
+.join-steps { margin: 0; padding-left: 22px; }
+.join-steps li { margin: 0 0 10px; }
+.join-steps strong { display: block; }
+.join-start { margin: 8px 0; }
