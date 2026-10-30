@@ -589,3 +589,10 @@ details.more > label, details.more > .row { margin-top: 10px; }
 .join-steps li { margin: 0 0 10px; }
 .join-steps strong { display: block; }
 .join-start { margin: 8px 0; }
+
+/* Home: Work with us */
+.site-join { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.site-join h2 { margin-bottom: 12px; }
+.site-join p { color: var(--muted); line-height: 1.5; margin: 0 0 8px; }
+.site-join ul { margin: 0; padding-left: 20px; line-height: 1.7; }
+@media (max-width: 700px) { .site-join { flex-direction: column; align-items: stretch; } }

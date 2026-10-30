@@ -216,6 +216,21 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="site-sec" id="jobs">
+        <div className="site-wrap site-join">
+          <div>
+            <h2>Work with us</h2>
+            <p>We're hiring movers in DC, Maryland and Northern Virginia. No experience needed: you work next to a lead mover.</p>
+            <ul>
+              <li>Pick the days you want to work</li>
+              <li>Paid after every job, plus customer tips</li>
+              <li>Everything runs in our app, in English or Spanish</li>
+            </ul>
+          </div>
+          <Link to="/join" className="site-btn gold">Join our crew</Link>
+        </div>
+      </section>
+
       <section className="site-band">
         <div className="site-wrap">
           <h2>Ready to move?</h2>
