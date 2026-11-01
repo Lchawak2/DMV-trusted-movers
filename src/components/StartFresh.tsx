@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 // Clears out test moves before going live, so Dashboard and Money start at $0.
-// The database refuses once a real card payment has come in.
+// Turned off once a real card payment has come in.
 export default function StartFresh() {
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState('')
@@ -13,9 +13,19 @@ export default function StartFresh() {
   async function run() {
     setBusy(true)
     setError(null)
-    const { error: e } = await supabase.rpc('start_fresh', { p_confirm: typed.trim() })
+    const fail = (message: string) => { setBusy(false); setError(message) }
+    // Real money records stay: once a card payment has gone through, this is off
+    const { count, error: e1 } = await supabase.from('payments').select('id', { count: 'exact', head: true }).in('status', ['paid', 'refunded'])
+    if (e1) return fail(e1.message)
+    if (count) return fail('A real card payment has come in, so Start fresh is turned off to keep your money records.')
+    // Jobs first (their crew, photos and costs go with them), then customers, whose
+    // requests, quotes and payment attempts go with them
+    for (const table of ['jobs', 'customers', 'move_requests'] as const) {
+      const { error: e } = await supabase.from(table).delete().not('id', 'is', null)
+      if (e) return fail(e.message)
+    }
+    await supabase.rpc('mark_alerts_read')
     setBusy(false)
-    if (e) return setError(e.message)
     setDone(true)
     setOpen(false)
   }
