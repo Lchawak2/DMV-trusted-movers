@@ -7,7 +7,7 @@ import { FREE_MINUTES, MOVE_RATE } from '../lib/prices'
 import { lang, t, useLang } from '../lib/lang'
 
 const EMAIL = 'dmvtrustedmoversservices@gmail.com'
-const updated = () => t('October 27, 2026', '27 de octubre de 2026')
+const updated = () => t('November 2, 2026', '2 de noviembre de 2026')
 
 // Terms, privacy and cancellation policy in one page, with a section for each.
 // The booking form and quote page link to a section by its #id.
@@ -84,12 +84,13 @@ export default function Policies() {
         <p>{t('Your name, phone, email, addresses, move details and the photos you send us. We also keep photos and the sign-off from the day of your move.', 'Su nombre, teléfono, correo, direcciones, detalles de la mudanza y las fotos que nos envía. También guardamos fotos y la firma del día de su mudanza.')}</p>
         <p>{t('Card payments go through Stripe. We never see or store your full card number.', 'Los pagos con tarjeta pasan por Stripe. Nunca vemos ni guardamos el número completo de su tarjeta.')}</p>
         <p>{t('When you use this website we count which pages you open and how far you get on the quote form, so we can make the site easier to use. That count uses a random number saved in your browser, not your name or contact details, and is kept for a year.', 'Cuando usa este sitio contamos qué páginas abre y hasta dónde llega en el formulario, para hacer el sitio más fácil de usar. Ese conteo usa un número al azar guardado en su navegador, no su nombre ni sus datos de contacto, y se guarda por un año.')}</p>
+        <p>{t('We use Google Ads to show our ads. Google\'s tag on this site uses cookies to tell us when someone who clicked an ad asks for a quote, so we know which ads work. It doesn\'t send your name, phone, email or address to Google. You can turn off personalized ads at adssettings.google.com.', 'Usamos Google Ads para mostrar nuestros anuncios. La etiqueta de Google en este sitio usa cookies para avisarnos cuando alguien que hizo clic en un anuncio pide una cotización, así sabemos qué anuncios funcionan. No envía su nombre, teléfono, correo ni dirección a Google. Puede desactivar los anuncios personalizados en adssettings.google.com.')}</p>
 
         <h3>{t('Why', 'Para qué')}</h3>
         <p>{t('To price your move, plan it, keep in touch with you about it, take payment, and keep business records.', 'Para darle el precio de su mudanza, planearla, mantenernos en contacto con usted, cobrar y llevar los registros del negocio.')}</p>
 
         <h3>{t('Who sees it', 'Quién los ve')}</h3>
-        <p>{t('Our team, and the movers on your job, who see the addresses and details they need for the move. We use a few services to run the business: Stripe for payments, Supabase to store data, Vercel to host this site and Resend to send email. We don\'t sell your information.', 'Nuestro equipo y los mudanceros de su trabajo, que ven las direcciones y los detalles que necesitan para la mudanza. Usamos algunos servicios para operar el negocio: Stripe para pagos, Supabase para guardar datos, Vercel para alojar este sitio y Resend para enviar correos. No vendemos su información.')}</p>
+        <p>{t('Our team, and the movers on your job, who see the addresses and details they need for the move. We use a few services to run the business: Stripe for payments, Supabase to store data, Vercel to host this site, Resend to send email and Google Ads for our ads. We don\'t sell your information.', 'Nuestro equipo y los mudanceros de su trabajo, que ven las direcciones y los detalles que necesitan para la mudanza. Usamos algunos servicios para operar el negocio: Stripe para pagos, Supabase para guardar datos, Vercel para alojar este sitio, Resend para enviar correos y Google Ads para nuestros anuncios. No vendemos su información.')}</p>
 
         <h3>{t('How long we keep it', 'Cuánto tiempo los guardamos')}</h3>
         <p>{t('We keep booking and payment records as long as we need them for taxes and business records. Email us to ask for a copy of your information, or to have it deleted when we no longer need to keep it.', 'Guardamos los registros de reservas y pagos mientras los necesitemos para impuestos y registros del negocio. Escríbanos para pedir una copia de su información, o para que la borremos cuando ya no necesitemos guardarla.')}</p>

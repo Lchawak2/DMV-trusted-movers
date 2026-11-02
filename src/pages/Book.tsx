@@ -9,6 +9,7 @@ import { HOME_SIZES, LEAD_SOURCES } from '../lib/types'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
 import { usePageTitle } from '../lib/site'
 import { track, trackOnce, usePageView } from '../lib/track'
+import { adsQuoteRequest } from '../lib/ads'
 import { lang, priceLine, sizeName, t, useLang } from '../lib/lang'
 
 // What customers can ask for; keys match JOB_TYPES
@@ -207,6 +208,7 @@ export default function Book() {
       return setError(error.message)
     }
     track('book_submit', { type, size })
+    adsQuoteRequest()
     const id = data as string
     let photosFailed = false
     for (const file of photos) {

@@ -85,7 +85,7 @@ function pagePath() {
   return ['/', '/site', '/book', '/pricing', '/policies'].includes(p) ? (p === '/site' ? '/' : p) : null
 }
 
-function counting() {
+export function counting() {
   if (typeof window === 'undefined' || navigator.webdriver) return false
   return store('local')?.getItem(STAFF_KEY) !== '1'
 }
