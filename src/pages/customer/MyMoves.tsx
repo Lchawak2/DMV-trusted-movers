@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PublicPage from '../../components/PublicPage'
+import TalkToUs from '../../components/TalkToUs'
 import Pending from '../Pending'
 import DeleteAccount from '../../components/DeleteAccount'
 import { supabase } from '../../lib/supabase'
@@ -88,6 +89,7 @@ export default function MyMoves() {
           </ul>
         </section>
       ))}
+      <TalkToUs title="Questions about a move?" message="Hi, I have a question about my move." />
       <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
       <DeleteAccount />
     </PublicPage>

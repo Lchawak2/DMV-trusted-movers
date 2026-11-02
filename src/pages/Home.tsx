@@ -256,8 +256,10 @@ export default function Home() {
         <div className="site-wrap">
           <h2>{t('Ready to move?', '¿Listo para mudarse?')}</h2>
           <p>{t('See your price in about 2 minutes. No account needed.', 'Vea su precio en unos 2 minutos. No necesita cuenta.')}</p>
+          {site.phone && <p>{t('Questions? Text or call us and a real person on our team answers.', '¿Preguntas? Escríbanos o llámenos y le contesta una persona real de nuestro equipo.')}</p>}
           <div className="site-cta">
             <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
+            {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text us', 'Escríbanos')}</a>}
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar al')} {site.phone}</a>}
           </div>
         </div>

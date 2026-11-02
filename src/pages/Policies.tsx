@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import PublicPage from '../components/PublicPage'
+import TalkToUs from '../components/TalkToUs'
 import { usePageView } from '../lib/track'
 import { FREE_MINUTES, MOVE_RATE } from '../lib/prices'
 import { lang, t, useLang } from '../lib/lang'
@@ -94,6 +95,7 @@ export default function Policies() {
         <p>{t('We keep booking and payment records as long as we need them for taxes and business records. Email us to ask for a copy of your information, or to have it deleted when we no longer need to keep it.', 'Guardamos los registros de reservas y pagos mientras los necesitemos para impuestos y registros del negocio. Escríbanos para pedir una copia de su información, o para que la borremos cuando ya no necesitemos guardarla.')}</p>
       </section>
 
+      <TalkToUs title={t('Questions about our policies?', '¿Preguntas sobre nuestras políticas?')} message={t('Hi, I have a question about your policies.', 'Hola, tengo una pregunta sobre sus políticas.')} />
       <p className="note center-text">{t('Questions? Email', '¿Preguntas? Escriba a')} <a href={`mailto:${EMAIL}`}>{EMAIL}</a></p>
     </PublicPage>
   )
