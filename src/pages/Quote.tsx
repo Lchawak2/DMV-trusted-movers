@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import PublicPage from '../components/PublicPage'
+import TalkToUs from '../components/TalkToUs'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { track, usePageView } from '../lib/track'
@@ -293,6 +294,13 @@ export default function Quote({ token }: { token: string }) {
             </>
           )}
         </section>
+      )}
+
+      {(q.status === 'sent' || booked) && (
+        <TalkToUs
+          title={booked ? t('Questions about your move?', '¿Preguntas sobre su mudanza?') : t('Questions before you book?', '¿Preguntas antes de reservar?')}
+          message={t('Hi, I have a question about my quote.', 'Hola, tengo una pregunta sobre mi cotización.')}
+        />
       )}
 
       {q.status === 'sent' && (

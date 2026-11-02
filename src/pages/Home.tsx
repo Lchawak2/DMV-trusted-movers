@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
+import { smsLink } from '../lib/format'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
 import { photoUrl, rgb, siteText, telLink, usePageTitle, useSite } from '../lib/site'
 import { sizeName, t, useLang } from '../lib/lang'
@@ -230,7 +231,7 @@ export default function Home() {
             <h3>{t('Hours', 'Horario')}</h3>
             <p>{siteText(site.hours)}</p>
             <h3>{t('Contact', 'Contacto')}</h3>
-            {site.phone && <p><a href={telLink(site.phone)}>{site.phone}</a></p>}
+            {site.phone && <p><a href={telLink(site.phone)}>{site.phone}</a> · <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))}>{t('Text us', 'Escríbanos')}</a></p>}
             {site.email && <p><a href={`mailto:${site.email}`}>{site.email}</a></p>}
           </div>
         </div>
@@ -255,8 +256,10 @@ export default function Home() {
         <div className="site-wrap">
           <h2>{t('Ready to move?', '¿Listo para mudarse?')}</h2>
           <p>{t('See your price in about 2 minutes. No account needed.', 'Vea su precio en unos 2 minutos. No necesita cuenta.')}</p>
+          {site.phone && <p>{t('Questions? Text or call us and a real person on our team answers.', '¿Preguntas? Escríbanos o llámenos y le contesta una persona real de nuestro equipo.')}</p>}
           <div className="site-cta">
             <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
+            {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text us', 'Escríbanos')}</a>}
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar al')} {site.phone}</a>}
           </div>
         </div>

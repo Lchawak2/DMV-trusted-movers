@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import TruckLogo from './TruckLogo'
+import { smsLink } from '../lib/format'
 import LangSwitch from './LangSwitch'
 import { siteText, telLink, type SiteContent } from '../lib/site'
 import { t } from '../lib/lang'
@@ -76,6 +77,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
       {/* Always in reach on phones, where most ad clicks land */}
       <div className="site-sticky">
         {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar')}</a>}
+        {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text', 'Mensaje')}</a>}
         <Link to="/book" className="site-btn gold">{t('Get my price', 'Ver mi precio')}</Link>
       </div>
     </div>

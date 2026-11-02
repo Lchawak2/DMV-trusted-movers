@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
+import { smsLink } from '../lib/format'
 import { telLink, usePageTitle, useSite } from '../lib/site'
 import { usePageView } from '../lib/track'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
@@ -72,6 +73,7 @@ export default function Pricing() {
           <div className="site-cta">
             <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">{t('Call', 'Llamar al')} {site.phone}</a>}
+            {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about your prices.', 'Hola, tengo una pregunta sobre sus precios.'))} className="site-btn outline">{t('Text us', 'Escríbanos')}</a>}
           </div>
         </div>
       </section>
