@@ -4,7 +4,8 @@ import PublicPage from '../components/PublicPage'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { track, usePageView } from '../lib/track'
-import { money, parseDay } from '../lib/format'
+import { money, parseDay, smsLink } from '../lib/format'
+import { telLink, useSite } from '../lib/site'
 import { JOB_TYPES } from '../lib/types'
 import { BOOK_TYPES, es } from './Book'
 import { locale, sizeName, t, useLang } from '../lib/lang'
@@ -295,6 +296,8 @@ export default function Quote({ token }: { token: string }) {
         </section>
       )}
 
+      {(q.status === 'sent' || booked) && <TalkToUs booked={booked} />}
+
       {q.status === 'sent' && (
         <section className="card form">
           {q.deposit > 0 ? (
@@ -325,6 +328,23 @@ export default function Quote({ token }: { token: string }) {
       {q.status === 'expired' && <p className="note center-text">{t('This quote is closed.', 'Esta cotización ya cerró.')} <Link to="/book">{t('Get a new price', 'Pedir un nuevo precio')}</Link>.</p>}
       {q.status === 'superseded' && <p className="note center-text">{t('We sent you a newer quote. Please use the latest link.', 'Le enviamos una cotización más nueva. Por favor use el enlace más reciente.')}</p>}
     </PublicPage>
+  )
+}
+
+// A real person to reach before paying: new companies have no reviews to lean on yet
+function TalkToUs({ booked }: { booked: boolean }) {
+  const { site } = useSite()
+  if (!site.phone) return null
+  return (
+    <section className="card talk">
+      <h3>{booked ? t('Questions about your move?', '¿Preguntas sobre su mudanza?') : t('Questions before you book?', '¿Preguntas antes de reservar?')}</h3>
+      <p className="muted small">{t('Text or call us and a real person on our team answers.', 'Escríbanos o llámenos y le contesta una persona real de nuestro equipo.')}</p>
+      <div className="row">
+        <a className="secondary" href={smsLink(site.phone, t('Hi, I have a question about my quote.', 'Hola, tengo una pregunta sobre mi cotización.'))}>{t('Text us', 'Escríbanos')}</a>
+        <a className="secondary" href={telLink(site.phone)}>{t('Call', 'Llamar')}</a>
+      </div>
+      <p className="muted small center-text">{site.phone}</p>
+    </section>
   )
 }
 
