@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { parseDay } from '../../lib/format'
 import { addDays, iso } from './jobData'
 import { HBars, Tile, niceMax, pct, useWidth } from './Insights'
+import AdsPanel from './AdsPanel'
 
 const PERIODS = { 1: 'Today', 7: '7 days', 30: '30 days', 90: '90 days' } as const
 type Days = keyof typeof PERIODS
@@ -107,6 +108,7 @@ function Body({ r, b, days, vs }: { r: Report; b: Report | null; days: Days; vs:
           <h4 className="chart-title">What to try next</h4>
           <ul className="tips">{tips(r).map((t) => <li key={t}>{t}</li>)}</ul>
         </div>
+        <AdsPanel days={days} />
         <div className="card panel">
           <h4 className="chart-title">From visit to booking</h4>
           <HBars rows={[
