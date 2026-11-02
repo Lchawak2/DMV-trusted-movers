@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState, type FormEvent } from 'react'
 import PublicPage from '../components/PublicPage'
+import TalkToUs from '../components/TalkToUs'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { shrink } from '../lib/photos'
@@ -258,6 +259,10 @@ export default function Book() {
           )}
           {sent.photosFailed && <p className="note">{t('Some photos didn\'t upload. That\'s fine, we\'ll ask for them if we need them.', 'Algunas fotos no se subieron. No se preocupe, se las pediremos si las necesitamos.')}</p>}
         </section>
+        <TalkToUs
+          title={sent.instant ? t('Questions about your price?', '¿Preguntas sobre su precio?') : t('Questions in the meantime?', '¿Preguntas mientras tanto?')}
+          message={t('Hi, I just filled out the quote form and have a question.', 'Hola, acabo de llenar el formulario de cotización y tengo una pregunta.')}
+        />
       </PublicPage>
     )
   }
@@ -357,6 +362,10 @@ export default function Book() {
         </ul>
         <p className="note center-text">{t('No account needed. Your price shows up as soon as you send, and we confirm it by text or email. By sending, you agree to our', 'No necesita cuenta. Su precio aparece en cuanto envía, y se lo confirmamos por mensaje o correo. Al enviar, acepta nuestros')} <Link to="/policies#terms">{t('terms', 'términos')}</Link> {t('and', 'y nuestra')} <Link to="/policies#privacy">{t('privacy policy', 'política de privacidad')}</Link>.</p>
       </form>
+      <TalkToUs
+        title={t('Rather talk to someone?', '¿Prefiere hablar con alguien?')}
+        message={t('Hi, I\'d like a price for my move.', 'Hola, quisiera un precio para mi mudanza.')}
+      />
     </PublicPage>
   )
 }
