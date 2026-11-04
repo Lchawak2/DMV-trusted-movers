@@ -258,7 +258,7 @@ export default function Home() {
           <p>{t('See your price in about 2 minutes. No account needed.', 'Vea su precio en unos 2 minutos. No necesita cuenta.')}</p>
           {(site.phone || site.email) && <p>{t('Questions? Text, call or email us and a real person on our team answers.', '¿Preguntas? Escríbanos, llámenos o mándenos un correo y le contesta una persona real de nuestro equipo.')}</p>}
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
+            <Link to="/book" className="site-btn gold">{t('Book now', 'Reservar ahora')}</Link>
             {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text us', 'Escríbanos')}</a>}
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar al')} {site.phone}</a>}
             {site.email && <a href={mailLink(site.email, t('Question about a move', 'Pregunta sobre una mudanza'))} className="site-btn ghost">{t('Email us', 'Correo')}</a>}
@@ -300,7 +300,7 @@ function QuickQuote({ phone, email }: { phone: string; email: string }) {
         </select>
       </label>
       <label>{t('Moving date', 'Fecha de mudanza')}<input type="date" value={date} min={addDays(2)} onChange={(e) => setDate(e.target.value)} /></label>
-      <button className="primary block">{t('See my price', 'Ver mi precio')}</button>
+      <button className="primary block">{t('Book now', 'Reservar ahora')}</button>
       <p className="note">{t('Your price shows on the next screen. No account needed.', 'Su precio aparece en la siguiente pantalla. No necesita cuenta.')}</p>
       <ul className="site-quote-trust">
         <li>{t('Flat price', 'Precio fijo')}</li>

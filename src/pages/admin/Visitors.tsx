@@ -181,7 +181,7 @@ function tips(r: Report): string[] {
   } else if (r.visits < 20) {
     out.push(`Only ${plural(r.visits, 'visit')} so far. Advice shows up here once about 20 people have visited.`)
   } else if (share(r.started, r.visits) < 15) {
-    out.push(`Only ${share(r.started, r.visits)}% of visits start a quote. Put the Get my price button and the price of a 1 bedroom move right at the top of the home page.`)
+    out.push(`Only ${share(r.started, r.visits)}% of visits start a quote. Put the Book now button and the price of a 1 bedroom move right at the top of the home page.`)
   }
 
   const stops = r.stopped_at.reduce((s, x) => s + x.n, 0)
@@ -221,7 +221,7 @@ function tips(r: Report): string[] {
   if (r.faq[0] && r.faq[0].n >= 5) out.push(`The question opened most is "${r.faq[0].label}". Answer it higher up on the home page.`)
 
   if (r.scroll.home_visits >= 20 && share(r.scroll.half, r.scroll.home_visits) < 30) {
-    out.push(`Only ${share(r.scroll.half, r.scroll.home_visits)}% read past the middle of the home page. Keep prices and the Get my price button near the top.`)
+    out.push(`Only ${share(r.scroll.half, r.scroll.home_visits)}% read past the middle of the home page. Keep prices and the Book now button near the top.`)
   }
 
   if (r.visits >= 20 && out.length === 0) out.push('Nothing stands out right now. Keep an eye on where people leave the form as more people visit.')

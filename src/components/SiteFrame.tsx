@@ -26,7 +26,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             <Link to="/#contact" className="site-nav-wide">{t('Contact', 'Contacto')}</Link>
             <Link to="/join">{t('Jobs', 'Empleo')}</Link>
             <Link to="/login" className="site-nav-wide">{t('Sign in', 'Entrar')}</Link>
-            <Link to="/book" className="site-nav-book">{t('Get my price', 'Ver mi precio')}</Link>
+            <Link to="/book" className="site-nav-book">{t('Book now', 'Reservar ahora')}</Link>
             <LangSwitch />
           </nav>
         </div>
@@ -55,7 +55,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             </div>
             <div>
               <h3>{t('Company', 'Compañía')}</h3>
-              <p><Link to="/book">{t('Get my price', 'Ver mi precio')}</Link></p>
+              <p><Link to="/book">{t('Book now', 'Reservar ahora')}</Link></p>
               <p><Link to="/pricing">{t('Prices', 'Precios')}</Link></p>
               <p><Link to="/#faq">{t('Questions', 'Preguntas')}</Link></p>
               <p><Link to="/join">{t('Work with us', 'Trabaje con nosotros')}</Link></p>
@@ -79,7 +79,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
         {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar')}</a>}
         {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text', 'SMS')}</a>}
         {site.email && <a href={mailLink(site.email, t('Question about a move', 'Pregunta sobre una mudanza'))} className="site-btn ghost">{t('Email', 'Correo')}</a>}
-        <Link to="/book" className="site-btn gold">{t('Get my price', 'Ver mi precio')}</Link>
+        <Link to="/book" className="site-btn gold">{t('Book now', 'Reservar ahora')}</Link>
       </div>
     </div>
   )
