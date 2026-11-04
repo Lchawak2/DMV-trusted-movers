@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { smsLink } from '../lib/format'
-import { telLink, usePageTitle, useSite } from '../lib/site'
+import { mailLink, telLink, usePageTitle, useSite } from '../lib/site'
 import { usePageView } from '../lib/track'
 import { DEPOSIT_SHARE, FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE, depositFor } from '../lib/prices'
 import { sizeName, t, useLang } from '../lib/lang'
@@ -75,9 +75,10 @@ export default function Pricing() {
           <p className="site-lead">{t('Your price shows up as soon as you send the quote form, and you can book it right there. A 25% deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we\'ll tell you before doing any extra work.',
             'Su precio aparece en cuanto envía el formulario, y puede reservar ahí mismo. Un depósito del 25% aparta su fecha y paga el resto cuando termina la mudanza. Si su mudanza resulta más grande de lo que nos dijo, le avisamos antes de hacer cualquier trabajo extra.')}</p>
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
+            <Link to="/book" className="site-btn gold">{t('Book now', 'Reservar ahora')}</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">{t('Call', 'Llamar al')} {site.phone}</a>}
             {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about your prices.', 'Hola, tengo una pregunta sobre sus precios.'))} className="site-btn outline">{t('Text us', 'Escríbanos')}</a>}
+            {site.email && <a href={mailLink(site.email, t('Question about your prices', 'Pregunta sobre sus precios'))} className="site-btn outline">{t('Email us', 'Correo')}</a>}
           </div>
         </div>
       </section>

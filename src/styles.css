@@ -491,10 +491,10 @@ html { scroll-behavior: smooth; }
 .site-band .site-btn.gold { background: var(--site-main); color: #fff; }
 .site-band .site-btn.ghost { border-color: var(--site-main); color: var(--site-main); }
 
-/* Call / Get my price bar pinned to the bottom of phone screens on the website */
-.site-sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--site-main); box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.18); }
-.site-sticky .site-btn { flex: 1; padding: 12px 10px; }
-.site-sticky .site-btn.ghost { flex: 0 0 25%; padding-left: 4px; padding-right: 4px; }
+/* Call / Book now bar pinned to the bottom of phone screens on the website */
+.site-sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--site-main); box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.18); }
+.site-sticky .site-btn { flex: 1.5 1 0; min-width: 0; padding: 12px 8px; }
+.site-sticky .site-btn.ghost { flex: 1 1 0; padding-left: 2px; padding-right: 2px; font-size: 0.92em; }
 .site-foot { padding-bottom: calc(24px + 72px + env(safe-area-inset-bottom)); }
 @media (min-width: 860px) { .site-sticky { display: none; } .site-foot { padding-bottom: 24px; } }
 

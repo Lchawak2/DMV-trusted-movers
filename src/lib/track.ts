@@ -126,7 +126,7 @@ function flush() {
   if (queue.length) flush()
 }
 
-// Where on the page a link sits, for Call and Get my price taps
+// Where on the page a link sits, for Call and Book now taps
 function placeOf(el: Element) {
   const marked = el.closest('[data-place]')?.getAttribute('data-place')
   if (marked) return marked

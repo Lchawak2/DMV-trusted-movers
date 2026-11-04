@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { smsLink } from '../lib/format'
 import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, SMALL_OFFICE, WEEKEND_FEE } from '../lib/prices'
-import { photoUrl, rgb, siteText, telLink, usePageTitle, useSite } from '../lib/site'
+import { mailLink, photoUrl, rgb, siteText, telLink, usePageTitle, useSite } from '../lib/site'
 import { sizeName, t, useLang } from '../lib/lang'
 import { track, usePageView, useScrollDepth } from '../lib/track'
 
@@ -96,7 +96,7 @@ export default function Home() {
               <p className="site-rating">{'★'.repeat(Math.round(rating))} {rating} {t('from', 'de')} {ratings} {ratings === 1 ? t('customer', 'cliente') : t('customers', 'clientes')}</p>
             )}
           </div>
-          <QuickQuote phone={site.phone} />
+          <QuickQuote phone={site.phone} email={site.email} />
         </div>
       </section>
 
@@ -232,7 +232,7 @@ export default function Home() {
             <p>{siteText(site.hours)}</p>
             <h3>{t('Contact', 'Contacto')}</h3>
             {site.phone && <p><a href={telLink(site.phone)}>{site.phone}</a> · <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))}>{t('Text us', 'Escríbanos')}</a></p>}
-            {site.email && <p><a href={`mailto:${site.email}`}>{site.email}</a></p>}
+            {site.email && <p><a href={mailLink(site.email, t('Question about a move', 'Pregunta sobre una mudanza'))}>{site.email}</a></p>}
           </div>
         </div>
       </section>
@@ -256,11 +256,12 @@ export default function Home() {
         <div className="site-wrap">
           <h2>{t('Ready to move?', '¿Listo para mudarse?')}</h2>
           <p>{t('See your price in about 2 minutes. No account needed.', 'Vea su precio en unos 2 minutos. No necesita cuenta.')}</p>
-          {site.phone && <p>{t('Questions? Text or call us and a real person on our team answers.', '¿Preguntas? Escríbanos o llámenos y le contesta una persona real de nuestro equipo.')}</p>}
+          {(site.phone || site.email) && <p>{t('Questions? Text, call or email us and a real person on our team answers.', '¿Preguntas? Escríbanos, llámenos o mándenos un correo y le contesta una persona real de nuestro equipo.')}</p>}
           <div className="site-cta">
-            <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
+            <Link to="/book" className="site-btn gold">{t('Book now', 'Reservar ahora')}</Link>
             {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text us', 'Escríbanos')}</a>}
             {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar al')} {site.phone}</a>}
+            {site.email && <a href={mailLink(site.email, t('Question about a move', 'Pregunta sobre una mudanza'))} className="site-btn ghost">{t('Email us', 'Correo')}</a>}
           </div>
         </div>
       </section>
@@ -269,7 +270,7 @@ export default function Home() {
 }
 
 // A short start to the quote form: picks carry over to /book
-function QuickQuote({ phone }: { phone: string }) {
+function QuickQuote({ phone, email }: { phone: string; email: string }) {
   const navigate = useNavigate()
   const [type, setType] = useState('full_move')
   const [size, setSize] = useState('')
@@ -299,12 +300,13 @@ function QuickQuote({ phone }: { phone: string }) {
         </select>
       </label>
       <label>{t('Moving date', 'Fecha de mudanza')}<input type="date" value={date} min={addDays(2)} onChange={(e) => setDate(e.target.value)} /></label>
-      <button className="primary block">{t('See my price', 'Ver mi precio')}</button>
+      <button className="primary block">{t('Book now', 'Reservar ahora')}</button>
       <p className="note">{t('Your price shows on the next screen. No account needed.', 'Su precio aparece en la siguiente pantalla. No necesita cuenta.')}</p>
       <ul className="site-quote-trust">
         <li>{t('Flat price', 'Precio fijo')}</li>
         <li>{t('Free cancellation', 'Cancelación gratis')}</li>
         {phone && <li><a href={telLink(phone)}>{phone}</a></li>}
+        {email && <li><a href={mailLink(email, t('Question about a move', 'Pregunta sobre una mudanza'))}>{t('Email us', 'Correo')}</a></li>}
       </ul>
     </form>
   )

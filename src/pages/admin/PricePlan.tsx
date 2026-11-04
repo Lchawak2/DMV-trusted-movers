@@ -84,7 +84,9 @@ export default function PricePlan() {
 
       <section className="card">
         <h3>Each extra hour</h3>
-        <p>The customer pays {dollars(MOVE_RATE)}. The crew gets {dollars(costs.movers * costs.moverRate)} ({costs.movers} × {dollars(costs.moverRate)}), card fees take about {dollars(MOVE_RATE * 0.029)}, so you keep about <strong className="tone-good">{dollars(extraKeep)}</strong>.</p>
+        <p>The customer pays {dollars(MOVE_RATE)}. The crew gets {dollars(costs.movers * costs.moverRate)} ({costs.movers} × {dollars(costs.moverRate)}), card fees take about {dollars(MOVE_RATE * 0.029)}, {extraKeep < 0
+          ? <>so you lose about <strong className="warn">{dollars(-extraKeep)}</strong> on each extra hour.</>
+          : <>so you keep about <strong className="tone-good">{dollars(extraKeep)}</strong>.</>}</p>
       </section>
 
       <section className="card">

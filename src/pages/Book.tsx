@@ -356,7 +356,7 @@ export default function Book() {
         </section>
 
         {error && <p className="warn">{error}</p>}
-        <button className="primary" disabled={busy}>{busy ? t('Working out your price…', 'Calculando su precio…') : t('See my price', 'Ver mi precio')}</button>
+        <button className="primary" disabled={busy}>{busy ? t('Working out your price…', 'Calculando su precio…') : t('Book now', 'Reservar ahora')}</button>
         <ul className="est-trust">
           <li>{t('Flat price, truck and gas included', 'Precio fijo, camión y gasolina incluidos')}</li>
           <li>{t('No extra charge for stairs', 'Sin cargo extra por escaleras')}</li>

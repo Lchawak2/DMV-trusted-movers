@@ -6,7 +6,6 @@ import { usePageView } from '../lib/track'
 import { FREE_MINUTES, MOVE_RATE } from '../lib/prices'
 import { lang, t, useLang } from '../lib/lang'
 
-const EMAIL = 'dmvtrustedmoversservices@gmail.com'
 const updated = () => t('November 2, 2026', '2 de noviembre de 2026')
 
 // Terms, privacy and cancellation policy in one page, with a section for each.
@@ -97,7 +96,6 @@ export default function Policies() {
       </section>
 
       <TalkToUs title={t('Questions about our policies?', '¿Preguntas sobre nuestras políticas?')} message={t('Hi, I have a question about your policies.', 'Hola, tengo una pregunta sobre sus políticas.')} />
-      <p className="note center-text">{t('Questions? Email', '¿Preguntas? Escriba a')} <a href={`mailto:${EMAIL}`}>{EMAIL}</a></p>
     </PublicPage>
   )
 }
