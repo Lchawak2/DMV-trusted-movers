@@ -8,14 +8,15 @@ import { useTexting } from '../../lib/texting'
 import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, TRUCK_SIZES, type LostReason, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
 import ProfitPreview from './ProfitPreview'
+import { depositFor as depositForPrice } from '../../lib/prices'
 import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
 
 const QUOTE_DAYS = 3
 
-// Deposit is 25% of the price, rounded to the cent
+// The deposit share is set in lib/prices (DEPOSIT_SHARE)
 const depositFor = (price: string) => {
   const n = Number(price)
-  return price && n > 0 ? String(Math.round(n * 25) / 100) : ''
+  return price && n > 0 ? String(depositForPrice(n)) : ''
 }
 
 export default function RequestDetail() {

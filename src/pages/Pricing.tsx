@@ -4,10 +4,12 @@ import SiteFrame from '../components/SiteFrame'
 import { smsLink } from '../lib/format'
 import { telLink, usePageTitle, useSite } from '../lib/site'
 import { usePageView } from '../lib/track'
-import { FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE } from '../lib/prices'
+import { DEPOSIT_SHARE, FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE, depositFor } from '../lib/prices'
 import { sizeName, t, useLang } from '../lib/lang'
 
-const dollars = (n: number) => '$' + n.toLocaleString('en-US')
+const dollars = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })
+const PCT = `${DEPOSIT_SHARE * 100}%`
+const first = HOME_MOVES[0].price, firstDeposit = depositFor(first)
 
 const included = () => [
   t('No extra charge for stairs or elevators', 'Sin cargo extra por escaleras o elevadores'),
@@ -42,10 +44,12 @@ export default function Pricing() {
                 <strong>{dollars(m.price)}</strong>
                 <span>{t(`up to ${m.hours} hours`, `hasta ${m.hours} horas`)}</span>
                 <span className="extra">{t(`+$${MOVE_RATE} each extra hour`, `+$${MOVE_RATE} cada hora extra`)}</span>
+                <span className="deposit">{t(`${dollars(depositFor(m.price))} to book`, `${dollars(depositFor(m.price))} para reservar`)}</span>
               </div>
             ))}
           </div>
           <ul className="price-rules">
+            <li><strong>{t(`Book with ${PCT} down:`, `Reserve con el ${PCT}:`)}</strong> {t(`pay ${PCT} of your price online to hold your date, and the rest after the move. For example, a ${dollars(first)} move is ${dollars(firstDeposit)} to book and ${dollars(first - firstDeposit)} after.`, `pague el ${PCT} de su precio en línea para apartar su fecha, y el resto después de la mudanza. Por ejemplo, una mudanza de ${dollars(first)} son ${dollars(firstDeposit)} para reservar y ${dollars(first - firstDeposit)} después.`)}</li>
             <li><strong>{t('Home moves:', 'Mudanzas de casa:')}</strong> {t('one flat price for 2 movers, the truck and gas, for up to the hours shown.', 'un precio fijo por 2 mudanceros, el camión y la gasolina, hasta las horas indicadas.')}</li>
             <li><strong>{t('Going over your hours?', '¿Se pasa de sus horas?')}</strong> {t(`The first ${FREE_MINUTES} minutes are free, then it's ${dollars(MOVE_RATE)} an hour for the extra time, by the minute.`, `Los primeros ${FREE_MINUTES} minutos son gratis; después, el tiempo extra cuesta ${dollars(MOVE_RATE)} la hora, cobrado por minuto.`)}</li>
             <li><strong>{t('Saturday and Sunday:', 'Sábado y domingo:')}</strong> {t(`home and office moves are ${dollars(WEEKEND_FEE)} more. Move Monday to Friday to save.`, `las mudanzas de casa y oficina cuestan ${dollars(WEEKEND_FEE)} más. Múdese de lunes a viernes para ahorrar.`)}</li>
