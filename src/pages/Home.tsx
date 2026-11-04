@@ -96,7 +96,7 @@ export default function Home() {
               <p className="site-rating">{'★'.repeat(Math.round(rating))} {rating} {t('from', 'de')} {ratings} {ratings === 1 ? t('customer', 'cliente') : t('customers', 'clientes')}</p>
             )}
           </div>
-          <QuickQuote phone={site.phone} />
+          <QuickQuote phone={site.phone} email={site.email} />
         </div>
       </section>
 
@@ -270,7 +270,7 @@ export default function Home() {
 }
 
 // A short start to the quote form: picks carry over to /book
-function QuickQuote({ phone }: { phone: string }) {
+function QuickQuote({ phone, email }: { phone: string; email: string }) {
   const navigate = useNavigate()
   const [type, setType] = useState('full_move')
   const [size, setSize] = useState('')
@@ -306,6 +306,7 @@ function QuickQuote({ phone }: { phone: string }) {
         <li>{t('Flat price', 'Precio fijo')}</li>
         <li>{t('Free cancellation', 'Cancelación gratis')}</li>
         {phone && <li><a href={telLink(phone)}>{phone}</a></li>}
+        {email && <li><a href={mailLink(email, t('Question about a move', 'Pregunta sobre una mudanza'))}>{t('Email us', 'Correo')}</a></li>}
       </ul>
     </form>
   )
