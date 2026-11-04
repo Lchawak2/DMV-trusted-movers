@@ -28,13 +28,13 @@ const why = () => [
   { title: t('Clear, flat prices', 'Precios claros y fijos'), text: t('One price for your size of move, with the truck and gas included. You see it before you book.', 'Un precio según el tamaño de su mudanza, con camión y gasolina incluidos. Lo ve antes de reservar.') },
   { title: t('Careful with your things', 'Cuidamos sus cosas'), text: t('We handle every item with care, from the first box to the last piece of furniture.', 'Tratamos cada cosa con cuidado, desde la primera caja hasta el último mueble.') },
   { title: t('On time, kept posted', 'Puntuales y siempre informado'), text: t('You pick an arrival window, and we keep you posted on moving day.', 'Usted escoge un horario de llegada y lo mantenemos informado el día de la mudanza.') },
-  { title: t('Book in minutes', 'Reserve en minutos'), text: t('Answer a few questions, see your price right away, and hold your date with a deposit of half the price.', 'Conteste unas preguntas, vea su precio al instante y aparte su fecha con un depósito de la mitad del precio.') },
+  { title: t('Book in minutes', 'Reserve en minutos'), text: t('Answer a few questions, see your price right away, and hold your date with a 25% deposit.', 'Conteste unas preguntas, vea su precio al instante y aparte su fecha con un depósito del 25%.') },
 ]
 
 const steps = () => [
   { title: t('Tell us about your move', 'Cuéntenos de su mudanza'), text: t('A short form with your addresses, date and size. No account needed.', 'Un formulario corto con sus direcciones, fecha y tamaño. No necesita cuenta.') },
   { title: t('See your price', 'Vea su precio'), text: t('Your flat price shows up right away, with every part listed.', 'Su precio fijo aparece al instante, con cada parte detallada.') },
-  { title: t('Hold your date', 'Aparte su fecha'), text: t('Pay half the price online as a deposit. Free cancellation up to 72 hours before.', 'Pague la mitad del precio en línea como depósito. Cancelación gratis hasta 72 horas antes.') },
+  { title: t('Hold your date', 'Aparte su fecha'), text: t('Pay a 25% deposit online. Free cancellation up to 72 hours before.', 'Pague un depósito del 25% en línea. Cancelación gratis hasta 72 horas antes.') },
   { title: t('Moving day', 'El día de la mudanza'), text: t('Your crew arrives on time, moves you carefully, and you sign off when it\'s done.', 'Su equipo llega a tiempo, hace la mudanza con cuidado y usted firma al terminar.') },
 ]
 

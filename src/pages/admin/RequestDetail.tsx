@@ -12,9 +12,10 @@ import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState,
 
 const QUOTE_DAYS = 3
 
-const halfOf = (price: string) => {
+// Deposit is 25% of the price, rounded to the cent
+const depositFor = (price: string) => {
   const n = Number(price)
-  return price && n > 0 ? String(Math.round(n * 50) / 100) : ''
+  return price && n > 0 ? String(Math.round(n * 25) / 100) : ''
 }
 
 export default function RequestDetail() {
@@ -68,10 +69,10 @@ export default function RequestDetail() {
   const q = latestQuote(r)
   const state = requestState(r)
   const set = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v })
-  // The deposit follows the price at half, until the admin types their own deposit
+  // The deposit follows the price at 25%, until the admin types their own deposit
   const setPrice = (v: string) => {
-    const follows = form.deposit === '' || form.deposit === halfOf(form.price)
-    setForm({ ...form, price: v, deposit: follows ? halfOf(v) : form.deposit })
+    const follows = form.deposit === '' || form.deposit === depositFor(form.price)
+    setForm({ ...form, price: v, deposit: follows ? depositFor(v) : form.deposit })
   }
   const typeName = BOOK_TYPES[r.move_type] ?? JOB_TYPES[r.move_type] ?? r.move_type
   const open = r.status === 'new' || r.status === 'waiting_on_client' || r.status === 'quoted'
@@ -173,7 +174,7 @@ export default function RequestDetail() {
           <h3>{q ? `Quote (version ${q.version})` : 'Your quote'}</h3>
           <div className="row">
             <label>Price ($)<input type="number" min={1} step="0.01" inputMode="decimal" value={form.price} onChange={(e) => setPrice(e.target.value)} required /></label>
-            <label>Deposit ($, half the price)<input type="number" min={0} step="0.01" inputMode="decimal" value={form.deposit} onChange={(e) => set('deposit', e.target.value)} /></label>
+            <label>Deposit ($, 25% of price)<input type="number" min={0} step="0.01" inputMode="decimal" value={form.deposit} onChange={(e) => set('deposit', e.target.value)} /></label>
           </div>
           <div className="row">
             <label>Movers<input type="number" min={1} max={12} inputMode="numeric" value={form.crew_size} onChange={(e) => set('crew_size', e.target.value)} /></label>

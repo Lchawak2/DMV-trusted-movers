@@ -1,4 +1,4 @@
--- Instant quotes ask for a deposit of half the price (was a flat $50), rounded to the cent.
+-- Instant quotes ask for a deposit of 25% of the price (was a flat $50), rounded to the cent.
 -- Same function as 20261023191000_instant_quote_hours_note.sql apart from the deposit.
 
 create or replace function public.instant_quote(p_request uuid, p_supplies jsonb, p_replaces uuid default null, p_distance text default null)
@@ -35,7 +35,7 @@ begin
       'likely', (est ->> 'likely')::numeric + weekend_fee);
   end if;
 
-  deposit := round((est ->> 'price')::numeric / 2, 2);
+  deposit := round((est ->> 'price')::numeric * 0.25, 2);
 
   insert into public.quotes (request_id, price, deposit, crew_size, truck_size, est_hours, arrival_window, note, status, sent_at, expires_at)
   values (r.id, (est ->> 'price')::numeric, deposit, 2, est ->> 'truck', (est ->> 'hours')::numeric, r.arrival_window,

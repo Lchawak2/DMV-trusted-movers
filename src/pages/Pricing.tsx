@@ -68,8 +68,8 @@ export default function Pricing() {
       <section className="site-sec">
         <div className="site-wrap">
           <h2>{t('How you pay', 'Cómo paga')}</h2>
-          <p className="site-lead">{t('Your price shows up as soon as you send the quote form, and you can book it right there. A deposit of half the price holds your date, and you pay the other half when the move is done. If your move turns out bigger than you told us, we\'ll tell you before doing any extra work.',
-            'Su precio aparece en cuanto envía el formulario, y puede reservar ahí mismo. Un depósito de la mitad del precio aparta su fecha y paga la otra mitad cuando termina la mudanza. Si su mudanza resulta más grande de lo que nos dijo, le avisamos antes de hacer cualquier trabajo extra.')}</p>
+          <p className="site-lead">{t('Your price shows up as soon as you send the quote form, and you can book it right there. A 25% deposit holds your date, and you pay the rest when the move is done. If your move turns out bigger than you told us, we\'ll tell you before doing any extra work.',
+            'Su precio aparece en cuanto envía el formulario, y puede reservar ahí mismo. Un depósito del 25% aparta su fecha y paga el resto cuando termina la mudanza. Si su mudanza resulta más grande de lo que nos dijo, le avisamos antes de hacer cualquier trabajo extra.')}</p>
           <div className="site-cta">
             <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">{t('Call', 'Llamar al')} {site.phone}</a>}
