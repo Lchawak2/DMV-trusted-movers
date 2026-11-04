@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import TruckLogo from './TruckLogo'
 import { smsLink } from '../lib/format'
 import LangSwitch from './LangSwitch'
-import { siteText, telLink, type SiteContent } from '../lib/site'
+import { mailLink, siteText, telLink, type SiteContent } from '../lib/site'
 import { t } from '../lib/lang'
 
 // Header and footer shared by the public website pages (home and prices)
@@ -40,7 +40,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             <div>
               <p className="site-foot-name"><TruckLogo size={20} />DMV Trusted Movers</p>
               <p>{t('Local movers for homes and offices in', 'Mudanzas locales de casas y oficinas en')} {siteText(site.area)}.</p>
-              {site.phone && <p><a href={telLink(site.phone)}>{site.phone}</a></p>}
+              {site.phone && <p><a href={telLink(site.phone)}>{site.phone}</a> · <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))}>{t('Text', 'Mensaje')}</a></p>}
               {site.email && <p><a href={`mailto:${site.email}`}>{site.email}</a></p>}
             </div>
             <div>
@@ -77,7 +77,8 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
       {/* Always in reach on phones, where most ad clicks land */}
       <div className="site-sticky">
         {site.phone && <a href={telLink(site.phone)} className="site-btn ghost">{t('Call', 'Llamar')}</a>}
-        {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text', 'Mensaje')}</a>}
+        {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about a move.', 'Hola, tengo una pregunta sobre una mudanza.'))} className="site-btn ghost">{t('Text', 'SMS')}</a>}
+        {site.email && <a href={mailLink(site.email, t('Question about a move', 'Pregunta sobre una mudanza'))} className="site-btn ghost">{t('Email', 'Correo')}</a>}
         <Link to="/book" className="site-btn gold">{t('Get my price', 'Ver mi precio')}</Link>
       </div>
     </div>

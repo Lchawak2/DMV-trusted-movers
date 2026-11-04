@@ -122,6 +122,11 @@ export function photoUrl(path: string) {
   return supabase.storage.from('site-photos').getPublicUrl(path).data.publicUrl
 }
 
+// Email link with a subject line filled in
+export function mailLink(email: string, subject: string) {
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}`
+}
+
 // "(240) 555-0123" → "tel:+12405550123"
 export function telLink(phone: string) {
   const digits = phone.replace(/\D/g, '')

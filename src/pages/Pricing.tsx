@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SiteFrame from '../components/SiteFrame'
 import { smsLink } from '../lib/format'
-import { telLink, usePageTitle, useSite } from '../lib/site'
+import { mailLink, telLink, usePageTitle, useSite } from '../lib/site'
 import { usePageView } from '../lib/track'
 import { DEPOSIT_SHARE, FREE_MINUTES, HOME_MOVES, MOVE_RATE, WEEKEND_FEE, depositFor } from '../lib/prices'
 import { sizeName, t, useLang } from '../lib/lang'
@@ -78,6 +78,7 @@ export default function Pricing() {
             <Link to="/book" className="site-btn gold">{t('See my price', 'Ver mi precio')}</Link>
             {site.phone && <a href={telLink(site.phone)} className="site-btn outline">{t('Call', 'Llamar al')} {site.phone}</a>}
             {site.phone && <a href={smsLink(site.phone, t('Hi, I have a question about your prices.', 'Hola, tengo una pregunta sobre sus precios.'))} className="site-btn outline">{t('Text us', 'Escríbanos')}</a>}
+            {site.email && <a href={mailLink(site.email, t('Question about your prices', 'Pregunta sobre sus precios'))} className="site-btn outline">{t('Email us', 'Correo')}</a>}
           </div>
         </div>
       </section>
