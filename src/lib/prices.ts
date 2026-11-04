@@ -18,4 +18,7 @@ export const MOVE_RATE = 125
 export const FREE_MINUTES = 15
 // Saturday and Sunday home and office moves cost this much more
 export const WEEKEND_FEE = 100
+// Share of the price paid up front to book (instant quotes use the same in public.instant_quote)
+export const DEPOSIT_SHARE = 0.25
+export const depositFor = (price: number) => Math.round(price * DEPOSIT_SHARE * 100) / 100
 

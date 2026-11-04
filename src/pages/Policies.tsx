@@ -40,7 +40,7 @@ export default function Policies() {
         <p>{t(`Flat prices include a set number of hours, counted from when the crew starts to when you sign off. The first ${FREE_MINUTES} minutes past that are free; after that, the extra time is $${MOVE_RATE} an hour, billed by the minute, and added to your balance.`, `Los precios fijos incluyen un número fijo de horas, contadas desde que el equipo empieza hasta que usted firma. Los primeros ${FREE_MINUTES} minutos extra son gratis; después, el tiempo extra cuesta $${MOVE_RATE} la hora, cobrado por minuto, y se suma a su saldo.`)}</p>
 
         <h3>{t('Booking', 'Reserva')}</h3>
-        <p>{t('Paying the deposit on your quote books your date. We need at least 48 hours\' notice for a new booking.', 'Pagar el depósito de su cotización reserva su fecha. Necesitamos al menos 48 horas de aviso para una nueva reserva.')}</p>
+        <p>{t('Paying the deposit on your quote (25% of the price) books your date. We need at least 48 hours\' notice for a new booking.', 'Pagar el depósito de su cotización (el 25% del precio) reserva su fecha. Necesitamos al menos 48 horas de aviso para una nueva reserva.')}</p>
 
         <h3>{t('Payment', 'Pago')}</h3>
         <p>{t('The balance (your price, plus any extras, minus the deposit) is due when the move is done. You can pay by card from your booking link. Card payments are handled by Stripe.', 'El saldo (su precio, más cualquier extra, menos el depósito) se paga cuando termina la mudanza. Puede pagar con tarjeta desde su enlace de reserva. Los pagos con tarjeta los procesa Stripe.')}</p>

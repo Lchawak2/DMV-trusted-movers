@@ -8,9 +8,16 @@ import { useTexting } from '../../lib/texting'
 import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, TRUCK_SIZES, type LostReason, type RequestStatus } from '../../lib/types'
 import { ARRIVAL_WINDOWS, BOOK_TYPES } from '../Book'
 import ProfitPreview from './ProfitPreview'
+import { depositFor as depositForPrice } from '../../lib/prices'
 import { REQUEST_SELECT, crossesStateLine, latestQuote, placeText, requestState, type RequestRow } from './requestData'
 
 const QUOTE_DAYS = 3
+
+// The deposit share is set in lib/prices (DEPOSIT_SHARE)
+const depositFor = (price: string) => {
+  const n = Number(price)
+  return price && n > 0 ? String(depositForPrice(n)) : ''
+}
 
 export default function RequestDetail() {
   const { id } = useParams() as { id: string }
@@ -63,6 +70,11 @@ export default function RequestDetail() {
   const q = latestQuote(r)
   const state = requestState(r)
   const set = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v })
+  // The deposit follows the price at 25%, until the admin types their own deposit
+  const setPrice = (v: string) => {
+    const follows = form.deposit === '' || form.deposit === depositFor(form.price)
+    setForm({ ...form, price: v, deposit: follows ? depositFor(v) : form.deposit })
+  }
   const typeName = BOOK_TYPES[r.move_type] ?? JOB_TYPES[r.move_type] ?? r.move_type
   const open = r.status === 'new' || r.status === 'waiting_on_client' || r.status === 'quoted'
 
@@ -162,8 +174,8 @@ export default function RequestDetail() {
         <form className="card form" onSubmit={sendQuote}>
           <h3>{q ? `Quote (version ${q.version})` : 'Your quote'}</h3>
           <div className="row">
-            <label>Price ($)<input type="number" min={1} step="0.01" inputMode="decimal" value={form.price} onChange={(e) => set('price', e.target.value)} required /></label>
-            <label>Deposit ($)<input type="number" min={0} step="0.01" inputMode="decimal" value={form.deposit} onChange={(e) => set('deposit', e.target.value)} /></label>
+            <label>Price ($)<input type="number" min={1} step="0.01" inputMode="decimal" value={form.price} onChange={(e) => setPrice(e.target.value)} required /></label>
+            <label>Deposit ($, 25% of price)<input type="number" min={0} step="0.01" inputMode="decimal" value={form.deposit} onChange={(e) => set('deposit', e.target.value)} /></label>
           </div>
           <div className="row">
             <label>Movers<input type="number" min={1} max={12} inputMode="numeric" value={form.crew_size} onChange={(e) => set('crew_size', e.target.value)} /></label>
