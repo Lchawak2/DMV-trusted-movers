@@ -79,3 +79,7 @@ begin
   return new;
 end;
 $$;
+
+-- Quotes already sent say $50 too (cheaper for the customer, so nothing they agreed to gets worse)
+update public.quotes set note = replace(note, 'Each extra hour adds $125.', 'Each extra hour adds $50.')
+where note like '%Each extra hour adds $125.%';
