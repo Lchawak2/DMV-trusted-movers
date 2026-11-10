@@ -202,6 +202,17 @@ export interface CrewPapers {
   id_path: string | null
   rules_name: string | null
   rules_accepted_at: string | null
+  agreement_name: string | null
+  agreement_signed_at: string | null
+  agreement_sig_path: string | null
+  agreement_version: string | null
+  emergency_name: string | null
+  emergency_relation: string | null
+  emergency_phone: string | null
+  emergency2_name: string | null
+  emergency2_relation: string | null
+  emergency2_phone: string | null
+  health_notes: string | null
   admin_ok_at: string | null
   updated_at: string
 }
