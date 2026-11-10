@@ -142,7 +142,7 @@ export default function People() {
   )
 }
 
-// Photo ID and crew rules. Files open from the private bucket with a link that lasts 10 minutes.
+// Photo ID, crew rules, crew agreement and emergency contact. Files open from the private bucket with a link that lasts 10 minutes.
 function PapersRow({ papers, crewId, onChange }: { papers: CrewPapers | undefined; crewId: string; onChange: () => void }) {
   async function open(path: string) {
     // Open the tab first so phones don't block it as a pop-up
@@ -165,6 +165,18 @@ function PapersRow({ papers, crewId, onChange }: { papers: CrewPapers | undefine
       {papers?.rules_accepted_at
         ? <span title={dateTime(papers.rules_accepted_at)}>Rules ✓ (signed as {papers.rules_name})</span>
         : <span className="tone-warn">Rules not agreed</span>}
+      {papers?.agreement_signed_at
+        ? <span title={`${dateTime(papers.agreement_signed_at)} · version ${papers.agreement_version ?? ''}`}>
+            Agreement ✓ (signed as {papers.agreement_name}{papers.agreement_sig_path && <>, <button className="link" onClick={() => open(papers.agreement_sig_path!)}>see signature</button></>})
+          </span>
+        : <span className="tone-warn">Agreement not signed</span>}
+      {papers?.emergency_phone
+        ? <span title={papers.health_notes ? `Health info: ${papers.health_notes}` : undefined}>
+            Emergency: {papers.emergency_name}{papers.emergency_relation ? ` (${papers.emergency_relation})` : ''} <a href={`tel:${papers.emergency_phone}`}>{papers.emergency_phone}</a>
+            {papers.emergency2_phone && <> · {papers.emergency2_name} <a href={`tel:${papers.emergency2_phone}`}>{papers.emergency2_phone}</a></>}
+            {papers.health_notes && <> · Health info: {papers.health_notes}</>}
+          </span>
+        : <span className="tone-warn">No emergency contact</span>}
       {papers?.admin_ok_at
         ? <span className="tone-good">Checked by you · <button className="link" onClick={() => setOk(false)}>Undo</button></span>
         : <button className="link" onClick={() => setOk(true)}>{papersDone(papers) ? 'Mark checked' : 'Got them another way'}</button>}

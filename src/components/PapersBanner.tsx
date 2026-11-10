@@ -12,8 +12,8 @@ export default function PapersBanner({ papers }: { papers: CrewPapers | null | u
       <span className="list-main">
         <strong>{t('Finish your sign-up papers', 'Termina tus papeles de registro')}</strong>
         <span className="muted small step-detail">
-          {t(`Photo ID and crew rules (${n} of 2 done). You can claim jobs once they're in.`,
-            `Identificación y reglas del equipo (${n} de 2 listos). Podrás tomar trabajos cuando estén completos.`)}
+          {t(`Photo ID, crew rules, crew agreement and emergency contact (${n} of 4 done). You can claim jobs once they're in.`,
+            `Identificación, reglas, contrato y contacto de emergencia (${n} de 4 listos). Podrás tomar trabajos cuando estén completos.`)}
         </span>
       </span>
       <span className="muted">›</span>

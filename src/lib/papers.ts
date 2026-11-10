@@ -5,11 +5,14 @@ import type { CrewPapers } from './types'
 
 // Matches private.papers_done in the database, which is what Find Job checks
 export function papersDone(p: CrewPapers | null | undefined): boolean {
-  return !!p && (!!p.admin_ok_at || (!!p.id_path && !!p.rules_accepted_at))
+  return !!p && (!!p.admin_ok_at || papersCount(p) === PAPERS_TOTAL)
 }
 
+// Photo ID, crew rules, crew agreement, emergency contact
+export const PAPERS_TOTAL = 4
+
 export function papersCount(p: CrewPapers | null | undefined): number {
-  return [p?.id_path, p?.rules_accepted_at].filter(Boolean).length
+  return [p?.id_path, p?.rules_accepted_at, p?.agreement_signed_at, p?.emergency_phone].filter(Boolean).length
 }
 
 // The signed-in mover's own papers. undefined while loading.

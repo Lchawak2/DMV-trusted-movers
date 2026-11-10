@@ -70,7 +70,7 @@ function CrewLinks() {
           <Link to="/papers" className="list-main plain">
             <strong>{t('Sign-up papers', 'Papeles de registro')}</strong>
             <div className={`small ${papersDone(papers) ? 'tone-good' : 'tone-warn'}`}>
-              {papers === undefined ? '' : papersDone(papers) ? t('Done', 'Listos') : t(`${papersCount(papers)} of 2 done`, `${papersCount(papers)} de 2 listos`)}
+              {papers === undefined ? '' : papersDone(papers) ? t('Done', 'Listos') : t(`${papersCount(papers)} of 4 done`, `${papersCount(papers)} de 4 listos`)}
             </div>
           </Link>
           <span className="muted">›</span>
