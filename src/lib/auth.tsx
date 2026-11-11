@@ -10,14 +10,22 @@ interface AuthState {
   account: Account | null
   loading: boolean
   refresh: () => Promise<void>
+  // Opened the Forgot password email link: show the Set a new password screen first
+  recovering: boolean
+  doneRecovering: () => void
 }
 
-const AuthContext = createContext<AuthState>({ session: null, account: null, loading: true, refresh: async () => {} })
+const RECOVER_KEY = 'password-recovery'
+
+const AuthContext = createContext<AuthState>({ session: null, account: null, loading: true, refresh: async () => {}, recovering: false, doneRecovering: () => {} })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [account, setAccount] = useState<Account | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovering, setRecovering] = useState(() => {
+    try { return sessionStorage.getItem(RECOVER_KEY) === '1' } catch { return false }
+  })
 
   async function loadAccount(s: Session | null) {
     if (!s) {
@@ -48,16 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadAccount(data.session)
       setLoading(false)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
+      if (event === 'PASSWORD_RECOVERY') {
+        try { sessionStorage.setItem(RECOVER_KEY, '1') } catch { /* still shows for this visit */ }
+        setRecovering(true)
+      }
+      if (event === 'SIGNED_OUT') doneRecovering()
       // Defer the query so it doesn't run inside the auth callback
       setTimeout(() => loadAccount(s), 0)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  function doneRecovering() {
+    try { sessionStorage.removeItem(RECOVER_KEY) } catch { /* nothing saved */ }
+    setRecovering(false)
+  }
+
   return (
-    <AuthContext.Provider value={{ session, account, loading, refresh: () => loadAccount(session) }}>
+    <AuthContext.Provider value={{ session, account, loading, refresh: () => loadAccount(session), recovering, doneRecovering }}>
       {children}
     </AuthContext.Provider>
   )

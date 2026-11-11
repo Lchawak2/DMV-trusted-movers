@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import Login from './pages/Login'
+import SetPassword from './pages/SetPassword'
 import Home from './pages/Home'
 import Book from './pages/Book'
 import Quote from './pages/Quote'
@@ -35,7 +36,7 @@ import Extras from './pages/jobday/Extras'
 import Sign from './pages/jobday/Sign'
 
 export default function App() {
-  const { session, account, loading } = useAuth()
+  const { session, account, loading, recovering } = useAuth()
   const { pathname } = useLocation()
 
   // Customers ask for a quote without signing in
@@ -52,6 +53,7 @@ export default function App() {
     if (pathname === '/join') return <Login join />
     return pathname === '/account' ? <CustomerAccount /> : <Login />
   }
+  if (recovering) return <SetPassword />
   if (!account) return <div className="center muted">Setting up your account…</div>
 
   if (!account.active) return <Pending />
