@@ -1,7 +1,7 @@
 // The crew agreement movers sign in the app (Sign-up papers, step 3).
 // Same papers as the printable packet in the project files (crew-papers), minus the fill-in blanks.
 // Change AGREEMENT_VERSION whenever the wording changes, so the office knows which version each mover signed.
-export const AGREEMENT_VERSION = '2026-11-10'
+export const AGREEMENT_VERSION = '2026-11-11'
 
 // h = heading, p = paragraph, li = list item (items in a row form one list)
 export type Block = ['h' | 'p' | 'li', string, string]
@@ -30,8 +30,10 @@ export const CREW_AGREEMENT: Paper[] = [
       ['li', 'You bring your own work clothes and closed shoes. The Company provides the truck and moving equipment.',
         'Tú traes tu ropa de trabajo y zapatos cerrados. La Compañía pone el camión y el equipo de mudanza.'],
       ['h', 'Pay', 'Pago'],
-      ['li', 'Your pay rate is what the office tells you in writing (text or email) before your first job.',
-        'Tu pago es el que la oficina te dice por escrito (texto o correo) antes de tu primer trabajo.'],
+      ['li', 'Your pay is a percentage of the price the customer pays for each move you work on, including any extra hours. It does not count tips (you get those on top) or refunds.',
+        'Tu pago es un porcentaje del precio que el cliente paga por cada mudanza en la que trabajas, incluidas las horas extra. No cuenta las propinas (esas son aparte, para ti) ni los reembolsos.'],
+      ['li', 'The office tells you the percentage in writing (text or email) before your first job, and gives you at least 7 days’ notice in writing before changing it. A change never applies to a job you already accepted.',
+        'La oficina te dice el porcentaje por escrito (texto o correo) antes de tu primer trabajo, y te avisa por escrito con al menos 7 días antes de cambiarlo. Un cambio nunca aplica a un trabajo que ya aceptaste.'],
       ['li', 'You are paid after each job is finished, by Zelle or another way you agree on with the office. My earnings in the app shows every job, your pay, your tips and what is still owed.',
         'Se te paga después de cada trabajo terminado, por Zelle u otra forma que acuerdes con la oficina. Mis ganancias en la app muestra cada trabajo, tu pago, tus propinas y lo que falta pagar.'],
       ['li', 'Tips customers add by card through their booking link are split evenly among the crew on that job and paid with your job pay.',
