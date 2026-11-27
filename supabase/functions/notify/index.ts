@@ -336,6 +336,82 @@ async function moveReminder(jobId: string): Promise<Out[]> {
   return emails
 }
 
+// After the customer signs off: the balance, with a link to pay it by card on their booking link
+async function balanceDue(jobId: string): Promise<Out[]> {
+  const { data: j } = await db.from('jobs')
+    .select('job_date, status, job_prices(price, paid), job_extras(title, job_extra_prices(amount)), quotes(token), move_requests(customers(full_name, email, language))')
+    .eq('id', jobId).maybeSingle()
+  if (!j || j.status === 'cancelled') return []
+  const one = <T,>(v: T | T[] | null | undefined) => (Array.isArray(v) ? v[0] : v) ?? null
+  const price = one(j.job_prices as unknown as { price: number; paid: number } | null)
+  const token = one(j.quotes as unknown as { token: string } | null)?.token
+  const c = (j.move_requests as unknown as { customers: { full_name: string; email: string | null; language: string } | null } | null)?.customers
+  if (!price || !token) return []
+  const extras = ((j.job_extras ?? []) as unknown as { title: string; job_extra_prices: { amount: number } | { amount: number }[] | null }[])
+    .map((x) => ({ title: x.title, amount: Number(one(x.job_extra_prices)?.amount ?? 0) })).filter((x) => x.amount > 0)
+  const total = Number(price.price) + extras.reduce((t, x) => t + x.amount, 0)
+  const paid = Number(price.paid)
+  const due = Math.max(total - paid, 0)
+  // Nothing left to pay (paid in cash or already by card)
+  if (due <= 0) return []
+  const link = `${LIVE_SITE}/quote/${token}`
+  const out: Out[] = [{
+    push: true,
+    title: `Payment link sent: ${c?.full_name ?? 'Customer'}, ${money(due)}`,
+    body: c?.email ? 'We emailed them the balance with a link to pay by card.' : 'They have no email. Text them the payment link from the job.',
+    url: `/jobs/${jobId}?tab=money`,
+    tag: `balance-${jobId}`,
+  }]
+  if (!CAN_EMAIL_OTHERS || !c?.email) return out
+  const first = c.full_name.split(' ')[0]
+  if (c.language === 'es') {
+    out.push({
+      to: [c.email],
+      subject: `Su mudanza terminó: saldo de ${money(due)}`,
+      text: lines(
+        `Hola ${first}:`,
+        '',
+        `¡Gracias por mudarse con DMV Trusted Movers! Su mudanza del ${dayEs(j.job_date)} está terminada.`,
+        '',
+        `Precio de la mudanza: ${money(price.price)}`,
+        ...extras.map((x) => `${x.title}: ${money(x.amount)}`),
+        `Ya pagado: ${money(paid)}`,
+        `Saldo a pagar: ${money(due)}`,
+        '',
+        'Pague con tarjeta aquí. También puede dejar una propina para su equipo si quiere:',
+        link,
+        '',
+        '¿Preguntas sobre su factura? Responda a este correo.',
+        '',
+        'DMV Trusted Movers',
+      ),
+    })
+  } else {
+    out.push({
+      to: [c.email],
+      subject: `Your move is done: ${money(due)} balance`,
+      text: lines(
+        `Hi ${first},`,
+        '',
+        `Thank you for moving with DMV Trusted Movers! Your move on ${day(j.job_date)} is done.`,
+        '',
+        `Move price: ${money(price.price)}`,
+        ...extras.map((x) => `${x.title}: ${money(x.amount)}`),
+        `Already paid: ${money(paid)}`,
+        `Balance due: ${money(due)}`,
+        '',
+        'Pay by card here. You can also leave a tip for your crew if you like:',
+        link,
+        '',
+        'Questions about your bill? Just reply to this email.',
+        '',
+        'DMV Trusted Movers',
+      ),
+    })
+  }
+  return out
+}
+
 async function balancePaid(paymentId: string): Promise<Email[]> {
   const { data: p } = await db.from('payments')
     .select('amount, provider_ref, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email, language)))')
@@ -605,7 +681,7 @@ async function sendPush(p: Push) {
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
   balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
-  crew_accepted: crewAccepted, damage_report: damageReport,
+  crew_accepted: crewAccepted, damage_report: damageReport, balance_due: balanceDue,
 }
 
 Deno.serve(async () => {
