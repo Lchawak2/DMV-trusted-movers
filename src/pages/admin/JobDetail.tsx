@@ -12,6 +12,7 @@ import { costGuesses, moverPay, useCosts } from '../../lib/costs'
 import { dateTime, dayHeading, fromLocalInput, money, smsLink, toLocalInput, windowText } from '../../lib/format'
 import SendText from '../../components/SendText'
 import ReviewSection from './ReviewSection'
+import BookingText from './BookingText'
 import {
   JOB_TYPES, PAY_METHODS, TRUCK_SIZES,
   type Account, type Assignment, type CrewPapers, type Job, type JobCost, type JobStatus, type JobTips, type TimeEntry, type TruckRental,
@@ -116,6 +117,7 @@ export default function AdminJobDetail() {
             </div>
             {job.access_notes && <div className="notes"><span>Access</span>{job.access_notes}</div>}
           </section>
+          {job.status === 'scheduled' && job.quote_id && <BookingText job={job} />}
           {job.status === 'completed' && <ReviewSection jobId={id} quoteId={job.quote_id} />}
           <JobDayChecklist jobId={id} photos={day.photos} extras={day.extras} signoff={day.signoff} />
           <WorkChecklist jobId={id} />
