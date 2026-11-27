@@ -86,22 +86,68 @@ async function newRequest(id: string): Promise<Email[]> {
   }]
 }
 
+// When free cancellation ends: 72 hours before the arrival time, New York time (same as private.job_start)
+function freeCancelUntil(iso: string, start: string | null): Date {
+  const [y, mo, d] = iso.split('-').map(Number)
+  const [h, mi] = (start ?? '08:00').split(':').map(Number)
+  const guess = Date.UTC(y, mo - 1, d, h, mi)
+  // New York's offset from UTC on that day (4 or 5 hours)
+  const ny = new Date(new Date(guess).toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const utc = new Date(new Date(guess).toLocaleString('en-US', { timeZone: 'UTC' }))
+  return new Date(guess + (utc.getTime() - ny.getTime()) - 72 * 3600 * 1000)
+}
+const nyWhen = (t: Date, locale: string) =>
+  `${t.toLocaleDateString(locale, { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' })}, ${t.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' })}`
+const WINDOW_TIMES: Record<string, [string, string]> = {
+  Morning: ['08:00', '10:00'], Midday: ['11:00', '13:00'], Afternoon: ['14:00', '16:00'],
+}
+const SIZES_ES: Record<string, string> = {
+  Studio: 'Estudio', '1 bedroom': '1 habitación', '2 bedrooms': '2 habitaciones', '3 bedrooms': '3 habitaciones',
+  'Studio or 1 bedroom': 'Estudio o 1 habitación',
+}
+const TYPES_ES: Record<string, string> = {
+  full_move: 'Mudanza de casa', office_move: 'Mudanza de oficina', small_move: 'Mudanza pequeña',
+  labor_only: 'Carga o descarga', packing: 'Empaque', junk_haul: 'Retiro de basura', other: 'Mudanza',
+}
+
 async function depositPaid(paymentId: string): Promise<Out[]> {
   const { data: p } = await db.from('payments')
-    .select('amount, quotes(id, token, price, request_id, move_requests(preferred_date, arrival_window, customers(full_name, email, phone, language)))')
+    .select('amount, quotes(id, token, price, est_hours, arrival_window, request_id, jobs(job_date, window_start, window_end, job_type, home_size, from_address, to_address), move_requests(move_type, home_size, preferred_date, arrival_window, from_address, to_address, customers(full_name, email, phone, language)))')
     .eq('id', paymentId).maybeSingle()
+  type Job = { job_date: string; window_start: string | null; window_end: string | null; job_type: string; home_size: string | null; from_address: string; to_address: string | null }
   const q = p?.quotes as unknown as {
-    id: string; token: string; price: number; request_id: string
-    move_requests: { preferred_date: string; arrival_window: string | null; customers: { full_name: string; email: string | null; phone: string | null; language: string } | null }
+    id: string; token: string; price: number; est_hours: number | null; arrival_window: string | null; request_id: string
+    jobs: Job[] | Job | null
+    move_requests: {
+      move_type: string; home_size: string | null; preferred_date: string; arrival_window: string | null
+      from_address: string; to_address: string | null
+      customers: { full_name: string; email: string | null; phone: string | null; language: string } | null
+    }
   } | null
   if (!p || !q) return []
   const r = q.move_requests
   const c = r.customers
+  // The booked job has the final details; if it isn't saved yet, use the quote and the request
+  const job = Array.isArray(q.jobs) ? q.jobs[0] : q.jobs
+  const date = job?.job_date ?? r.preferred_date
+  const win = q.arrival_window ?? r.arrival_window
+  const preset = win ? WINDOW_TIMES[win.split(' ')[0]] : undefined
+  const start = job?.window_start ?? preset?.[0] ?? null
+  const end = job?.window_end ?? preset?.[1] ?? null
+  const from = job?.from_address ?? r.from_address
+  const to = job?.to_address ?? r.to_address
+  const type = job?.job_type ?? r.move_type
+  const size = job?.home_size ?? r.home_size
+  const price = Number(q.price)
+  const balance = Math.max(price - Number(p.amount), 0)
+  const until = freeCancelUntil(date, start)
+  const link = `${LIVE_SITE}/quote/${q.token}`
+  const first = c?.full_name.split(' ')[0] ?? ''
   const emails: Out[] = [{
     to: await admins(),
     subject: `Deposit paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
     text: lines(
-      `${c?.full_name ?? 'A customer'} paid a ${money(p.amount)} deposit for ${day(r.preferred_date)}. The move is booked.`,
+      `${c?.full_name ?? 'A customer'} paid a ${money(p.amount)} deposit for ${day(date)}. The move is booked.`,
       '',
       `See the booking: ${LIVE_SITE}/requests/${q.request_id}`,
     ),
@@ -110,18 +156,34 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
   if (CAN_EMAIL_OTHERS && c?.email && es) {
     emails.push({
       to: [c.email],
-      subject: `Su mudanza está reservada para el ${dayEs(r.preferred_date)}`,
+      subject: `Gracias por reservar: su mudanza es el ${dayEs(date)}`,
       text: lines(
-        `Hola ${c.full_name.split(' ')[0]}:`,
+        `Hola ${first}:`,
         '',
-        `Gracias por reservar con DMV Trusted Movers. Recibimos su depósito de ${money(p.amount)}.`,
+        '¡Gracias por reservar con DMV Trusted Movers! Su mudanza está confirmada.',
         '',
-        `Fecha de la mudanza: ${dayEs(r.preferred_date)}${r.arrival_window ? `, ${windowEs(r.arrival_window).toLowerCase()}` : ''}`,
-        `Precio total: ${money(q.price)}`,
-        `Saldo después de la mudanza: ${money(Number(q.price) - Number(p.amount))}`,
+        'SU MUDANZA',
+        `Servicio: ${TYPES_ES[type] ?? 'Mudanza'}${size ? `, ${SIZES_ES[size] ?? size}` : ''}`,
+        `Fecha: ${dayEs(date)}`,
+        `Hora de llegada: ${start ? slotEs(start, end) : win ? windowEs(win) : 'hora por confirmar'}`,
+        `${to ? 'Desde' : 'Dirección'}: ${from}`,
+        to && `Hasta: ${to}`,
         '',
-        'Puede cancelar gratis hasta 72 horas antes de su mudanza. Después de eso, el depósito no se devuelve.',
-        `Su reserva: ${LIVE_SITE}/quote/${q.token}`,
+        'PAGO',
+        `Precio total: ${money(price)}${q.est_hours ? ` (incluye hasta ${Number(q.est_hours)} horas de trabajo)` : ''}`,
+        `Depósito pagado hoy: ${money(p.amount)}`,
+        `Saldo después de la mudanza: ${money(balance)}`,
+        '',
+        'CANCELACIÓN',
+        `Cancele gratis hasta el ${nyWhen(until, 'es-US')} (72 horas antes de la llegada). Su depósito se devuelve a su tarjeta de inmediato; los bancos tardan de 5 a 10 días en mostrarlo.`,
+        'Si cancela con menos de 72 horas, el depósito no se devuelve.',
+        `Para cancelar o cambiar la fecha, abra su reserva y toque "Cancelar mi mudanza" o "Cambiar mi fecha":`,
+        link,
+        '',
+        'Antes del día de la mudanza, si puede, reserve el elevador y guarde un lugar para estacionar el camión. Le enviaremos un recordatorio el día antes.',
+        '',
+        `Todas las reglas: ${LIVE_SITE}/policies`,
+        '¿Preguntas? Responda a este correo.',
         '',
         'DMV Trusted Movers',
       ),
@@ -129,18 +191,34 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
   } else if (CAN_EMAIL_OTHERS && c?.email) {
     emails.push({
       to: [c.email],
-      subject: `You're booked for ${day(r.preferred_date)}`,
+      subject: `Thanks for booking! Your move is on ${day(date)}`,
       text: lines(
-        `Hi ${c.full_name.split(' ')[0]},`,
+        `Hi ${first},`,
         '',
-        `Thanks for booking with DMV Trusted Movers. We received your ${money(p.amount)} deposit.`,
+        'Thank you for booking with DMV Trusted Movers! Your move is confirmed.',
         '',
-        `Move date: ${day(r.preferred_date)}${r.arrival_window ? `, ${r.arrival_window.toLowerCase()}` : ''}`,
-        `Total price: ${money(q.price)}`,
-        `Balance after the move: ${money(Number(q.price) - Number(p.amount))}`,
+        'YOUR MOVE',
+        `Service: ${TYPES[type] ?? 'Move'}${size ? `, ${size}` : ''}`,
+        `Date: ${day(date)}`,
+        `Arrival time: ${start ? slot(start, end) : win ?? 'time to be set'}`,
+        `${to ? 'From' : 'Address'}: ${from}`,
+        to && `To: ${to}`,
         '',
-        'Free cancellation up to 72 hours before your move. After that the deposit is kept.',
-        `Your booking: ${LIVE_SITE}/quote/${q.token}`,
+        'PAYMENT',
+        `Total price: ${money(price)}${q.est_hours ? ` (includes up to ${Number(q.est_hours)} hours of work)` : ''}`,
+        `Deposit paid today: ${money(p.amount)}`,
+        `Balance after the move: ${money(balance)}`,
+        '',
+        'CANCELLATION',
+        `Cancel for free until ${nyWhen(until, 'en-US')} (72 hours before arrival). Your deposit is refunded to your card right away; banks take 5 to 10 days to show it.`,
+        'If you cancel less than 72 hours before, the deposit is kept.',
+        'To cancel or change your date, open your booking and tap "Cancel my move" or "Change my date":',
+        link,
+        '',
+        'Before moving day, please book the elevator and save a parking spot for the truck if you can. We will send you a reminder the day before.',
+        '',
+        `All policies: ${LIVE_SITE}/policies`,
+        'Questions? Just reply to this email.',
         '',
         'DMV Trusted Movers',
       ),
@@ -150,8 +228,8 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
     emails.push({
       sms: [c.phone],
       text: es
-        ? `DMV Trusted Movers: su mudanza está reservada para el ${dayEs(r.preferred_date)}${r.arrival_window ? `, ${windowEs(r.arrival_window).toLowerCase()}` : ''}. Recibimos su depósito de ${money(p.amount)}. Su reserva: ${LIVE_SITE}/quote/${q.token}`
-        : `DMV Trusted Movers: you're booked for ${day(r.preferred_date)}${r.arrival_window ? `, ${r.arrival_window.toLowerCase()}` : ''}. We got your ${money(p.amount)} deposit. Your booking: ${LIVE_SITE}/quote/${q.token}`,
+        ? `DMV Trusted Movers: ¡gracias! Su mudanza está reservada para el ${dayEs(date)}${start ? `, llegada ${slotEs(start, end)}` : ''}. Depósito ${money(p.amount)}, saldo ${money(balance)}. Cancele gratis hasta 72 h antes. Su reserva: ${link}`
+        : `DMV Trusted Movers: thanks! You're booked for ${day(date)}${start ? `, arrival ${slot(start, end)}` : ''}. Deposit ${money(p.amount)}, balance ${money(balance)}. Free cancellation until 72h before. Your booking: ${link}`,
     })
   }
   return emails
