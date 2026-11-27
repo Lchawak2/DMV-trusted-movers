@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import { supabase } from '../../lib/supabase'
 import { dateTime, dayHeading, money, parseDay, smsLink } from '../../lib/format'
+import BookingText from './BookingText'
+import type { Job } from '../../lib/types'
 import SendText from '../../components/SendText'
 import { useTexting } from '../../lib/texting'
 import { JOB_TYPES, LEAD_SOURCES, LOST_REASONS, TRUCK_SIZES, type LostReason, type RequestStatus } from '../../lib/types'
@@ -31,6 +33,8 @@ export default function RequestDetail() {
   const [depositPaid, setDepositPaid] = useState(true)
   const [losing, setLosing] = useState(false)
   const canText = useTexting()
+  // The booked job, so the admin can text the booking confirmation right from here (the deposit alert opens this page)
+  const [job, setJob] = useState<Job | null>(null)
 
   async function load() {
     const { data } = await supabase.from('move_requests').select(REQUEST_SELECT).eq('id', id).single()
@@ -45,6 +49,10 @@ export default function RequestDetail() {
         const { data: res } = await supabase.functions.invoke('deposit', { body: { action: 'confirm', token: q.token } })
         if (res?.paid) return load()
       }
+    }
+    if (q?.status === 'accepted') {
+      const { data: j } = await supabase.from('jobs').select('*').eq('quote_id', q.id).maybeSingle()
+      setJob(j as Job | null)
     }
     setForm({
       price: q?.price.toString() ?? '', deposit: q?.deposit.toString() ?? '',
@@ -141,6 +149,7 @@ export default function RequestDetail() {
 
   return (
     <Layout back="/requests" title="Request">
+      {job?.status === 'scheduled' && <BookingText job={job} />}
       <section className="card">
         <div className="card-head"><h3>{c?.full_name}</h3><span className={`pill ${state.pill}`}>{state.label}</span></div>
         <p className="muted small">{typeName}{r.home_size ? ` · ${r.home_size}` : ''} · {dayHeading(r.preferred_date)}{r.arrival_window ? ` · ${r.arrival_window}` : ''}</p>
