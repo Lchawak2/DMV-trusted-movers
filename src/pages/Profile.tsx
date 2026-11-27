@@ -9,6 +9,7 @@ import { papersCount, papersDone, useMyPapers } from '../lib/papers'
 import DeleteAccount from '../components/DeleteAccount'
 import InstallApp from '../components/InstallApp'
 import StartFresh from '../components/StartFresh'
+import PhoneAlerts from '../components/PhoneAlerts'
 
 export default function Profile() {
   const { account, refresh } = useAuth()
@@ -50,6 +51,7 @@ export default function Profile() {
       </form>
       {account?.role === 'crew' && <CrewLinks />}
       <InstallApp />
+      {account?.role === 'admin' && <PhoneAlerts accountId={account.id} />}
       {account?.role === 'admin' && <ReviewLink />}
       {account?.role === 'admin' && <TestText phone={account.phone} />}
       {account?.role === 'admin' && <StartFresh />}

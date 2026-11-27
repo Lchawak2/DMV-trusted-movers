@@ -4,6 +4,7 @@
 // Deployed with verify_jwt off: calling it only sends what is already queued, so a caller can't
 // choose who gets emailed or what it says.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
+import webpush from 'npm:web-push@3.6.7'
 
 const LIVE_SITE = 'https://dmvtrustedmovers.org'
 // Until a domain is verified in Resend, it only delivers to the Resend account's own email,
@@ -22,7 +23,9 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 
 type Email = { to: string[]; subject: string; text: string }
 type Text = { sms: string[]; text: string }
-type Out = Email | Text
+// A phone notification to the admins' phones and computers that turned notifications on
+type Push = { push: true; title: string; body: string; url: string; tag: string }
+type Out = Email | Text | Push
 
 const TWILIO = {
   sid: Deno.env.get('TWILIO_ACCOUNT_SID'), token: Deno.env.get('TWILIO_AUTH_TOKEN'), from: Deno.env.get('TWILIO_FROM'),
@@ -148,9 +151,19 @@ async function depositPaid(paymentId: string): Promise<Out[]> {
     subject: `Deposit paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
     text: lines(
       `${c?.full_name ?? 'A customer'} paid a ${money(p.amount)} deposit for ${day(date)}. The move is booked.`,
+      'We emailed them the booking confirmation.',
       '',
-      `See the booking: ${LIVE_SITE}/requests/${q.request_id}`,
+      c?.phone
+        ? `Text them the confirmation too: open this link on your phone and tap "Text confirmation". The message is filled in, so you just press send.`
+        : 'They gave no phone number, so there is no text to send.',
+      `${LIVE_SITE}/requests/${q.request_id}`,
     ),
+  }, {
+    push: true,
+    title: `Deposit paid: ${c?.full_name ?? 'Customer'}, ${money(p.amount)}`,
+    body: c?.phone ? `Move on ${day(date)} is booked. Tap to text them the confirmation.` : `Move on ${day(date)} is booked.`,
+    url: `/requests/${q.request_id}`,
+    tag: `deposit-${paymentId}`,
   }]
   const es = c?.language === 'es'
   if (CAN_EMAIL_OTHERS && c?.email && es) {
@@ -559,6 +572,36 @@ async function sendText(to: string, body: string) {
   if (!res.ok) throw new Error(`Twilio ${res.status}: ${(await res.text()).slice(0, 300)}`)
 }
 
+// Phone notifications (web push) to every admin's phone or computer that turned them on in Profile.
+// A failed one is logged; a phone that turned them off is forgotten.
+// The public push key (also in src/lib/push.ts); the private one is in the server-only server_keys table
+const VAPID = { subject: 'https://dmvtrustedmovers.org', publicKey: 'BEFIvX3pVduQGDcBz1H5AE5guLpn_PVqWXIf4cpSSuoyOVo8fxcPacW6MOO9BKZqb8MFPkuOzdN3-spUut8m9Lg', privateKey: '' }
+async function vapidReady() {
+  if (!VAPID.privateKey) {
+    const { data } = await db.from('server_keys').select('value').eq('name', 'vapid_private').maybeSingle()
+    VAPID.privateKey = data?.value ?? ''
+  }
+  return !!VAPID.privateKey
+}
+async function sendPush(p: Push) {
+  if (!(await vapidReady())) return
+  const { data: admin } = await db.from('accounts').select('id').eq('role', 'admin').eq('active', true)
+  const ids = (admin ?? []).map((a) => a.id)
+  if (!ids.length) return
+  const { data: subs } = await db.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('account_id', ids)
+  for (const s of subs ?? []) {
+    try {
+      const d = webpush.generateRequestDetails({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+        JSON.stringify({ title: p.title, body: p.body, url: p.url, tag: p.tag }), { vapidDetails: VAPID, TTL: 86400, urgency: 'high' })
+      const res = await fetch(d.endpoint, { method: d.method, headers: d.headers as Record<string, string>, body: d.body })
+      if (res.status === 404 || res.status === 410) await db.from('push_subscriptions').delete().eq('id', s.id)
+      else if (!res.ok) console.error('notify: push failed', res.status, (await res.text()).slice(0, 200))
+    } catch (e) {
+      console.error('notify: push failed', e)
+    }
+  }
+}
+
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
   balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
@@ -580,6 +623,7 @@ Deno.serve(async () => {
     try {
       const outs = (await builders[n.kind]?.(n.ref_id)) ?? []
       for (const e of outs) if ('to' in e && e.to.length) await send(key, e)
+      for (const e of outs) if ('push' in e) await sendPush(e)
       let textError: string | null = null
       for (const e of outs) {
         if (!('sms' in e) || !CAN_TEXT) continue
