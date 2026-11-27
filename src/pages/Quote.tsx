@@ -168,6 +168,41 @@ export default function Quote({ token }: { token: string }) {
   const cancelled = q.job_status === 'cancelled'
   const booked = q.status === 'accepted' && !cancelled
   const free = !!q.free_cancel_until && new Date(q.free_cancel_until) > new Date()
+  const payable = booked && !!q.balance_payable && q.balance_due != null
+  // Once the move is done and money is owed, the pay box goes right at the top of the page
+  const due = q.balance_due ?? 0
+  const owes = payable && due > 0
+  const paySection = payable && (
+        <section className="card form">
+          {due > 0 ? (
+            <>
+              <h3>{t('Pay your balance', 'Pague su saldo')}</h3>
+              <ul className="list">
+                {(q.extras ?? []).length > 0 && q.move_price != null && <>
+                  <li><span>{t('Your move', 'Su mudanza')}</span><span>{money(q.move_price)}</span></li>
+                  {q.extras!.map((x, i) => <li key={i}><span>{extraName(x.title)}</span><span>{money(x.amount)}</span></li>)}
+                </>}
+                <li><span>{t('Move total', 'Total de la mudanza')}</span><span>{money(q.total)}</span></li>
+                <li><span>{t('Already paid', 'Ya pagado')}</span><span>{money(Number(q.total) - due)}</span></li>
+                <li><strong>{t('Left to pay', 'Falta pagar')}</strong><strong>{money(due)}</strong></li>
+              </ul>
+              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
+              {error && <p className="warn">{error}</p>}
+              <button className="primary" disabled={busy} onClick={payBalance}>{busy ? t('Opening payment…', 'Abriendo el pago…') : t(`Pay ${money(due + tip)}`, `Pagar ${money(due + tip)}`)}</button>
+              <p className="note">{t('You\'ll pay securely with Stripe. The total includes anything added on the day, like extra items or extra time.', 'Pagará de forma segura con Stripe. El total incluye lo que se agregó ese día, como cosas o tiempo extra.')}</p>
+            </>
+          ) : q.tipped > 0 ? (
+            <p className="center-text"><strong>{t('Paid in full.', 'Pagado por completo.')}</strong> {t(`Thank you for the ${money(q.tipped)} tip! It goes to your movers.`, `¡Gracias por la propina de ${money(q.tipped)}! Es para sus mudanceros.`)}</p>
+          ) : (
+            <>
+              <p className="center-text"><strong>{t('Paid in full.', 'Pagado por completo.')}</strong> {t('Thank you for moving with us.', 'Gracias por mudarse con nosotros.')}</p>
+              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
+              {error && <p className="warn">{error}</p>}
+              {tip > 0 && <button className="primary" disabled={busy} onClick={payBalance}>{busy ? t('Opening payment…', 'Abriendo el pago…') : t(`Tip ${money(tip)}`, `Dar ${money(tip)} de propina`)}</button>}
+            </>
+          )}
+        </section>
+  )
 
   return (
     <PublicPage sub={cancelled ? t('Booking cancelled', 'Reserva cancelada') : booked ? t('Booking confirmed', 'Reserva confirmada') : t(`Quote for ${q.first_name}`, `Cotización para ${q.first_name}`)} langSwitch>
@@ -194,6 +229,8 @@ export default function Quote({ token }: { token: string }) {
           {q.status === 'sent' && q.expires_at && <div className="muted small">{t('Good until', 'Válido hasta el')} {longDate(q.expires_at)}</div>}
         </div>
       )}
+
+      {owes && paySection}
 
       <section className="card">
         <h3>{booked ? t('Your move', 'Su mudanza') : t('What you get', 'Lo que incluye')}</h3>
@@ -226,37 +263,7 @@ export default function Quote({ token }: { token: string }) {
 
       {booked && <SaveMoves token={token} />}
 
-      {booked && q.balance_payable && q.balance_due != null && (
-        <section className="card form">
-          {q.balance_due > 0 ? (
-            <>
-              <h3>{t('Pay your balance', 'Pague su saldo')}</h3>
-              <ul className="list">
-                {(q.extras ?? []).length > 0 && q.move_price != null && <>
-                  <li><span>{t('Your move', 'Su mudanza')}</span><span>{money(q.move_price)}</span></li>
-                  {q.extras!.map((x, i) => <li key={i}><span>{extraName(x.title)}</span><span>{money(x.amount)}</span></li>)}
-                </>}
-                <li><span>{t('Move total', 'Total de la mudanza')}</span><span>{money(q.total)}</span></li>
-                <li><span>{t('Already paid', 'Ya pagado')}</span><span>{money(Number(q.total) - q.balance_due)}</span></li>
-                <li><strong>{t('Left to pay', 'Falta pagar')}</strong><strong>{money(q.balance_due)}</strong></li>
-              </ul>
-              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
-              {error && <p className="warn">{error}</p>}
-              <button className="primary" disabled={busy} onClick={payBalance}>{busy ? t('Opening payment…', 'Abriendo el pago…') : t(`Pay ${money(q.balance_due + tip)}`, `Pagar ${money(q.balance_due + tip)}`)}</button>
-              <p className="note">{t('You\'ll pay securely with Stripe. The total includes anything added on the day, like extra items or extra time.', 'Pagará de forma segura con Stripe. El total incluye lo que se agregó ese día, como cosas o tiempo extra.')}</p>
-            </>
-          ) : q.tipped > 0 ? (
-            <p className="center-text"><strong>{t('Paid in full.', 'Pagado por completo.')}</strong> {t(`Thank you for the ${money(q.tipped)} tip! It goes to your movers.`, `¡Gracias por la propina de ${money(q.tipped)}! Es para sus mudanceros.`)}</p>
-          ) : (
-            <>
-              <p className="center-text"><strong>{t('Paid in full.', 'Pagado por completo.')}</strong> {t('Thank you for moving with us.', 'Gracias por mudarse con nosotros.')}</p>
-              <TipPicker total={Number(q.total)} tip={tip} onChange={setTip} />
-              {error && <p className="warn">{error}</p>}
-              {tip > 0 && <button className="primary" disabled={busy} onClick={payBalance}>{busy ? t('Opening payment…', 'Abriendo el pago…') : t(`Tip ${money(tip)}`, `Dar ${money(tip)} de propina`)}</button>}
-            </>
-          )}
-        </section>
-      )}
+      {payable && !owes && paySection}
 
       {booked && q.job_status && !q.started && (
         <section className="card form">

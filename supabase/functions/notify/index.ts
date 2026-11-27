@@ -412,6 +412,80 @@ async function balanceDue(jobId: string): Promise<Out[]> {
   return out
 }
 
+// "Pay my bill" page: the customer typed their email, so send them the link to each of their moves
+async function payLink(requestId: string): Promise<Email[]> {
+  const { data: r } = await db.from('pay_link_requests').select('email').eq('id', requestId).maybeSingle()
+  if (!r || !CAN_EMAIL_OTHERS) return []
+  const pattern = r.email.replace(/[\\%_]/g, (ch: string) => `\\${ch}`)
+  const { data: people } = await db.from('customers')
+    .select('full_name, language, created_at, move_requests(quotes(token, status, jobs(job_date, status, job_prices(price, paid), job_extras(job_extra_prices(amount)))))')
+    .ilike('email', pattern).order('created_at', { ascending: false })
+  if (!people?.length) return []
+  const one = <T,>(v: T | T[] | null | undefined) => (Array.isArray(v) ? v[0] : v) ?? null
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  type J = { job_date: string; status: string; job_prices: unknown; job_extras: { job_extra_prices: unknown }[] | null }
+  const moves: { date: string; due: number; payable: boolean; link: string }[] = []
+  for (const c of people) {
+    for (const mr of (c.move_requests ?? []) as unknown as { quotes: { token: string; status: string; jobs: J | J[] | null }[] | null }[]) {
+      for (const q of mr.quotes ?? []) {
+        const j = one(q.jobs)
+        if (q.status !== 'accepted' || !j || j.status === 'cancelled') continue
+        const price = one(j.job_prices as { price: number; paid: number } | null)
+        if (!price) continue
+        const extras = (j.job_extras ?? []).reduce((t, x) => t + Number(one(x.job_extra_prices as { amount: number } | null)?.amount ?? 0), 0)
+        moves.push({
+          date: j.job_date,
+          due: Math.max(Number(price.price) + extras - Number(price.paid), 0),
+          payable: j.status === 'in_progress' || j.status === 'completed' || j.job_date <= today,
+          link: `${LIVE_SITE}/quote/${q.token}`,
+        })
+      }
+    }
+  }
+  moves.sort((a, b) => b.date.localeCompare(a.date))
+  const shown = moves.slice(0, 5)
+  const first = people[0].full_name.split(' ')[0]
+  const es = people[0].language === 'es'
+  const toPay = shown.filter((m) => m.payable && m.due > 0)
+  const row = (m: typeof shown[number]) => es
+    ? `${dayEs(m.date)}: ${m.due <= 0 ? 'pagado por completo' : m.payable ? `saldo de ${money(m.due)}, pague aquí` : `saldo de ${money(m.due)}, se paga después de la mudanza`}\n${m.link}`
+    : `${day(m.date)}: ${m.due <= 0 ? 'paid in full' : m.payable ? `${money(m.due)} balance, pay here` : `${money(m.due)} balance, paid after your move`}\n${m.link}`
+  if (es) {
+    return [{
+      to: [r.email],
+      subject: toPay.length ? `Su saldo con DMV Trusted Movers: ${money(toPay.reduce((t, m) => t + m.due, 0))}` : 'Sus mudanzas con DMV Trusted Movers',
+      text: lines(
+        `Hola ${first}:`,
+        '',
+        shown.length ? 'Usted pidió el enlace para pagar. Estas son sus mudanzas:' : 'Usted pidió el enlace para pagar, pero no encontramos una mudanza reservada con este correo.',
+        '',
+        ...shown.flatMap((m) => [row(m), '']),
+        toPay.length ? 'En la página puede pagar con tarjeta y dejar una propina para su equipo si quiere.' : 'No tiene nada que pagar en este momento.',
+        '',
+        '¿Preguntas sobre su factura? Responda a este correo.',
+        '',
+        'DMV Trusted Movers',
+      ),
+    }]
+  }
+  return [{
+    to: [r.email],
+    subject: toPay.length ? `Your DMV Trusted Movers balance: ${money(toPay.reduce((t, m) => t + m.due, 0))}` : 'Your moves with DMV Trusted Movers',
+    text: lines(
+      `Hi ${first},`,
+      '',
+      shown.length ? 'You asked for your payment link. Here are your moves:' : "You asked for your payment link, but we couldn't find a booked move under this email.",
+      '',
+      ...shown.flatMap((m) => [row(m), '']),
+      toPay.length ? 'On that page you can pay by card and leave a tip for your crew if you like.' : 'There is nothing to pay right now.',
+      '',
+      'Questions about your bill? Just reply to this email.',
+      '',
+      'DMV Trusted Movers',
+    ),
+  }]
+}
+
 async function balancePaid(paymentId: string): Promise<Email[]> {
   const { data: p } = await db.from('payments')
     .select('amount, provider_ref, quotes(token, jobs(id, job_date), move_requests(customers(full_name, email, language)))')
@@ -681,7 +755,7 @@ async function sendPush(p: Push) {
 const builders: Record<string, (id: string) => Promise<Out[]>> = {
   new_request: newRequest, deposit_paid: depositPaid, move_reminder: moveReminder, job_cancelled: jobCancelled,
   balance_paid: balancePaid, tip_paid: tipPaid, open_spots: openSpots, date_change: dateChange, review,
-  crew_accepted: crewAccepted, damage_report: damageReport, balance_due: balanceDue,
+  crew_accepted: crewAccepted, damage_report: damageReport, balance_due: balanceDue, pay_link: payLink,
 }
 
 Deno.serve(async () => {

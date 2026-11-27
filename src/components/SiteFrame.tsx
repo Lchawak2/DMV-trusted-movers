@@ -24,6 +24,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
             <Link to="/pricing">{t('Prices', 'Precios')}</Link>
             <Link to="/#faq" className="site-nav-wide">{t('FAQ', 'Preguntas')}</Link>
             <Link to="/#contact" className="site-nav-wide">{t('Contact', 'Contacto')}</Link>
+            <Link to="/pay" className="site-nav-wide">{t('Pay my bill', 'Pagar')}</Link>
             <Link to="/join">{t('Jobs', 'Empleo')}</Link>
             <Link to="/login" className="site-nav-wide">{t('Sign in', 'Entrar')}</Link>
             <Link to="/book" className="site-nav-book">{t('Book now', 'Reservar ahora')}</Link>
@@ -57,6 +58,7 @@ export default function SiteFrame({ site, children }: { site: SiteContent; child
               <h3>{t('Company', 'Compañía')}</h3>
               <p><Link to="/book">{t('Book now', 'Reservar ahora')}</Link></p>
               <p><Link to="/pricing">{t('Prices', 'Precios')}</Link></p>
+              <p><Link to="/pay">{t('Pay my bill', 'Pagar mi cuenta')}</Link></p>
               <p><Link to="/#faq">{t('Questions', 'Preguntas')}</Link></p>
               <p><Link to="/join">{t('Work with us', 'Trabaje con nosotros')}</Link></p>
               <p><Link to="/login">{t('Crew and customer sign in', 'Entrar (equipo y clientes)')}</Link></p>

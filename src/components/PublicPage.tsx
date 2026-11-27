@@ -31,6 +31,7 @@ export default function PublicPage({ sub, children, langSwitch = false }: { sub:
       <main className="content">{children}</main>
       <footer className="public-foot">
         <Link to="/pricing">{t('Prices', 'Precios')}</Link>
+        <Link to="/pay">{t('Pay my bill', 'Pagar mi cuenta')}</Link>
         {!session && <Link to="/login">{t('Sign in', 'Entrar')}</Link>}
         <Link to="/policies#terms">{t('Terms', 'Términos')}</Link>
         <Link to="/policies#cancellation">{t('Cancellation', 'Cancelación')}</Link>
